@@ -1,0 +1,134 @@
+/* * {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    background-color: white;
+}
+
+.flexbox {
+    display: flex;
+    justify-content: space-between;
+    width: 100%;
+    max-width: 786px;
+
+    height: 100vh;
+
+    overflow: hidden;
+
+    margin: 0 auto;
+    padding: 15px; 
+
+
+}
+
+.flexbox .board {
+    display: flex;
+    flex-direction: column;
+
+    width: 100%;
+    max-width: 300px;
+
+    background-color: brown;
+
+    padding: 15px
+}
+
+.flexbox .board .card {
+    padding: 15px 25px;
+    background-color: cadetblue;
+
+    cursor: pointer;
+    margin-bottom: 15px;
+}
+
+.boards{
+    display: flex;
+}
+
+.left{
+    flex: 2
+}
+
+.right{
+    flex: 8;
+    background-color: turquoise;
+} */
+
+.main{
+    display: flex;
+    flex-direction: row;
+}
+
+.pattern{
+    height: 50px;
+    width: 100px;
+    /* -webkit-user-drag: element; */
+}
+.box{
+    height: 100px;
+    width: 100px;
+    background-color: wheat;
+    margin: 20px 1px 20px 1px
+}
+
+.verticalDivider{
+    height: 100px;
+    width: 10px;
+    background-color: transparent;
+    margin-top: 20px;
+    margin-bottom: 20px;
+    display: flex;
+    justify-content: space-between;
+}
+
+.verticalDivider div{
+    margin-top: 40px;
+}
+
+.box:hover{
+    border-width: 5px;
+    border-color: black;
+}
+.left{
+    display: flex;
+    flex-direction: row;
+    flex: 1
+    
+}
+
+.right{
+    display: flex;
+    flex-direction: column;
+    flex:4
+}
+
+.row-1{
+    display: flex;
+    flex-direction: row;
+}
+
+.row-2{
+    display: flex;
+    flex-direction: row;
+}
+
+.column{
+    margin: 5px;
+
+}
+
+.pattern{
+    margin: 1px;
+    text-align: center;
+}
+
+.controls{
+    margin-top: 25px;
+}
+
+.box > div {
+    overflow-x: hidden;
+}
