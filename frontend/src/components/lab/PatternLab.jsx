@@ -286,6 +286,7 @@ function patternExtraction(notes, scale, root){
         }
         
     }
+    console.log(patternExport)
     setPattern(patternExport);
 }
 
@@ -516,6 +517,10 @@ if (keyType === 'minor'){
         <div>Octave: {octave}</div>
         <div>
             Pattern: {pattern}
+        </div>
+        <div>
+            <h3>Export</h3>
+            <div draggable='true' style={{height: '25px', width: '125px', backgroundColor: 'wheat'}}>Pattern 1</div>
         </div>
         {/* <button> Key Controls</button> */}
         <button onClick={() => generateRandomMelody()}>Generate Random Melody</button>

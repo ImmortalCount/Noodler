@@ -1,8 +1,12 @@
 import * as Tone from 'tone';
 import { useState, useEffect} from 'react';
 import { saveAs } from 'file-saver';
-import ReactDOM from 'react-dom';
+import { useSelector } from 'react-redux';
+import { Dropdown, Button, Icon, Segment } from 'semantic-ui-react';
+
 export default function GuitarSVG() {
+
+    const state = useSelector((state) => state.module)
 
     // useEffect(() =>{
     //     setTab(tab)
@@ -305,12 +309,12 @@ function generateTab(ids){
     //unused strings
     
     //renderTab
-    for (var k = 0; k < arrForTab.length; k++){
-        renderString = renderString + arrForTab[k] + '\n'
-    }
-    tabCount++;
-    document.getElementById("tab").innerHTML = renderString
-    console.log(renderString);
+    // for (var k = 0; k < arrForTab.length; k++){
+    //     renderString = renderString + arrForTab[k] + '\n'
+    // }
+    // tabCount++;
+    // document.getElementById("tab").innerHTML = renderString
+    // console.log(renderString);
 }
 
 var midiData = [
@@ -800,8 +804,25 @@ FileSaver.saveAs(blob, "tab.txt");
 
 useEffect (()=>{
     document.getElementById("divGuitar").appendChild(svg);
+    invisAll();
 }, []);
 
+const tuningOptions = [
+    {key: 'Custom Tuning', text: 'Custom Tuning', value: 'Custom Tuning'},
+    {key: 'Standard', text: 'Standard', value: 'Standard'},
+    {key: 'DADGAD', text: 'DADGAD', value: 'DADGAD'},
+    {key: 'P4', text: 'P4', value: 'P4'},
+    {key: 'DropD', text: 'DropD', value: 'DropD'},
+]
+
+const instrumentOptions = [
+    {key: 'Guitar', text: 'Guitar', value: 'Guitar'},
+    {key: 'Bass', text: 'Bass', value: 'Bass'},
+    {key: 'Mandolin', text: 'Mandolin', value: 'Mandolin'},
+    {key: 'Banjo', text: 'DropD', value: 'DropD'},
+]
+//Make invisible on load
+
 //********************************************************************* */
 //********************************************************************* */
 //********************************************************************* */
@@ -809,19 +830,62 @@ useEffect (()=>{
 //********************************************************************* */
 //********************************************************************* */
 
-//TONE JS STUFF BELOW
+//FEATURES TO REMEMBER 
+//TAB IS BEING MUTED EARLIER IN FILE
+//REMEMBER TO TOGGLE BETWEEN VIEWS ON BOARD (REALISTIC vs COMPACT)
+//INVIS ALL?
+//MODERN AND CLASSIC VIBRATO BEND REVERSE BEND SLIDE UP
+//SEE POSITIONS
+//START AUDIO
+//ON OFF SOUND
+
     return (
         <>
+        <Button.Group>
+            <Button compact basic> <Icon name ='left arrow'/></Button>
+            <Segment>
+            Strings: 6
+            </Segment>
+            <Button compact basic> <Icon name ='right arrow'/></Button>
+        </Button.Group>
+        <Dropdown
+        placeholder='Select Instrument'
+        search
+        selection
+        options={instrumentOptions}
+        defaultValue='Guitar'
+        />
+        <Dropdown
+        placeholder='Select Tuning'
+        search
+        selection
+        options={tuningOptions}
+        defaultValue='Standard'
+        />
+        <Button.Group>
+            <Button compact basic> <Icon name ='left arrow'/></Button>
+            <Segment>
+            Frets: 24
+            </Segment>
+            <Button compact basic> <Icon name ='right arrow'/></Button>
+        </Button.Group>
+        <Button onClick={() => console.log(state)}>State?</Button>
+        <div id='divGuitar'></div>
         
-        <button onClick={()=>playNotes()}>next </button>
-        <button onClick={() => console.log(positionNamer(chordData[playPosition -1]), chordData[playPosition -1])}>See positions</button>
-        <button onClick={function(){if (running !== true){myInterval = setInterval(playNotes, globalInt); running = true}}}>start</button>
-        <button onClick={function(){clearInterval(myInterval); running = false}}>stop</button>
-        <button onClick={()=>invisAll()}>invis All</button>
-        <button onClick={() => globalPosition--}>Down Position</button>
-        <button onClick={() => globalPosition++}> Up Position</button>
-        <button> All Positions</button>
-        <button>Add Strings</button>
+        
+        <Button compact basic onClick={function(){clearInterval(myInterval); running = false}}><Icon name='stop'/></Button>
+        <Button compact basic onClick={function(){if (running !== true){myInterval = setInterval(playNotes, globalInt); running = true}}}><Icon name='play'/></Button>
+        {/* <button onClick={() => console.log(positionNamer(chordData[playPosition -1]), chordData[playPosition -1])}>See positions</button> */}
+        {/* <button onClick={()=>invisAll()}>invis All</button> */}
+        <Button compact basic onClick={() => globalPosition = -1}><Icon name='arrows alternate vertical'/></Button>
+        <Button compact basic onClick={()=>playNotes()}><Icon name='step forward'/></Button>
+        <Button compact basic onClick={() => globalPosition--}><Icon name='arrow down'/></Button>
+        <Button compact basic onClick={() => globalPosition++}><Icon name='arrow up'/></Button>
+        <Button compact basic onClick={()=>playNotes()}><Icon name='step backward'/></Button>
+        <Button compact basic ><Icon name='fast backward'/></Button>
+        <Button compact basic ><Icon name='fast forward'/></Button>
+        <Button compact basic ><Icon name='retweet'/></Button>
+        {/* <button>Add Strings</button>
         <button>Change Tuning</button>
         <button onClick={()=> invisById()}>On/Off Sound</button>
         <button onClick={async()=> await Tone.start()}>Start Audio</button>
@@ -834,12 +898,11 @@ useEffect (()=>{
         <button onClick={() => animateBend()}>Bend</button>
         <button onClick={() => animateReverseBend()}>Reverse Bend</button>
         <button onClick={() => Bluesy()}>Bluesy</button>
-        <button onClick={() => animateSlideUp()}>SlideUp</button>
-        <p>Tab</p>
-        <div id="tab" dangerouslySetInnerHTML={{__html: " \n \n \n \n \n \n "}} style ={{whiteSpace: "pre-line", fontFamily: "monospace, monospace", backgroundColor: 'lightblue', width: '1000px', overflowX: 'scroll', visibility: ""}}> 
-        </div>
-        <button onClick={() => downloadTab()}>Download tab</button>
-        <div id='divGuitar'></div>
+        <button onClick={() => animateSlideUp()}>SlideUp</button> */}
+        {/* <p>Tab</p> */}
+        {/* <div id="tab" dangerouslySetInnerHTML={{__html: " \n \n \n \n \n \n "}} style ={{whiteSpace: "pre-line", fontFamily: "monospace, monospace", backgroundColor: 'lightblue', width: '1000px', overflowX: 'scroll', visibility: ""}}> 
+        </div> */}
+        {/* <button onClick={() => downloadTab()}>Download tab</button> */}
         {/* <button onClick={()=>playChord()}>chord</button> */}
         </>
     )

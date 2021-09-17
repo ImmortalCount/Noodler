@@ -354,6 +354,10 @@ export default function ChordLab() {
         <div>
             Dem Chords be Crazy
         </div>
+        <div>
+            <h3>Export</h3>
+            <div draggable='true' style={{height: '25px', width: '125px', backgroundColor: 'wheat'}}>C Maj</div>
+        </div>
         <button onClick={()=> organizeChords()}>Organize Chords</button>
         <button onClick={()=> playChords(chords)}>Play</button>
         <button onClick={()=> console.log(Chord.detect(['D', 'F', 'A']))}>Detect 'em</button>

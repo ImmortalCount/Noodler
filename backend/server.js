@@ -1,9 +1,13 @@
-const express = require('express');
-const app = express()
+import express from 'express';
+import cors from 'cors';
+import modules from './api/modules.route.js'
 
-app.get('/', function (req, res) {
-    res.send('Hello World')
-  })
-   
-  app.listen(5000)
-  
+const app = express();
+
+app.use(cors())
+app.use(express.json())
+
+app.use("/api/v1/modules", modules)
+app.use("*", (req, res) => res.status(404).json({error: "not found"}))
+
+export default app;

@@ -360,21 +360,25 @@ const timing = [];
     return (
         <>
         <div>
-           <h1>Riddim, jah!</h1> 
+           <h1>Rhythm Lab</h1> 
         </div>
         <div>
-            what dem notes look like?
+            Notes:
         </div>
-        <div>
+        {/* <div>
             {JSON.stringify(notes).replace(/\"/g, " ")}
-        </div>
+        </div> */}
        <div style={{display: 'flex', flexDirection: 'row', width: '500px'}} >
            {mapNotes(notes)}
        </div>
        <div>
+            <h3>Export</h3>
+            <div draggable='true' style={{height: '25px', width: '125px', backgroundColor: 'wheat'}}>Rhythm 1</div>
+        </div>
+       {/* <div>
            <h3>Change notes manually</h3>
        <input type="text" value ={JSON.stringify(notes).replace(/\"/g, " ")} style={{width:"500px"}}/>
-       </div>
+       </div> */}
         <button onClick={() => mapNotesToRhythm()}>map notes</button>
         <button onClick={() => Tone.start()}>Initialize</button>
         <button onClick={() => Tone.Transport.start()}>start </button>

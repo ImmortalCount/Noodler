@@ -11,8 +11,6 @@ export default function Guitar() {
     return (
         <>
         <div>
-            <div id="svg"></div>
-            <p>Guitar Component</p>
             <GuitarSVG/>
         </div>
         

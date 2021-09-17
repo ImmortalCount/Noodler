@@ -2,35 +2,6 @@ import React from 'react'
 import { Tab } from 'semantic-ui-react' 
 
 export default function Palette() {
-    const rhythmData = [
-        {},
-        {},
-        {},
-    ]
-
-    const scaleData = [
-        {},
-        {},
-        {},
-    ]
-
-    const patternData = [
-        {},
-        {},
-        {},
-    ]
-
-    const rhythmicPatternData = [
-        {},
-        {},
-        {},
-    ]
-
-    const chordData = [
-        {},
-        {},
-        {},
-    ]
 
     function InnerPalette(){
         return (
@@ -50,9 +21,9 @@ export default function Palette() {
     return (
         <>
         <div>
-            This is the pallette bruv
+            This is the pallette 
         </div>
-        <Tabs style={{width: '200px'}}/>
+        {/* <Tabs/> */}
         </>
     )
 }
