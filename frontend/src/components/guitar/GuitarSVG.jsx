@@ -7,10 +7,13 @@ import { Dropdown, Button, Icon, Segment } from 'semantic-ui-react';
 export default function GuitarSVG() {
 
     const state = useSelector((state) => state.module)
-
-    // useEffect(() =>{
-    //     setTab(tab)
-    // }, []);
+    const scaleData = useSelector((state) => state.scale)
+    const [textArr, setTextArr] = useState(['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#','A', 'A#', 'B'])
+    const [scale, setScale] = useState(['C', 'D', 'E','F', 'G', 'A', 'B'])
+    const [tuning, setTuning] = useState(['E4','B4','G3','D3','A2','E2'])
+    const [stringNumber, setStringNumber] = useState(6)
+    const [fretNumber, setFretNumber] = useState(24)
+    const [instruments, setInstruments] = useState([{'scale':['C', 'D', 'E','F', 'G', 'A', 'B'], 'tuning':['E4','B4','G3','D3','A2','E2'],'stringNumber':6,'fretNumber': 24}, {'scale':['C', 'D', 'E','F', 'G', 'A', 'B'], 'tuning':['E4','B4','G3','D3','A2','E2'],'stringNumber':7,'fretNumber': 24}])
 
     var fillArr = [
         '#FF0000', 
@@ -26,39 +29,38 @@ export default function GuitarSVG() {
         '#8F00FF',
         '#C71585' 
       ];
-    var textArr = [
-        'C', 
-        'C#', 
-        'D', 
-        'D#', 
-        'E', 
-        'F', 
-        'F#', 
-        'G', 
-        'G#',
-        'A', 
-        'A#', 
-        'B'
-      ];
+    var noteValues = [];
+    //generate note values
+    for (var m = 0; m < 10; m++){
+        for (var o = 0; o < textArr.length; o++){
+            var obj = {};
+            obj["name"] = textArr[o] + m;
+            obj["color"] = fillArr[o];
+            obj["note"] = textArr[o];
+            obj["octave"] = m;
+            noteValues.push(obj);
+        }
+    }
 
-    var tuning = [
-        'F4',
-        'C4',
-        'G3',
-        'D3',
-        'A2',
-        'E2',
-    ]
+    function findIndex(name){
+        for (var z = 0; z < noteValues.length; z++){
+            if (noteValues[z]['name'] === name){
+                return z
+            }
+        }
+    }
 
-    var scale = [
-        'C',
-        'D',
-        'E',
-        'F',
-        'G',
-        'A',
-        'B'
+    // useEffect(() =>{
+    //     setTab(tab)
+    // }, []);
+    const testSequence = [
+        [["C4 E4 G4","D4"],["E4","G5"],["C5 E4 G4","B4"],["X","X"]],[["E4 G4 B4","A4"],["E4","E5"],["F4","B5"],["E5 G4 B4","D5"]],[["C5 E4 G4","B4"],["C6","A4"],["F4 B4 D4","B4"],["D4","A5"]]
     ]
+    const testSequence2 = [
+        [["C3 E3 G3"],["C3 E3 G3"],["C3 E3 G3"],["C3 E3 G3"]],[["D3 F3 A3"],["D3 F3 A3"],["D3 F3 A3"],["D3 F3 A3"]],[['E3 G3 B3'],['E3 G3 B3'],['E3 G3 B3'],['E3 G3 B3']]
+    ]
+    
+    
 
     //Thanks PimpTrizkit
     function shadeHexColor(color, percent) {
@@ -70,21 +72,21 @@ export default function GuitarSVG() {
         var f=parseInt(c0.slice(1),16),t=parseInt(c1.slice(1),16),R1=f>>16,G1=f>>8&0x00FF,B1=f&0x0000FF,R2=t>>16,G2=t>>8&0x00FF,B2=t&0x0000FF;
         return "#"+(0x1000000+(Math.round((R2-R1)*p)+R1)*0x10000+(Math.round((G2-G1)*p)+G1)*0x100+(Math.round((B2-B1)*p)+B1)).toString(16).slice(1);
     }
+
+    
     //--------------------
 
-    //var global attributes
-    var realistic = false;
-    var stringNumber = 6;
-    var fretNumber = 24;
+function createGuitarSVG(){
     var stringWidth = 0.5;
     var y = 10;
     var x = 80;
-    var svgLength = 1000;
-    var svgHeight = 270;
+    var svgLength = 40 + (fretNumber * 40)
+    var svgHeight = 20 + ((stringNumber - 1) * 50);
 
     var svg = document.createElementNS("http://www.w3.org/2000/svg", 'svg');
     svg.setAttribute("height", svgHeight);
     svg.setAttribute("width", svgLength);
+    svg.setAttribute("id", "svg1")
     
 
     //neck
@@ -100,7 +102,7 @@ export default function GuitarSVG() {
     nut.setAttribute("x1", 40);
     nut.setAttribute("x2", 40);
     nut.setAttribute("y1", 0);
-    nut.setAttribute("y2", 270);
+    nut.setAttribute("y2", svgHeight);
     nut.setAttribute("stroke-width", "5");
     nut.setAttribute("stroke", "black");
     svg.appendChild(nut);
@@ -108,13 +110,12 @@ export default function GuitarSVG() {
     //frets
     //Thanks Vincenzo Galilei
     //Dn = [(L – Dn-1) / 17.817] + Dn-1
-    var fretPosition = 0;
     for (var j = 0; j < fretNumber; j++){
     var fret = document.createElementNS("http://www.w3.org/2000/svg", 'line');
     fret.setAttribute('x1', x);
     fret.setAttribute('x2', x);
     fret.setAttribute('y1', 0);
-    fret.setAttribute('y2', 270);
+    fret.setAttribute('y2', svgHeight);
     fret.setAttribute("stroke-width", "4");
     fret.setAttribute("stroke", "#C0C0C0");
     
@@ -173,13 +174,11 @@ export default function GuitarSVG() {
     fretMarker.setAttribute('class', 'fretmarker');
     svg.appendChild(fretMarker);
     }
-
-
     //strings
     for (var i = 0; i < stringNumber; i++) {
         var string = document.createElementNS("http://www.w3.org/2000/svg", 'line');
-        string.setAttribute("x1", "0");
-        string.setAttribute("x2", "1000");
+        string.setAttribute("x1", 0);
+        string.setAttribute("x2", svgLength);
         string.setAttribute("y1", y);
         string.setAttribute("y2", y);
         string.setAttribute("stroke-width", stringWidth);
@@ -188,37 +187,14 @@ export default function GuitarSVG() {
         y += 50;
         stringWidth += 0.5;
      };
-
-
     //note
-    var noteValues = [];
-    //generate note values
-    for (var m = 0; m < 10; m++){
-        for (var o = 0; o < textArr.length; o++){
-            var obj = {};
-            obj["name"] = textArr[o] + m;
-            obj["color"] = fillArr[o];
-            obj["note"] = textArr[o];
-            obj["octave"] = m;
-            noteValues.push(obj);
-        }
-    }
-
-    function findIndex(name){
-        for (var z = 0; z < noteValues.length; z++){
-            if (noteValues[z]['name'] === name){
-                return z
-            }
-        }
-    }
-
     var noteX = 20;
     var noteY = 10;
     //generate notes
     for (var k = 0; k < tuning.length; k++){
         var index = findIndex(tuning[k]);
         for (var l = 0; l < fretNumber + 1; l++){
-            if (scale.indexOf(noteValues[index]["note"]) !== -1){
+
             var note = document.createElementNS("http://www.w3.org/2000/svg", 'circle');
             note.setAttribute('cx', noteX);
             note.setAttribute('cy', noteY);
@@ -238,32 +214,83 @@ export default function GuitarSVG() {
             noteName.setAttribute('class', noteValues[index]["name"] + 'name notename')
             noteName.setAttribute('id', (k + 1) + "_" + l + "_name");
             noteName.textContent = noteValues[index]["name"];
+            if (scale.indexOf(noteValues[index]["note"]) === -1){
+                note.setAttribute('visibility', 'hidden');
+                noteName.setAttribute('visibility', 'hidden');
+            }
             svg.appendChild(note);
             svg.appendChild(noteName);
-            }
-            
+
             noteX += 40;
             index += 1;
         }
         noteY += 50;
         noteX = 20;
     }
+    //check for previous guitars
+    const guitarDiv = document.getElementById('divGuitar');
+    const guitarDiv2 = document.getElementById('divGuitar2');
+    if (guitarDiv.firstChild){
+        while (guitarDiv.firstChild){
+            guitarDiv.removeChild(guitarDiv.firstChild)
+        }
+    }
+    let clone = svg.cloneNode(true)
+    //Add to div
+    guitarDiv.appendChild(svg);
+    guitarDiv2.appendChild(clone)
+    
 
+}
 
 function invisAll(){
     var x = document.getElementsByClassName('note');
     var y = document.getElementsByClassName('notename');
     for (var i = 0; i < x.length; i++){
         x[i].setAttribute('visibility', 'hidden');
-        y[i].textContent = '';
+        y[i].setAttribute('visibility', 'hidden');
         }
 }
+
+function showAll(){
+    var x = document.getElementsByClassName('note');
+    var y = document.getElementsByClassName('notename');
+    for (var i = 0; i < x.length; i++){
+        x[i].setAttribute('visibility', '');
+        y[i].setAttribute('visibility', '')
+        }
+}
+
+function displayNotes(notesArr){
+    var displayArr = [];
+    for (var i = 0; i < notesArr.length; i++){
+        for (var j = 0; j < noteValues.length; j++){
+            if (noteValues[j]['note'] === notesArr[i]){
+                var currentPositions = positionNamer(noteValues[j]['name'])
+                for (var k = 0; k < currentPositions.length; k++){
+                    if (currentPositions[k] !== undefined){
+                        displayArr.push(currentPositions[k][0])
+                    }
+                }
+            }
+        }
+    }
+    for (var l = 0; l < displayArr.length; l++){
+        var x = document.getElementById(displayArr[l]);
+        var y = document.getElementById(displayArr[l] + '_name')
+        x.setAttribute('visibility', '')
+        y.setAttribute('visibility', '')
+    }
+    return displayArr;
+}
+
+
 
 function invisById(){
     var x = document.getElementById('5_7');
     var y = document.getElementById('5_7_name')
     x.setAttribute('visibility', 'hidden')
-    y.textContent= '';
+    y.setAttribute('visibility', 'hidden')
 }
 
 var arrForTab = [];
@@ -343,13 +370,6 @@ var midi1 = [
     'A4',
 ]
 
-    //I:   c e g
-    //II:  d f a
-    //III: e g b
-    //IV:  f a c
-    //V:   g b d
-    //VI:  a c e
-    //VII: b d f
 var chordData = [
     ['C3', 'E3', 'G4'],
     ['C3', 'G3', 'D4', 'A4'],
@@ -412,7 +432,7 @@ function positionNamer(notesArr){
     for (var i = 0; i < tuning.length; i++){
         var stringNotes = [];
         var index = findIndex(tuning[i]);
-        for (var j = 0; j < fretNumber; j++){
+        for (var j = 0; j < fretNumber + 1; j++){
             stringNotes.push(noteValues[index + j]['name'])
         }
         fretboard.push(stringNotes)
@@ -435,6 +455,21 @@ function positionNamer(notesArr){
     }
     return allPositions;
 }
+    //if the array is only one note long
+    if (notesArr.length === 1){
+        for (var k = 0; k < tuning.length;k++){
+            var foundFretIndex = fretboard[k].indexOf(notesArr[0]);
+        //if the note we're looking for is on the string 
+            if (foundFretIndex !== -1){
+            var indexID = (k + 1 + "_" + foundFretIndex);
+            allPositions.push([indexID]);
+        }
+    }
+    return allPositions;
+}
+
+
+
     //Multiple notes --> continue
 
     function alreadyCalled(val){
@@ -551,6 +586,37 @@ var globalPosition = 0;
 //bpm ish
 var globalInt = 500;
 const synth = new Tone.PolySynth(Tone.Synth).toDestination();
+
+// const synth = new Tone.Sampler({
+//     urls: {
+//         A0: "A0.mp3",
+//         C1: "C1.mp3",
+        
+//         A1: "A1.mp3",
+//         C2: "C2.mp3",
+       
+//         A2: "A2.mp3",
+//         C3: "C3.mp3",
+        
+//         A3: "A3.mp3",
+//         C4: "C4.mp3",
+        
+//         A4: "A4.mp3",
+//         C5: "C5.mp3",
+      
+//         A5: "A5.mp3",
+//         C6: "C6.mp3",
+   
+//         A6: "A6.mp3",
+//         C7: "C7.mp3",
+//         A7: "A7.mp3",
+//         C8: "C8.mp3"
+//     },
+//     baseUrl: "https://github.com/gleitz/midi-js-soundfonts/tree/gh-pages/MusyngKite/electric_guitar_jazz-mp3/"
+// }).toDestination();
+
+
+
 async function soundNotes(){
     synth.triggerAttackRelease(midiData[playPosition], globalInt/1000);
 }
@@ -578,7 +644,7 @@ var positions = positionNamer(midiData[playPosition]);
             var z = document.getElementsByClassName(previousArray[m] + 'name');
             for (var i = 0; i < q.length; i++){
                 q[i].setAttribute('visibility', 'hidden');
-                z[i].textContent = '';
+                z[i].setAttribute('visibility', 'hidden');
             }
         }
         
@@ -593,7 +659,7 @@ var positions = positionNamer(midiData[playPosition]);
             z = document.getElementsByClassName(previousArray[n] + 'name');
             for (var k = 0; k < q.length; k++){
                 q[k].setAttribute('visibility', 'hidden');
-                z[k].textContent = '';
+                z[k].setAttribute('visibility', 'hidden')
             }
         }
         
@@ -613,7 +679,7 @@ var positions = positionNamer(midiData[playPosition]);
     
             for (var j = 0; j < x.length; j++){
                 x[j].setAttribute('visibility', '');
-                y[j].textContent = currentArray[w];
+                y[j].setAttribute('visibility', '');
             }
         }
     } else {
@@ -624,7 +690,7 @@ var positions = positionNamer(midiData[playPosition]);
             var y = document.getElementById(pos[w] + '_name');
 
             x.setAttribute('visibility', '');
-            y.textContent = y.getAttribute('class').split(" ")[0].slice(0,2);
+            y.setAttribute('visibility', '');
             tabArray.push(x.getAttribute('id'));
         }
         generateTab(tabArray);
@@ -637,6 +703,122 @@ var positions = positionNamer(midiData[playPosition]);
     } else {
         playPosition = 0;
     }
+}
+
+function flattenNotes(notes, returnArr){
+    if (returnArr === undefined){
+        returnArr = [];
+    }
+        for (var i = 0; i < notes.length; i++){
+            if (Array.isArray(notes[i]) === false){
+                returnArr.push(notes[i])
+            } else {
+                flattenNotes(notes[i], returnArr);
+            }
+        }
+    return returnArr;
+}   
+
+function noteStringHandler(notes){
+    var returnArr = []
+    if (notes.indexOf(' ') === -1){
+        returnArr.push(notes)
+    } else {
+        returnArr = notes.split(' ')
+    }
+    return returnArr
+}
+
+function sequenceIntoNotesAndPositions(sequence){
+    var flatData = flattenNotes(sequence);
+    var flatReturn = [];
+    var positionReturn = [];
+    for (var i = 0; i < flatData.length; i++){
+        flatReturn.push(noteStringHandler(flatData[i]))
+    }
+    for (var j = 0; j < flatReturn.length; j++){
+        positionReturn.push(positionNamer(flatReturn[j]))
+    }
+    var returnObj = {};
+    returnObj['notes'] = flatReturn;
+    returnObj['positions'] = positionReturn;
+    return returnObj;
+}
+
+function playNoteSequence(sequence){
+var cleanData = sequenceIntoNotesAndPositions(sequence)
+var flatData = cleanData.notes;
+var currentArray = [];
+var previousArray = [];
+var positions = cleanData.positions
+
+const synthPart = new Tone.Sequence(
+        function(time, note) {
+          if (note !== 'X'){
+
+              synth.triggerAttackRelease(noteStringHandler(note), 0.1, time);
+          }
+            //   =============
+              if (playPosition === 0){
+                previousArray = flatData[flatData.length - 1];
+                for (var m = 0; m < previousArray.length; m++){
+                    var q = document.getElementsByClassName(previousArray[m]);
+                    var z = document.getElementsByClassName(previousArray[m] + 'name');
+                    for (var i = 0; i < q.length; i++){
+                        q[i].setAttribute('visibility', 'hidden');
+                        z[i].setAttribute('visibility', 'hidden');
+                    }
+                }
+            } else {
+                previousArray = flatData[playPosition - 1];
+                for (var n = 0; n < previousArray.length; n++){
+                    q = document.getElementsByClassName(previousArray[n]);
+                    z = document.getElementsByClassName(previousArray[n] + 'name');
+                    for (var k = 0; k < q.length; k++){
+                        q[k].setAttribute('visibility', 'hidden');
+                        z[k].setAttribute('visibility', 'hidden');
+                    }
+                }
+            }
+              //==============
+              if (note !== 'X'){
+                currentArray = flatData[playPosition];
+                if (globalPosition < 0){
+                    for (var w = 0; w < currentArray.length; w++){
+                        var x = document.getElementsByClassName(currentArray[w]);
+                        var y = document.getElementsByClassName(currentArray[w] + 'name');
+                
+                        for (var j = 0; j < x.length; j++){
+                            x[j].setAttribute('visibility', '');
+                            y[j].setAttribute('visibility', '');
+                        }
+                    }
+                } else {
+                    var pos = (positions[playPosition][globalPosition] || positions[playPosition][positions[playPosition].length -1]);
+                    var tabArray = []
+                    for (var w = 0; w < pos.length; w++){
+                        var x = document.getElementById(pos[w]);
+                        var y = document.getElementById(pos[w] + '_name');
+                        x.setAttribute('visibility', '');
+                        y.setAttribute('visibility', '');
+                        tabArray.push(x.getAttribute('id'));
+                    }
+                    generateTab(tabArray);
+                }
+              }
+            // reveal current notes
+
+        if (playPosition < flattenNotes(sequence).length - 1){
+            playPosition++;
+        } else {
+            playPosition = 0;
+        }
+        },
+       sequence,
+        "1n"
+      );
+      synthPart.start();
+      synthPart.loop = 1;
 }
 //animate vibrato
 function animateClassicVibrato(){
@@ -802,17 +984,20 @@ var blob = new Blob([document.getElementById("tab").innerHTML], {type: "text/pla
 FileSaver.saveAs(blob, "tab.txt");
 }
 
+
+
 useEffect (()=>{
-    document.getElementById("divGuitar").appendChild(svg);
-    invisAll();
-}, []);
+    if (scaleData.length !== 0){
+        setScale(scaleData)
+    }
+    createGuitarSVG();
+}, [tuning, fretNumber, scale, scaleData]);
 
 const tuningOptions = [
-    {key: 'Custom Tuning', text: 'Custom Tuning', value: 'Custom Tuning'},
-    {key: 'Standard', text: 'Standard', value: 'Standard'},
-    {key: 'DADGAD', text: 'DADGAD', value: 'DADGAD'},
-    {key: 'P4', text: 'P4', value: 'P4'},
-    {key: 'DropD', text: 'DropD', value: 'DropD'},
+    {key: 'Standard', text: 'EADGBE', value: ['E4', 'B4', 'G3', 'D3', 'A2', 'E2']},
+    {key: 'DADGAD', text: 'DADGAD', value: ['D4', 'A3', 'G3', 'D3', 'A2', 'D2']},
+    {key: 'P4', text: 'P4', value: ['F4', 'C4', 'G3', 'D3', 'A2', 'E2']},
+    {key: 'DropD', text: 'DropD', value: ['E4', 'B4', 'G3', 'D3', 'A2', 'D2']},
 ]
 
 const instrumentOptions = [
@@ -821,6 +1006,32 @@ const instrumentOptions = [
     {key: 'Mandolin', text: 'Mandolin', value: 'Mandolin'},
     {key: 'Banjo', text: 'DropD', value: 'DropD'},
 ]
+
+function handleStringChange(direction){
+    if (direction === 'down'){
+        if (stringNumber !== 1){
+            var clone = [...tuning]
+            clone.pop()
+            setTuning(clone)
+            setStringNumber(stringNumber - 1)
+        }
+    } 
+    if (direction === 'up'){
+        var clone = [...tuning]
+        var newNote = noteValues[findIndex(clone[clone.length - 1]) - 5];
+        if (newNote === undefined){
+            return
+        } else {
+        clone.push(newNote['name'])
+        setTuning(clone)
+        setStringNumber(stringNumber + 1)
+        }
+    }
+}
+
+const onChangeTuning = (e, {value}) => {
+    setTuning(value);
+  }
 //Make invisible on load
 
 //********************************************************************* */
@@ -841,50 +1052,92 @@ const instrumentOptions = [
 
     return (
         <>
+        <div>
         <Button.Group>
-            <Button compact basic> <Icon name ='left arrow'/></Button>
+            <Button compact basic onClick={()=> handleStringChange('down')}> <Icon name ='left arrow'/></Button>
             <Segment>
-            Strings: 6
+            Strings: {stringNumber}
             </Segment>
-            <Button compact basic> <Icon name ='right arrow'/></Button>
+            <Button compact basic onClick={()=> handleStringChange('up')}> <Icon name ='right arrow'/></Button>
         </Button.Group>
         <Dropdown
-        placeholder='Select Instrument'
         search
         selection
         options={instrumentOptions}
         defaultValue='Guitar'
         />
         <Dropdown
-        placeholder='Select Tuning'
+        placeholder='EADGBE'
         search
         selection
+        onChange={onChangeTuning}
         options={tuningOptions}
-        defaultValue='Standard'
+        defaultValue='EADGBE'
         />
         <Button.Group>
-            <Button compact basic> <Icon name ='left arrow'/></Button>
+            <Button compact basic onClick={()=> setFretNumber(fretNumber - 1)}> <Icon name ='left arrow'/></Button>
             <Segment>
-            Frets: 24
+            Frets: {fretNumber}
             </Segment>
-            <Button compact basic> <Icon name ='right arrow'/></Button>
+            <Button compact basic onClick={()=> setFretNumber(fretNumber + 1)} > <Icon name ='right arrow'/></Button>
         </Button.Group>
-        <Button onClick={() => console.log(state)}>State?</Button>
         <div id='divGuitar'></div>
+        </div>
+        <div>
+        <Button.Group>
+            <Button compact basic onClick={()=> handleStringChange('down')}> <Icon name ='left arrow'/></Button>
+            <Segment>
+            Strings: {stringNumber}
+            </Segment>
+            <Button compact basic onClick={()=> handleStringChange('up')}> <Icon name ='right arrow'/></Button>
+        </Button.Group>
+        <Dropdown
+        search
+        selection
+        options={instrumentOptions}
+        defaultValue='Guitar'
+        />
+        <Dropdown
+        placeholder='EADGBE'
+        search
+        selection
+        onChange={onChangeTuning}
+        options={tuningOptions}
+        defaultValue='EADGBE'
+        />
+        <Button.Group>
+            <Button compact basic onClick={()=> setFretNumber(fretNumber - 1)}> <Icon name ='left arrow'/></Button>
+            <Segment>
+            Frets: {fretNumber}
+            </Segment>
+            <Button compact basic onClick={()=> setFretNumber(fretNumber + 1)} > <Icon name ='right arrow'/></Button>
+        </Button.Group>
+        <div id='divGuitar2'></div>
+        </div>
+        
         
         
         <Button compact basic onClick={function(){clearInterval(myInterval); running = false}}><Icon name='stop'/></Button>
-        <Button compact basic onClick={function(){if (running !== true){myInterval = setInterval(playNotes, globalInt); running = true}}}><Icon name='play'/></Button>
+        {/* <Button compact basic onClick={function(){if (running !== true){myInterval = setInterval(playNotes, globalInt); running = true}}}><Icon name='play'/></Button> */}
+        {/* <button onClick={() => Tone.start()}>Initialize</button>
+        <button onClick={() => (Tone.Transport.start())}>start </button> */}
+        <Button compact basic onClick={() => playNoteSequence(JSON.parse(state))}><Icon name='play'/></Button>
+        {/* <Button compact basic onClick={() => playNoteSequence(testSequence)}><Icon name='play'/></Button> */}
         {/* <button onClick={() => console.log(positionNamer(chordData[playPosition -1]), chordData[playPosition -1])}>See positions</button> */}
         {/* <button onClick={()=>invisAll()}>invis All</button> */}
         <Button compact basic onClick={() => globalPosition = -1}><Icon name='arrows alternate vertical'/></Button>
-        <Button compact basic onClick={()=>playNotes()}><Icon name='step forward'/></Button>
+        <Button compact basic onClick={()=>playNotes()}><Icon name='step backward'/></Button>
         <Button compact basic onClick={() => globalPosition--}><Icon name='arrow down'/></Button>
         <Button compact basic onClick={() => globalPosition++}><Icon name='arrow up'/></Button>
-        <Button compact basic onClick={()=>playNotes()}><Icon name='step backward'/></Button>
+        <Button compact basic onClick={()=>playNotes()}><Icon name='step forward'/></Button>
         <Button compact basic ><Icon name='fast backward'/></Button>
         <Button compact basic ><Icon name='fast forward'/></Button>
         <Button compact basic ><Icon name='retweet'/></Button>
+        <Button compact basic onClick={()=>invisAll()} ><Icon name='eye'/></Button>
+        <Button compact basic onClick={() => console.log(scaleData, 'scaleData',state, 'stateData')} >Test</Button>
+        {/* <button onClick={() => console.log(sequenceIntoNotesAndPositions(testSequence))}>Test!</button>
+        <button onClick={() => playNoteSequence(testSequence)}>Test Sequence</button>
+        <button onClick={() => playNoteSequence(testSequence2)}>Test Sequence 2: Chords</button> */}
         {/* <button>Add Strings</button>
         <button>Change Tuning</button>
         <button onClick={()=> invisById()}>On/Off Sound</button>

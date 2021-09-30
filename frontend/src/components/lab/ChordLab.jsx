@@ -1,7 +1,7 @@
 import {React, useState} from 'react'
 import * as Tone from 'tone';
 import {Scale, Chord, Note} from '@tonaljs/tonal';
-import { Icon } from 'semantic-ui-react';
+import { Icon, Menu, Dropdown, Button } from 'semantic-ui-react';
 
 export default function ChordLab() {
     const [chords, setChords] = useState([['C3', 'E3', 'G3']])
@@ -335,30 +335,54 @@ export default function ChordLab() {
     }
 
     
+    //---Generate Options:
+    //---*Stack Selection
+    //---*Generate From Scale (Modal Popup)
+    //---*Generate From Pattern (Modal Popup)
 
+    //---Export Options:
+    //---*Map Chords to Player
+    //------All
+    //------Choose
+    //---*Export Chords to Palette
+    //---*Export Chords as Chord Groups
+    //---*Choose chords to Export
+    //---*Export Locally or Globally
+    //----Options
+    //----*Show Controls
+    //----*Show Controls
+    //----*Show Controls
+    //----Map
+    //----MAKE DRAG AND DROPPING MOVING DEFAULT!!!
 
     return (
         <>
-        <div>
-            <h1>Chord Lab</h1>
-        </div>        
+        <Menu>
+         <Menu.Item> Play </Menu.Item>   
+         <Menu.Item onClick={()=> generateChordStack(2,3)}> Generate </Menu.Item>   
+         <Menu.Item> Edit </Menu.Item>   
+         <Menu.Item> Options </Menu.Item>   
+         <Menu.Item> Map </Menu.Item>   
+         <Menu.Item> Export </Menu.Item>   
+        </Menu>
+        <Button.Group>
+            <Button basic onClick={() => setNoteOptions('octave')}>Octave</Button>
+            <Button basic onClick={() => setNoteOptions('scaler')}>Scale</Button>
+            <Button basic onClick={() => setNoteOptions('chromatic')}>Chromatic</Button>
+            <Button basic onClick={() => setNoteOptions('insert')}>Insert</Button>
+            <Button basic onClick={() => setNoteOptions('delete')}>Delete</Button>
+        </Button.Group>
         <div>
             <h3>Current Chord</h3>
-        </div> 
-        <div>
-            <h3>Chord Pool</h3>
         </div> 
         <div style={{display: 'flex', flexDirection: 'row'}}>
             {mapChords()}
         </div>
         <div>
-            Dem Chords be Crazy
-        </div>
-        <div>
             <h3>Export</h3>
             <div draggable='true' style={{height: '25px', width: '125px', backgroundColor: 'wheat'}}>C Maj</div>
         </div>
-        <button onClick={()=> organizeChords()}>Organize Chords</button>
+        {/* <button onClick={()=> organizeChords()}>Organize Chords</button>
         <button onClick={()=> playChords(chords)}>Play</button>
         <button onClick={()=> console.log(Chord.detect(['D', 'F', 'A']))}>Detect 'em</button>
         <button onClick={()=> generateChordStack(2,3)}>Generate Chord Stack</button>
@@ -384,7 +408,7 @@ export default function ChordLab() {
             <button>Map Chords to Progression</button>
             <button>Save Chords as Chord Bundle</button>
             <button>Save Chord as Chord Module</button>
-        </div>
+        </div> */}
         </>
     ) 
 }

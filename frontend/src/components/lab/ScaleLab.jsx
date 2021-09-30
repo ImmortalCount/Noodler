@@ -1,18 +1,28 @@
 import {React, useState, useEffect} from 'react'
-import { Form, Checkbox , Icon, Dropdown, Menu} from 'semantic-ui-react'
-import {Scale, ScaleType} from '@tonaljs/tonal';
+import { Form, Checkbox , Icon, Dropdown, Menu, Button} from 'semantic-ui-react'
+import {Scale, ScaleType, Note} from '@tonaljs/tonal';
 import * as Tone from 'tone';
+import { useDispatch } from 'react-redux';
+import { actionCreators } from '../../store';
+import { bindActionCreators } from 'redux';
 
 import '../../../public/Do_Mayor_armadura.svg'
 
 export default function ScaleLab() {
-    var [scaleDataBinary, setscaleDataBinary] = useState([0,0,0,0,0,0,0,0,0,0,0,0])
-    var [scaleName, setScaleName] = useState('');
-    var [graphicNotes, setGraphicNotes] = useState(['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B'])
-    var [notes, setNotes] = useState([]);
-    var [scaleNumber, setScaleNumber] = useState(0);
+    var [scaleDataBinary, setScaleDataBinary] = useState([1,0,1,0,1,1,0,1,0,1,0,1])
+    var [scaleName, setScaleName] = useState('major');
+    var [notes, setNotes] = useState(["C", "D", "E", "F", "G", "A", "B"]);
+    var [scaleNumber, setScaleNumber] = useState(2773);
+    var [display, setDisplay] = useState('off')
+    var [options, setOptions] = useState('sharps')
     const [rootNote, setRootNote] = useState('C')
 
+    const dispatch = useDispatch();
+
+    const {sendScaleData, receiveScaleData} = bindActionCreators(actionCreators, dispatch);
+
+
+function createScaleSVG(){
     var svg = document.createElementNS("http://www.w3.org/2000/svg", 'svg');
     svg.setAttribute("height", 300);
     svg.setAttribute("width", 300);
@@ -41,6 +51,7 @@ export default function ScaleLab() {
         mainCircle.setAttribute("stroke-width", '2');
         svg.appendChild(mainCircle)
     //inner Circles
+    var noteCount = 0;
     for (var i = 0; i < amountCircles; i++){
         var fill;
         if (scaleDataBinary[i] === 1){ 
@@ -62,16 +73,30 @@ export default function ScaleLab() {
         noteName.setAttribute('fill', 'white');
         noteName.setAttribute('dominant-baseline', 'middle');
         noteName.setAttribute('font-size', '15px');
-        noteName.textContent = graphicNotes[i];
+        if (fill === 'black'){
+          noteName.textContent = notes[noteCount];
+          noteCount++
+        }
         svg.appendChild(circle);
         svg.appendChild(noteName);
         angle += angleIncrement
 
     }
-    var newNotes;
+    //check if its there
+    const scaleDiv = document.getElementById('divScaleInteractive');
+    if (scaleDiv.firstChild){
+        while (scaleDiv.firstChild){
+            scaleDiv.removeChild(scaleDiv.firstChild)
+        }
+    }
+    //Add to div
+    scaleDiv.appendChild(svg);
+  }
+
     useEffect (()=>{
-      document.getElementById("divScaleInteractive").appendChild(svg)
-  }, [graphicNotes]);
+      createScaleSVG()
+      sendScaleData(notes)
+  }, [notes]);
 
     function generateRandomScale(noteNumber){
         var returnArr = [1,0,0,0,0,0,0,0,0,0,0,0];
@@ -91,19 +116,15 @@ export default function ScaleLab() {
                 returnScale.push(rootChromaticScale[j]);
             }
         }
-        synth.dispose();
         var digit = parseInt(returnArr.join(""), 2)
-        document.getElementById("divScaleInteractive").removeChild(svg);
-        console.log(returnArr.join("").name, 'returnArr')
-        if (Scale.get(returnArr.join("").name === undefined)){
-        setScaleName(digit)
-        } else {
-        setScaleName(Scale.get(returnArr.join("").name));
-        }
+        if (Scale.get(returnArr.join("")).name === ''){
+          setScaleName(digit);
+          } else {
+          setScaleName(Scale.get(returnArr.join("")).name);
+          }
         setScaleNumber(digit)
-        setscaleDataBinary(returnArr);
-        setGraphicNotes(rootChromaticScale);
-        setNotes(returnScale);
+        setScaleDataBinary(returnArr);
+        setNotes(scaleHandler(returnScale, options));
         
     }
 
@@ -125,13 +146,10 @@ export default function ScaleLab() {
                 returnScale.push(rootChromaticScale[j]);
             }
         }
-        synth.dispose();
-        document.getElementById("divScaleInteractive").removeChild(svg);
         setScaleName(allNamed[randIndex]['name']);
         setScaleNumber(allNamed[randIndex]['setNum'])
-        setscaleDataBinary(chromaReturn);
-        setGraphicNotes(rootChromaticScale);
-        setNotes(returnScale);
+        setScaleDataBinary(chromaReturn);
+        setNotes(scaleHandler(returnScale, options));
     }
 
     function changeBinary(index, status){
@@ -151,19 +169,15 @@ export default function ScaleLab() {
             }
         }
 
-        synth.dispose();
         var digit = parseInt(clone.join(""), 2)
-        console.log(Scale.get(clone.join("")).name);
         if (Scale.get(clone.join("")).name === ''){
           setScaleName(digit);
           } else {
           setScaleName(Scale.get(clone.join("")).name);
           }
-        document.getElementById("divScaleInteractive").removeChild(svg);
         setScaleNumber(digit)
-        setscaleDataBinary(clone);
-        setGraphicNotes(rootChromaticScale);
-        setNotes(returnScale);
+        setScaleDataBinary(clone);
+        setNotes(scaleHandler(returnScale, options));
     }
 
     function generateAllModes(binaryNoteArr){
@@ -181,7 +195,7 @@ export default function ScaleLab() {
             return modes;
         }
 
-    function toggleModes(direction){
+    function toggleModes(direction, notes){
     var newRoot;
     var allModes = generateAllModes(scaleDataBinary);
     var rootChromaticScale = Scale.get(rootNote + ' chromatic').notes
@@ -192,13 +206,13 @@ export default function ScaleLab() {
     }
     var newBinary = [];
     var returnScale = [];
-    var currentNotes = [];
+    var currentNotes = notes;
 
-    for (var i = 0; i < allModes[0].length; i++){
-      if (allModes[0][i] === 1){
-          currentNotes.push(rootChromaticScale[i]);
-      }
-  }
+  //   for (var i = 0; i < allModes[0].length; i++){
+  //     if (allModes[0][i] === 1){
+  //         currentNotes.push(rootChromaticScale[i]);
+  //     }
+  // }
 
     if (direction === 'next'){
         newBinary = allModes[1]
@@ -219,22 +233,21 @@ export default function ScaleLab() {
     }
 
 
-    synth.dispose();
     var digit = parseInt(newBinary.join(""), 2)
-        document.getElementById("divScaleInteractive").removeChild(svg);
         if (Scale.get(newBinary.join("")).name === ''){
           setScaleName(digit)
           } else {
           setScaleName(Scale.get(newBinary.join("")).name);
           }
         setScaleNumber(digit)
-        setscaleDataBinary(newBinary);
-        setGraphicNotes(newRootChromaticScale);
+        setScaleDataBinary(newBinary);
         setRootNote(newRoot);
-        setNotes(returnScale);
+        setNotes(scaleHandler(returnScale, options));
     }
 
     //---Play notes:
+    function playNoteSequence(){
+    Tone.Transport.start();
     var synth = new Tone.Synth().toDestination()
     var position = 0;
 //---Synthpart function 
@@ -255,10 +268,11 @@ export default function ScaleLab() {
 
           },
          notes,
-          "4n"
+          "8n"
         );
         synthPart.start();
-    
+        synthPart.loop = 1;
+    }
       const dropdownOptions = [
         { key: 1, text: 'C', value: 'C'},
         { key: 2, text: 'C#', value: 'C#'},
@@ -272,6 +286,12 @@ export default function ScaleLab() {
         { key: 10, text: 'A', value: 'A'},
         { key: 11, text: 'A#', value: 'A#'},
         { key: 12, text: 'B', value: 'B'}
+      ]
+
+      const playDropdownOptions = [
+        { key: 'forward', text: 'forward', value: 'forward'},
+        { key: 'reverse', text: 'reverse', value: 'reverse'},
+        { key: 'random', text: 'random', value: 'random'},
       ]
 
       const dragStartHandler = e => {
@@ -289,11 +309,8 @@ export default function ScaleLab() {
               returnScale.push(newRootChromaticScale[j]);
           }
       }
-        synth.dispose();
-        document.getElementById("divScaleInteractive").removeChild(svg)
-        setNotes(returnScale)
+        setNotes(scaleHandler(returnScale, options))
         setRootNote(value);
-        setGraphicNotes(Scale.get(value + ' chromatic').notes)
       }
 
       function noteMapper(notes){
@@ -303,27 +320,78 @@ export default function ScaleLab() {
         }
         return returnArr.join('')
       }
+
+      function scaleHandler(scale, options){
+        //options = sharps, flats, situational, classical
+        var returnArr = []
+          if (options === 'classical'){
+            return scale
+          }
+          for (var i = 0; i < scale.length; i++){
+            returnArr.push(Note.simplify(scale[i]))
+          }
+          if (options === undefined || options === 'situational'){
+            return returnArr
+          }
+          if (options ==='flats'){
+            for (var j = 0; j < returnArr.length; j++){
+              if (returnArr[j].includes('#')){
+                returnArr[j] = Note.enharmonic(returnArr[j])
+              }
+            }
+            return returnArr;
+          }
+          if (options ==='sharps'){
+            for (var k = 0; k < returnArr.length; k++){
+              if (returnArr[k].includes('b')){
+                returnArr[k] = Note.enharmonic(returnArr[k])
+              }
+            }
+            return returnArr;
+          }
+      }
+
     return (
         <>
+        <Menu>
+        <Dropdown onChange={onChangeDropdown} options={dropdownOptions} text = {`Root: ${rootNote}`} simple item/>
+        <Button.Group>
+        <Button basic onClick={()=> playNoteSequence()}><Icon name='play'/></Button>
+        <Dropdown
+          simple
+          item
+          className='button icon'
+          options={playDropdownOptions}
+          trigger={<></>}
+        />
+      </Button.Group>
+      <Button.Group>
+        <Button basic onClick={() => generateRandomScale(7)}>Random</Button>
+        <Dropdown
+          simple
+          item
+          className='button icon'
+          options={playDropdownOptions}
+          trigger={<></>}
+        />
+      </Button.Group>
+      <Button.Group>
+      <Button basic onClick={() => toggleModes('previous', notes)}><Icon name='caret left'/></Button>
+      <Button basic > Mode </Button>
+      <Button basic onClick={() => toggleModes('next', notes)}><Icon name='caret right'/></Button>
+      </Button.Group>
+      <Menu.Item>Options: Display 'Sharps'</Menu.Item>
+      <Menu.Item>Display: {display}</Menu.Item>
+      <Menu.Item onClick={() => console.log(notes, 'notes')}>Export</Menu.Item>
+      </Menu>
         <div>
-            <h1>Scale Lab</h1>
+        <div draggable='true' onDragStart={dragStartHandler} style={{height: '25px', width: '200px', backgroundColor:'wheat'}}>{rootNote} {scaleName}</div>
+        <p># {scaleNumber} </p>
+        <p>{noteMapper(notes)}</p>
         </div>
-        <Menu compact>
-          <Dropdown onChange={onChangeDropdown} options={dropdownOptions} text = {`Root: ${rootNote}`} simple item/>
-        </Menu>
         <div id="divScaleInteractive"></div>
-        <div>
-        <div>Slider for Amount of notes</div>
-        <h3>Scale: {rootNote} {scaleName}</h3>
-        <h3>Scale # {scaleNumber} </h3>
-        <h3>Notes: {noteMapper(notes)}</h3>
-        <div>
-          <h3>Export:</h3>
-          <div draggable='true' onDragStart={dragStartHandler} style={{height: '25px', width: '200px', backgroundColor:'wheat'}}>{rootNote} {scaleName}</div>
-        </div>
-        </div>
         {/* <img src="Do_Mayor_armadura.svg" alt="" /> */}
-        <button onClick={() => generateRandomScale(7)} >Generate Random Scale: 7 Notes</button>
+        {/* <button onClick={() => generateRandomScale(7)} >Generate Random Scale: 7 Notes</button>
         <button onClick={() => generateRandomNamedScale()}>Generate Named Scale</button>
         <button onClick={() => toggleModes('previous')}> <Icon name='arrow left'></Icon>Mode</button>
         <button onClick={() => toggleModes('next')}> Mode <Icon name='arrow right'></Icon></button>
@@ -332,7 +400,7 @@ export default function ScaleLab() {
         <button>Root lock</button>
         <button>Play on Change</button>
         <button onClick={()=> Tone.Transport.start()}> Play</button>
-        <button onClick={()=> Tone.Transport.stop()}> Stop</button>
+        <button onClick={()=> Tone.Transport.stop()}> Stop</button> */}
         
         <div className='binaryRadioSelector' style={{display: 'flex', flexDirection: 'row'}}>
         <Form>

@@ -1,4 +1,4 @@
-const initialState = 'Initial Module Data';
+const initialState = [];
 
 const reducer = (
     state = initialState,
@@ -15,4 +15,3 @@ const reducer = (
 }
 
 export default reducer;
-

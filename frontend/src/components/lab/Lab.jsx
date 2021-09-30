@@ -1,5 +1,5 @@
 import React, {useRef, useState} from 'react'
-import { Accordion, Icon} from 'semantic-ui-react'
+import { Accordion, Icon, List} from 'semantic-ui-react'
 import ChordLab from './ChordLab'
 import PatternLab from './PatternLab'
 import RhythmLab from './RhythmLab'
@@ -20,7 +20,8 @@ export default function Lab() {
 
     return (
         <>
-        <Accordion>
+        <div style={{minWidth: '250px', margin: "2px"}}>
+        <Accordion fluid styled>
         <Accordion.Title
           active={activeIndices.includes(0)}
           index={0}
@@ -69,6 +70,7 @@ export default function Lab() {
           <RhythmLab/>
         </Accordion.Content>
       </Accordion>
+      </div>
         </>
     )
 }

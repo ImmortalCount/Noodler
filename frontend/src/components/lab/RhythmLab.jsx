@@ -1,11 +1,12 @@
 import {React, useState} from 'react'
 import * as Tone from 'tone';
+import { Menu } from 'semantic-ui-react';
 import './rhythmlab.css'
 
 export default function RhythmLab() {
     const synth = new Tone.Synth().toDestination(); 
 
-    var [notes, setNotes] = useState([['D3', 'F3', 'A3'], ['F4','X', 'E4', 'X'], ['E3', 'G3', 'B3'], ['E4','X', ['D4', 'C4', 'B3'], 'X']])
+    var [notes, setNotes] = useState([['C3', 'C3'], ['C3', 'C3'], ['C3', 'C3'], ['C3','C3']])
 //------Returns an array of objects in order of when they are going to be played, as well as their className by Level and their ID (idx)
 function nestedIndexer(notes){
     var counter = 0;
@@ -277,6 +278,7 @@ const timing = [];
 
     var position = 0;
 //---Synthpart function 
+function playSynth(){
         const synthPart = new Tone.Sequence(
           function(time, note) {
             var cueCards = cueCardGenerator(notes);
@@ -333,6 +335,8 @@ const timing = [];
           "4n"
         );
         synthPart.start();
+        synthPart.loop = 1;
+
 
         function playBend(){
             var startTime = synth.now();
@@ -351,6 +355,8 @@ const timing = [];
         synthPart.dispose();
         setNotes(randomRhythmGenerator())
     }
+}
+
 
     function mapNotesToRhythm(patternNotes){
         for (var i = 0; i < patternNotes.length; i++){
@@ -359,9 +365,15 @@ const timing = [];
     }
     return (
         <>
-        <div>
-           <h1>Rhythm Lab</h1> 
-        </div>
+        <Menu>
+         <Menu.Item onClick={() => playSynth()}> Play </Menu.Item>   
+         <Menu.Item onClick={()=> console.log('ello?')}> Generate </Menu.Item>   
+         <Menu.Item> Edit </Menu.Item>   
+         <Menu.Item> Options </Menu.Item>   
+         <Menu.Item> Scale Lock </Menu.Item>   
+         <Menu.Item> Map </Menu.Item>   
+         <Menu.Item> Export </Menu.Item>   
+        </Menu>
         <div>
             Notes:
         </div>
@@ -379,7 +391,7 @@ const timing = [];
            <h3>Change notes manually</h3>
        <input type="text" value ={JSON.stringify(notes).replace(/\"/g, " ")} style={{width:"500px"}}/>
        </div> */}
-        <button onClick={() => mapNotesToRhythm()}>map notes</button>
+        {/* <button onClick={() => mapNotesToRhythm()}>map notes</button>
         <button onClick={() => Tone.start()}>Initialize</button>
         <button onClick={() => Tone.Transport.start()}>start </button>
         <button onClick={() => Tone.Transport.pause()}>pause </button>
@@ -394,7 +406,7 @@ const timing = [];
         <button> insert</button>
         <button> replace</button>
         <button> swap</button>
-        <button onClick={()=> handleRandom()}> Random Riddim</button>
+        <button onClick={()=> handleRandom()}> Random</button> */}
         </>
     )
 }

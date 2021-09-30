@@ -16,3 +16,21 @@ export const receiveModuleData = (data) => {
     }
 }
 
+export const sendScaleData = (data) => {
+    return (dispatch) => {
+        dispatch({
+            type: "send",
+            payload: data
+        });
+    }
+}
+
+export const receiveScaleData = (data) => {
+    return (dispatch) => {
+        dispatch({
+            type: "receive",
+            payload: data
+        });
+    }
+}
+

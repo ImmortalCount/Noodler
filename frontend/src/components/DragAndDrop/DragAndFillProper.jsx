@@ -85,7 +85,7 @@ export default function DragAndFillProper() {
             position: []
         },
     ];
-var controls = useRef('replace')
+var controls = useRef('swap')
 var [cardData, setCardData] = useState(initialData);
 
     var cardDataPrototype = {
@@ -399,6 +399,7 @@ var [cardData, setCardData] = useState(initialData);
             <Button active ={activeButton === 'replace'} compact basic onClick ={() => handleControls('replace')}>Replace</Button>
             <Button active ={activeButton === 'fill'} compact basic onClick ={() =>handleControls('fill')}>Fill</Button>
             <Button active ={activeButton === 'reverseFill'} compact basic onClick ={() => handleControls('reverseFill')}>Reverse Fill</Button>
+            <Button active ={activeButton === 'reverseFill'} compact basic onClick ={() => handleControls('swap')}>Reorder</Button>
         </Button.Group>
         <Button.Group>
             <Button compact basic> <Icon name ='left arrow'/></Button>
@@ -411,7 +412,7 @@ var [cardData, setCardData] = useState(initialData);
         <Button compact basic onClick={() => (Tone.Transport.start())}><Icon name='play'/></Button>
         <Button compact basic > Edit</Button>
         <Button compact basic > Save</Button>
-        <Button compact basic onClick={() => sendModuleData(JSON.stringify(cardData))}>sendData</Button>
+        <Button compact basic onClick={() => sendModuleData(JSON.stringify(convertModuleDataIntoPlayableSequence(cardData)))}>sendData</Button>
         <div>Key: C</div>
         <div>Bpm: 120</div>
         {/* <Form.Input

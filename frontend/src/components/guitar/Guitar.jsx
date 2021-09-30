@@ -13,7 +13,6 @@ export default function Guitar() {
         <div>
             <GuitarSVG/>
         </div>
-        
         </>
     )
 }

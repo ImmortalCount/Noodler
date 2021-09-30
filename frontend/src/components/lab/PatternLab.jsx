@@ -3,6 +3,7 @@ import { React, useState} from 'react'
 import * as Tone from 'tone';
 import { toMidi, midiToNoteName } from '@tonaljs/midi';
 import { Note, Scale, Chord} from '@tonaljs/tonal';
+import { Menu, Button } from 'semantic-ui-react';
 
 
 export default function PatternLab() {
@@ -506,10 +507,18 @@ if (keyType === 'minor'){
 
 //for scale lab
 // console.log(Scale.get("101010010100").name, 'name');
+//Drag and Drop Default
 
     return (
         <>
-        <h1> Pattern Lab</h1>
+        <Menu>
+         <Menu.Item> Play </Menu.Item>   
+         <Menu.Item onClick={()=> console.log('ello?')}> Generate </Menu.Item>   
+         <Menu.Item> Edit </Menu.Item>   
+         <Menu.Item> Options </Menu.Item>   
+         <Menu.Item> Scale Lock </Menu.Item>   
+         <Menu.Item> Export </Menu.Item>   
+        </Menu>
         <div>Scale: C Major</div>
         <div id='display' style={{display: 'flex', flexDirection: 'row'}}>
             Melody: {mapNotes(notes)}
@@ -523,17 +532,17 @@ if (keyType === 'minor'){
             <div draggable='true' style={{height: '25px', width: '125px', backgroundColor: 'wheat'}}>Pattern 1</div>
         </div>
         {/* <button> Key Controls</button> */}
-        <button onClick={() => generateRandomMelody()}>Generate Random Melody</button>
+        {/* <button onClick={() => generateRandomMelody()}>Generate Random Melody</button> */}
         {/* <button>Length of Melody: 8</button> */}
-        <button onClick={() => playAll(notes)}> Play All </button>
+        {/* <button onClick={() => playAll(notes)}> Play All </button> */}
         {/* <button> Notes </button> */}
         {/* <button>Input: on</button> */}
-        <button onClick={handleNotesClick}> Notes display</button>
-        <button onClick={() => generateRandomScale(7)}>Generate Random Scale</button>
+        {/* <button onClick={handleNotesClick}> Notes display</button>
+        <button onClick={() => generateRandomScale(7)}>Generate Random Scale</button> */}
         {/* <button>Generate Random Rhythm</button> */}
         {/* <button>Rhythm duration</button> */}
         {/* <button>Generate Random Melodic Rhythm</button> */}
-        <button onClick={() => generateAllModes([1, 0, 0, 1, 0, 1, 1, 1, 0, 1, 1, 0])}>All modes</button>
+        {/* <button onClick={() => generateAllModes([1, 0, 0, 1, 0, 1, 1, 1, 0, 1, 1, 0])}>All modes</button>
         <button>Scale lock: off</button>
         <button> Next Mode </button>
         <button>Previous Mode</button>
@@ -549,7 +558,7 @@ if (keyType === 'minor'){
         <button onClick={() => changeOctaves(notes, 'down')}>Down an octave</button>
         <button onClick={() => patternExtraction(notes, scale)}>Pattern extraction</button>
         <button onClick={() => patternAndScaleToNotes(pattern, scale)}>Play extracted pattern</button>
-        <button onClick={() => clearNotes()}>Clear notes</button>  
+        <button onClick={() => clearNotes()}>Clear notes</button>   */}
         </>
     )
 }
