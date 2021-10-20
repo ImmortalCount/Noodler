@@ -32,6 +32,11 @@ export default function Midbar() {
             onClick={OnClickHandler}
             />
             <Menu.Item
+            name='mixer'
+            active={activeItem === 'mixer'}
+            onClick={OnClickHandler}
+            />
+            <Menu.Item
             name='player'
             active={activeItem === 'player'}
             onClick={OnClickHandler}

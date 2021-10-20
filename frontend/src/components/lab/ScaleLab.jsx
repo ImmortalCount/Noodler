@@ -95,7 +95,7 @@ function createScaleSVG(){
 
     useEffect (()=>{
       createScaleSVG()
-      sendScaleData(notes)
+      // sendScaleData(notes)
   }, [notes]);
 
     function generateRandomScale(noteNumber){

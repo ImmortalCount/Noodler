@@ -255,7 +255,7 @@ function shuffleNotes(notes){
 
 function patternExtraction(notes, scale, root){
     if (root === undefined){
-        root = 'C4'
+        root = scale[0] + 3
     }
     var chromaticScale = Scale.get('c chromatic').notes
     var allNotes = [];

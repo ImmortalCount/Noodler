@@ -1,5 +1,5 @@
 import React,{useState} from 'react'
-import DragAndFillProper from '../../components/DragAndDrop/DragAndFillProper'
+import Player from '../../components/DragAndDrop/Player'
 import MenuFinder from '../../components/finder/MenuFinder'
 import Results from '../../components/finder/Results'
 import Guitar from '../../components/guitar/Guitar'
@@ -10,7 +10,8 @@ import {Menu, Icon} from 'semantic-ui-react';
 import Finder from '../../components/finder/Finder'
 
 export default function MainPage() {
-    const [activeTabs, setActiveTabs] = useState(['guitar 1'])
+    const [activeTabs, setActiveTabs] = useState(['player','guitar 1'])
+    const [insruments, setInstruments] = useState(['guitar 1', 'guitar 2'])
 
     const onClickHandler = (e, titleProps) => {
         var temp = [...activeTabs]
@@ -23,6 +24,9 @@ export default function MainPage() {
     }
 
     const guitarAddHandler = (e, titleProps) => {
+        console.log('guitar added!')
+    }
+    const guitarSubtractHandler = (e, titleProps) => {
         console.log('guitar added!')
     }
     
@@ -55,6 +59,11 @@ function Midbar() {
                 onClick={onClickHandler}
                 />
                 <Menu.Item
+                name='mixer'
+                active={activeTabs.includes('mixer')}
+                onClick={onClickHandler}
+                />
+                <Menu.Item
                 name='player'
                 active={activeTabs.includes('player')}
                 onClick={onClickHandler}
@@ -66,12 +75,22 @@ function Midbar() {
                 onClick={onClickHandler}
                 />
                 <Menu.Item
+                name='guitar 2'
+                active={activeTabs.includes('guitar 1')}
+                onClick={onClickHandler}
+                />
+                <Menu.Item
                 name='add'
                 onClick={guitarAddHandler}
                 >
                 <Icon name='add'/>
                 </Menu.Item>
-                <Icon name='' />
+                <Menu.Item
+                name='subtract'
+                onClick={guitarSubtractHandler}
+                >
+                <Icon name='minus'/>
+                </Menu.Item>
                 </Menu.Menu>
     
             </Menu>
@@ -92,7 +111,7 @@ function Midbar() {
             {activeTabs.includes('palette') && <Palette/>}
             </div>
             <div className="bottomright"> 
-            {activeTabs.includes('player') && <DragAndFillProper/>}
+            {activeTabs.includes('player') && <Player/>}
             </div>
         </div>
         </>
