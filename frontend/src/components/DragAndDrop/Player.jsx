@@ -28,7 +28,7 @@ export default function Player() {
             },
             patternData: {
                 patternName: 'Pattern: Arp Run',
-                pattern: [0, [2, 4, 6], -8, [8, 10, 12], 10, 12, 14, 16],
+                pattern: [0, [2, 4, 6], -10, [8, 10, 12], 10, 12, 14, 16],
             },
             scaleData: {
                 scaleName: 'C Ionian',
@@ -877,6 +877,7 @@ var [cardData, setCardData] = useState(initialData);
         <Button compact basic >Global Key: C Major</Button>
         <Button compact basic >BPM: 150</Button>
         <Button compact basic >Scale: Adapt</Button>
+        <Button compact basic >MASTER</Button>
         <Button compact basic onClick={() => console.log(cardData)} >CardData?</Button>
         <div id='instrumentDisplay' style={{display:'flex', flexDirection:'row'}}>
         {instrumentDisplay === 0 &&    

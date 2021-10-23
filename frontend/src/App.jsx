@@ -11,12 +11,12 @@ import MainPage from "./pages/main/MainPage.jsx";
 function App() {
   return (
     <>
-    {/* <Guitar/> */}
+    <Guitar/>
     {/* <ScaleLab/>
     <ChordLab/>
     <PatternLab/>
     <RhythmLab/> */}
-    <MainPage/>
+    {/* <MainPage/> */}
     {/* <PlayerTest/> */}
     </>
     

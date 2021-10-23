@@ -102,7 +102,7 @@ const data4 = [
 ]
 
 function loadNoteSequenceOntoTimeline(data){
-    Tone.Transport.cancel();
+    // Tone.Transport.cancel();
     function setUpSequence(data, instrument){
         for (var i = 0; i < data.length; i++){
             new Tone.Sequence(
