@@ -1,369 +1,28 @@
 import React, { useState, useEffect, useRef} from 'react'
 import DragAndFillCard from './DragAndFillCard'
-import {Icon, Button, Segment, Form, Dropdown} from 'semantic-ui-react';
-import { Note, Scale, Chord, ChordType} from '@tonaljs/tonal';
-import { useSelector, useDispatch } from 'react-redux';
+import {Button, Dropdown, Menu} from 'semantic-ui-react';
+import { Note, Scale, Chord} from '@tonaljs/tonal';
+import { useDispatch } from 'react-redux';
 import { bindActionCreators } from 'redux';
 import { actionCreators } from '../../store/index.js';
-import * as Tone from 'tone';
+import { initialData, initialData4 } from './dummyData';
+import { cardDataPrototype } from './cardDataPrototype';
 // import * as Tone from 'tone';
 
-export default function Player() {
-    //Options to reimplement
-    //Add box
-    //Remove box
-    //Looping options
-    //Global key
-    //Global BPM
-    //Multiple players
-    const initialData = [
-        {
-            chordData: {
-                chordName: 'Cmaj',
-                chord: ['C3', 'E3', 'G3'],
-            },
-            rhythmData: {
-                rhythmName: 'Default: Str 8s',
-                rhythm: [['C3', 'C3'], ['C3', 'C3'], ['C3', 'C3'], ['C3', 'C3']],
-            },
-            patternData: {
-                patternName: 'Pattern: Arp Run',
-                pattern: [0, [2, 4, 6], -10, [8, 10, 12], 10, 12, 14, 16],
-            },
-            scaleData: {
-                scaleName: 'C Ionian',
-                scale: ['C', 'D', 'E', 'F', 'G', 'A', 'B'],
-            },
-            keyData: {
-                keyName: 'Key: C Major',
-                root: 'C',
-                type: 'Major',
-            },
-            countData: {
-                countName: '4',
-                count: 4,
-            },
-            output: [],
-            position: []
-        },
-        {
-            chordData: {
-                chordName: 'Dmin',
-                chord: ['D3', 'F3', 'A3'],
-            },
-            rhythmData: {
-                rhythmName: 'Hard Swing',
-                rhythm: [['C3', 'X', 'C3'], ['C3', 'X', 'C3'], ['C3', 'X', 'C3'], ['C3', 'X', 'C3']],
-            },
-            patternData: {
-                patternName: 'Pattern: normal variation',
-                pattern: [1, 4, 1, 8, 2, 12, 8, 7],
-            },
-            scaleData: {
-                scaleName: 'D Dorian',
-                scale: ['D', 'E', 'F', 'G', 'A', 'B', 'C']
-            },
-            keyData: {
-                keyName: 'Key: C Major',
-                root: 'C',
-                type: 'Major',
-            },
-            countData: {
-                countName: '4',
-                count: 4,
-            },
-            output: [],
-            position: []
-        },
-        {
-            chordData: {
-                chordName: 'Emin',
-                chord: ['E3', 'G3', 'B3'],
-            },
-            rhythmData: {
-                rhythmName: 'Whole, Half-Half, Triplet, Quarter-Stop-Quarter-Stop',
-                rhythm: [['C3'], ['C3', 'C3'], ['C3', 'C3', 'C3'], ['C3', 'X', 'C3', 'X']],
-            },
-            patternData: {
-                patternName: 'Pattern: scale run and return',
-                pattern: [5, 4, 12, 3, 1, 4, -1, 10],
-            },
-            scaleData: {
-                scaleName: 'E Phrygian',
-                scale: ['E', 'F', 'G', 'A', 'B', 'C', 'D']
-            },
-            keyData: {
-                keyName: 'Key: C Major',
-                root: 'C',
-                type: 'Major',
-            },
-            countData: {
-                countName: '5',
-                count: 5,
-            },
-            output: [],
-            position: []
-        },
-    ];
 
-    const initialData2 = [
-        {
-            chordData: {
-                chordName: 'Cmaj',
-                chord: ['C3', 'E3', 'G3'],
-            },
-            rhythmData: {
-                rhythmName: 'Default: Str 8s',
-                rhythm: [['C3', 'C3'], ['C3', 'C3'], ['C3', 'C3'], ['C3', 'C3']],
-            },
-            patternData: {
-                patternName: 'Pattern: Arp Run',
-                pattern: [0, [2, 4, 6], 4, [8, 10, 12], 10, 12, 14, 16],
-            },
-            scaleData: {
-                scaleName: 'C Ionian',
-                scale: ['C', 'D', 'E', 'F', 'G', 'A', 'B'],
-            },
-            keyData: {
-                keyName: 'Key: C Major',
-                root: 'C',
-                type: 'Major',
-            },
-            countData: {
-                countName: '4',
-                count: 4,
-            },
-            output: [],
-            position: [0,0,0,0,0,0,0,0]
-        },
-        {
-            chordData: {
-                chordName: 'Dmin',
-                chord: ['D3', 'F3', 'A3'],
-            },
-            rhythmData: {
-                rhythmName: 'Hard Swing',
-                rhythm: [['C3', 'X', 'C3'], ['C3', 'X', 'C3'], ['C3', 'X', 'C3'], ['C3', 'X', 'C3']],
-            },
-            patternData: {
-                patternName: 'Pattern: normal variation',
-                pattern: [1, 4, 1, 8, 2, 12, 8, 7],
-            },
-            scaleData: {
-                scaleName: 'D Dorian',
-                scale: ['D', 'E', 'F', 'G', 'A', 'B', 'C']
-            },
-            keyData: {
-                keyName: 'Key: C Major',
-                root: 'C',
-                type: 'Major',
-            },
-            countData: {
-                countName: '4',
-                count: 4,
-            },
-            output: [],
-            position: [0,0,0,0,0,0,0,0],
-        },
-        {
-            chordData: {
-                chordName: 'Emin',
-                chord: ['E3', 'G3', 'B3'],
-            },
-            rhythmData: {
-                rhythmName: 'Whole, Half-Half, Triplet, Quarter-Stop-Quarter-Stop',
-                rhythm: [['C3'], ['C3', 'C3'], ['C3', 'C3', 'C3'], ['C3', 'X', 'C3', 'X']],
-            },
-            patternData: {
-                patternName: 'Pattern: scale run and return',
-                pattern: [5, 4, 12, 3, 1, 4, -1, 10],
-            },
-            scaleData: {
-                scaleName: 'E Phrygian',
-                scale: ['E', 'F', 'G', 'A', 'B', 'C', 'D']
-            },
-            keyData: {
-                keyName: 'Key: C Major',
-                root: 'C',
-                type: 'Major',
-            },
-            countData: {
-                countName: '5',
-                count: 5,
-            },
-            output: [],
-            position: [0,0,0,0,0,0,0,0],
-        },
-    ];
-
-
-
-    const initialData3 = [
-        {name:'Guitar 1',
-        mode: 'melody',
-        displayOnly: true,
-        data: [{
-            chordData: {
-                chordName: 'Cmaj',
-                chord: ['C3', 'E3', 'G3'],
-            },
-            rhythmData: {
-                rhythmName: 'Default: Str 8s',
-                rhythm: [['C3', 'C3'], ['C3', 'C3'], ['C3', 'C3'], ['C3', 'C3']],
-            },
-            patternData: {
-                patternName: 'Pattern: Arp Run',
-                pattern: [0, [2, 4, 6], 4, [8, 10, 12], 10, 12, 14, 16],
-            },
-            scaleData: {
-                scaleName: 'C Ionian',
-                scale: ['C', 'D', 'E', 'F', 'G', 'A', 'B'],
-            },
-            output: [],
-            position: []
-        },
-        {
-            chordData: {
-                chordName: 'Dmin',
-                chord: ['D3', 'F3', 'A3'],
-            },
-            rhythmData: {
-                rhythmName: 'Hard Swing',
-                rhythm: [['C3', 'X', 'C3'], ['C3', 'X', 'C3'], ['C3', 'X', 'C3'], ['C3', 'X', 'C3']],
-            },
-            patternData: {
-                patternName: 'Pattern: normal variation',
-                pattern: [1, 4, 1, 8, 2, 12, 8, 7],
-            },
-            scaleData: {
-                scaleName: 'D Dorian',
-                scale: ['D', 'E', 'F', 'G', 'A', 'B', 'C']
-            },
-            output: [],
-            position: []
-        },
-        {
-            chordData: {
-                chordName: 'Emin',
-                chord: ['E3', 'G3', 'B3'],
-            },
-            rhythmData: {
-                rhythmName: 'Whole, Half-Half, Triplet, Quarter-Stop-Quarter-Stop',
-                rhythm: [['C3'], ['C3', 'C3'], ['C3', 'C3', 'C3'], ['C3', 'X', 'C3', 'X']],
-            },
-            patternData: {
-                patternName: 'Pattern: scale run and return',
-                pattern: [5, 4, 12, 3, 1, 4, -1, 10],
-            },
-            scaleData: {
-                scaleName: 'E Phrygian',
-                scale: ['E', 'F', 'G', 'A', 'B', 'C', 'D']
-            },
-            output: [],
-            position: []
-        },]},
-        {name:'Guitar 2',
-        mode: 'melody',
-        dispalyOnly: true,
-        data: [{
-            chordData: {
-                chordName: 'Cmaj',
-                chord: ['C3', 'E3', 'G3'],
-            },
-            rhythmData: {
-                rhythmName: 'Str 4s',
-                rhythm: [['C3'], ['C3'], ['C3'], ['C3']],
-            },
-            patternData: {
-                patternName: 'Full Chord:0,2,4',
-                pattern: [[0, 2, 4], [0, 2, 4], [0, 2, 4], [0, 2, 4]],
-            },
-            scaleData: {
-                scaleName: 'C Ionian',
-                scale: ['C', 'D', 'E', 'F', 'G', 'A', 'B'],
-            },
-            countData: {
-                countName: '4',
-                count: 4,
-            },
-            output: [],
-            position: []
-        },
-        {
-            chordData: {
-                chordName: 'Dmin',
-                chord: ['D3', 'F3', 'A3'],
-            },
-            rhythmData: {
-                rhythmName: 'Str 4s',
-                rhythm: [['C3'], ['C3'], ['C3'], ['C3']],
-            },
-            patternData: {
-                patternName: 'Full Chord:0,2,4',
-                pattern: [[0, 2, 4], [0, 2, 4], [0, 2, 4], [0, 2, 4]],
-            },
-            scaleData: {
-                scaleName: 'D Dorian',
-                scale: ['D', 'E', 'F', 'G', 'A', 'B', 'C']
-            },
-            countData: {
-                countName: '4',
-                count: 4,
-            },
-            output: [],
-            position: []
-        },
-        {
-            chordData: {
-                chordName: 'Emin',
-                chord: ['E3', 'G3', 'B3'],
-            },
-            rhythmData: {
-                rhythmName: 'Str 4s',
-                rhythm: [['C3'], ['C3'], ['C3'], ['C3']],
-            },
-            patternData: {
-                patternName: 'Full Chord:0,2,4',
-                pattern: [[0, 2, 4], [0, 2, 4], [0, 2, 4], [0, 2, 4]],
-            },
-            scaleData: {
-                scaleName: 'E Phrygian',
-                scale: ['E', 'F', 'G', 'A', 'B', 'C', 'D']
-            },
-            countData: {
-                countName: '5',
-                count: 5,
-            },
-            output: [],
-            position: []
-        },]},
-            
-        ];
-
-    const synth = new Tone.Synth().toDestination(); 
+export default function Player({masterInstrumentArray}) {
+    var [cardData, setCardData] = useState(initialData);
     const [sequence, setSequence] = useState(convertModuleDataIntoPlayableSequence(initialData))
-    const [melodyModeData, setMelodyModeData] = useState([]);
-    const [chordModeData, setChordModeData] = useState([]);
-    const [instrumentDisplay, setInstrumentDisplay] = useState(0);
-    const [instumentPlayer, setInstrumentPlayer] = useState()
-    const [mode, setMode] = useState("melody")
-    
-
-    const state = useSelector((state) => state.module);
-
+    const [instrumentFocus, setInstrumentFocus] = useState(0);
+    const [playerData, setPlayerData] = useState({mode: 'melody', data: initialData})
+    var controls = useRef('swap')
     const dispatch = useDispatch();
-
     const {sendModuleData, receiveModuleData} = bindActionCreators(actionCreators, dispatch);
 
-
     useEffect (()=>{
-        setMelodyModeData(cardData)
-        setSequence(cardData)
-        setChordModeData(convertMelodyModeDataIntoChordModeData(cardData))
-        sendModuleData(JSON.stringify(convertModuleDataIntoPlayableSequence(cardData))) 
+        sendModuleData(JSON.stringify(sequence)) 
     }, [cardData, sequence]);
 
-    
 function convertMelodyModeDataIntoChordModeData(dataObj){
     var clone = JSON.parse(JSON.stringify(dataObj))
     for (var i = 0; i < clone.length; i++){
@@ -450,31 +109,9 @@ function setRomanNumeralsByKey(chord, root){
     return returnValue + returnChord;
 }
 
-var controls = useRef('swap')
-var [cardData, setCardData] = useState(initialData);
 
-    var cardDataPrototype = {
-        chordData: {
-            chordName: 'None',
-            chord: []
-        },
-        rhythmData: {
-            rhythmName: 'None',
-            rhythm: []
-        },
-        patternData: {
-            patternName: 'None',
-            pattern: []
-        },
-        scaleData: {
-            scaleName: 'None',
-            scale: [],
-        },
-        output: [],
-        position: []
-    }
 
-    function notesAndScaleToPattern(notes, scale, root){
+function notesAndScaleToPattern(notes, scale, root){
         if (root === undefined){
             root = scale[0] + 3
         }
@@ -528,7 +165,7 @@ var [cardData, setCardData] = useState(initialData);
     }
 
     //generate notes from patternData using scaleData
-    function patternAndScaleToNotes(pattern, scale, root){
+function patternAndScaleToNotes(pattern, scale, root){
         var allNotes = [];
         var allChromaticNotes = [];
         var chromaticScale = Scale.get('c chromatic').notes
@@ -586,7 +223,7 @@ var [cardData, setCardData] = useState(initialData);
         return notesExport;
     }
 
-    function notesIntoRhythm(notes, rhythm){
+function notesIntoRhythm(notes, rhythm){
         var cloneRhythm = JSON.parse(JSON.stringify(rhythm))
         var cloneNotes = notes.slice();
         var count = 0;
@@ -611,7 +248,7 @@ var [cardData, setCardData] = useState(initialData);
         return cloneRhythm;
     }
 
-    function countExpansionOrContraction(rhythmicNotes, count){
+function countExpansionOrContraction(rhythmicNotes, count){
         if (count < 0){
             count = 0;
         }
@@ -627,40 +264,31 @@ var [cardData, setCardData] = useState(initialData);
         }
     }
 
-     //---Convert cardData into playable sequencer part
-    
-    //playable sequencer part
+
+
     function convertModuleDataIntoPlayableSequence(data){
-        
-        var returnSequence = [];
+        var returnObject = 
+        {displayOnly: false,
+        highlight: [],
+        data: []};
+
         for (var i = 0; i < data.length; i++){
+        var innerObject = {speed:'', notes:[]}
         var rhythm = data[i]['rhythmData']['rhythm'];
         var pattern = data[i]['patternData']['pattern']
         var scale = data[i]['scaleData']['scale']
-        
         var notes = patternAndScaleToNotes(pattern, scale)
-        
         var sequence = notesIntoRhythm(notes, rhythm)
-        returnSequence.push(sequence)
+        
+        innerObject['speed'] = '4n'
+        innerObject['notes'] = sequence
+        returnObject['data'].push(innerObject)
         }
         
-        return returnSequence;
+        return [returnObject];
     }
 
 
-    //---Synthpart function 
-        const synthPart = new Tone.Sequence(
-            function(time, note) {
-              if (note !== 'X'){
-                  synth.triggerAttackRelease(note, "10hz", time);
-              }
-            },
-           sequence,
-            "1n"
-          );
-        //   synthPart.start();
-        //   synthPart.loop = 1;
-    
             
 
     //----------
@@ -703,7 +331,6 @@ var [cardData, setCardData] = useState(initialData);
             } else {
                 cardData[endIndex][className] = cardData[startIndex][className]
             }
-            synthPart.cancel();
             setCardData(cardData)
             setSequence(convertModuleDataIntoPlayableSequence(cardData))
             setMappedCards((mapCards(cardData)))
@@ -720,7 +347,6 @@ var [cardData, setCardData] = useState(initialData);
                 cardData[endIndex][className] = cardData[startIndex][className];
                 cardData[startIndex][className]= placeholder;
             }
-            synthPart.cancel();
             setCardData(cardData)
             setSequence(convertModuleDataIntoPlayableSequence(cardData))
             setMappedCards((mapCards(cardData)))
@@ -736,7 +362,6 @@ var [cardData, setCardData] = useState(initialData);
                     cardData[j][className] = cardData[startIndex][className]
                 }
             }
-            synthPart.cancel();
             setCardData(cardData)
             setSequence(convertModuleDataIntoPlayableSequence(cardData))
             setMappedCards((mapCards(cardData)))
@@ -752,7 +377,6 @@ var [cardData, setCardData] = useState(initialData);
                     cardData[l][className] = cardData[startIndex][className]
                 }
             }
-            synthPart.cancel();
             setCardData(cardData)
             setSequence(convertModuleDataIntoPlayableSequence(cardData))
             setMappedCards((mapCards(cardData)))
@@ -772,7 +396,7 @@ var [cardData, setCardData] = useState(initialData);
     }
 
     const addBox = e => {
-        var clone = {...cardDataPrototype}
+        var clone = JSON.parse(JSON.stringify(cardDataPrototype))
         var spliceIndex = Number((e.currentTarget.id).split('_')[0]);
         cardData.splice(spliceIndex + 1, 0, clone);
         setMappedCards((mapCards(cardData)));
@@ -816,11 +440,9 @@ var [cardData, setCardData] = useState(initialData);
         setActiveButton(type);
     }
 
-    function handleChangeInstrumentDisplay(type){
-        setInstrumentDisplay(type)
-    }
 
     const modeOptions = [
+        {key: 'off', text: 'Mode: Off', value: 'off'},
         {key: 'melody', text: 'Mode: Melody', value: 'melody'},
         {key: 'chord', text: 'Mode: Chord', value: 'chord'},
         {key: 'scale', text: 'Mode: Display Scale', value: 'scale'},
@@ -828,21 +450,43 @@ var [cardData, setCardData] = useState(initialData);
     ]
 
     const handleChangeMode = (e, {value}) => {
-        setMode(value)
-        if (value === 'melody'){
-            setCardData(melodyModeData)
-            setSequence(convertModuleDataIntoPlayableSequence(melodyModeData))
-            setMappedCards((mapCards(melodyModeData)))
-        }
-        if (value === 'chord'){
-            setCardData(chordModeData)
-            setSequence(convertModuleDataIntoPlayableSequence(chordModeData))
-            setMappedCards((mapCards(chordModeData)))
-        }
+        // setMode(value)
+
+        // if (value === 'melody'){
+        //     setCardData(melodyModeData)
+        //     setSequence(convertModuleDataIntoPlayableSequence(melodyModeData))
+        //     setMappedCards((mapCards(melodyModeData)))
+        // }
+        // if (value === 'chord'){
+        //     setCardData(chordModeData)
+        //     setSequence(convertModuleDataIntoPlayableSequence(chordModeData))
+        //     setMappedCards((mapCards(chordModeData)))
+        // }
+        console.log(value)
 
     }
 
-    console.log(Tone.Transport.bpm.value)
+    function mapMenuItems(){
+        return (
+            masterInstrumentArray.map((instrument, idx) => 
+            <Button key={'instrumentSelect' + idx} active={instrumentFocus === idx} compact basic onClick ={() => setInstrumentFocus(idx)}>{instrument}</Button>
+            )
+        )
+}
+function handlePlayerUpdate(){
+    // var clone = [...instruments]
+    // var clonePrototype = JSON.parse(JSON.stringify(guitarPrototype))
+    // if (masterInstrumentArray.length === instruments.length){
+    //     return
+    // } else if (masterInstrumentArray.length > instruments.length){
+    //     clone.push(clonePrototype)
+    //     console.log(clonePrototype, '!?!?!?!?!?')
+    //     setInstruments(clone)
+    // } else if (masterInstrumentArray.length < instruments.length){
+    //     clone.pop()
+    //     setInstruments(clone)
+    // }
+}
     
     //Features
     //Recommended Scale: On Off (implement it first)
@@ -855,10 +499,18 @@ var [cardData, setCardData] = useState(initialData);
 
     return (
         <>
+        <Menu>
         <Button.Group>
-        <Button active ={instrumentDisplay === 0}compact basic onClick ={() => handleChangeInstrumentDisplay(0)}>Guitar 1</Button>
-            <Button active ={instrumentDisplay === 1} compact basic onClick ={() => handleChangeInstrumentDisplay(1)}>Guitar 2</Button>
+        {mapMenuItems()}
         </Button.Group>
+        <Dropdown
+        selection
+        onChange={handleChangeMode}
+        options={modeOptions}
+        defaultValue='melody'
+        />
+        </Menu>
+        
         <Button.Group>
             <Button active ={activeButton === 'swap'}compact basic onClick ={() => handleControls('swap')}>Swap</Button>
             <Button active ={activeButton === 'replace'} compact basic onClick ={() => handleControls('replace')}>Replace</Button>
@@ -866,44 +518,17 @@ var [cardData, setCardData] = useState(initialData);
             <Button active ={activeButton === 'reverseFill'} compact basic onClick ={() => handleControls('reverseFill')}>Reverse Fill</Button>
             <Button active ={activeButton === 'reOrder'} compact basic onClick ={() => handleControls('swap')}>Reorder</Button>
         </Button.Group>
-        <Button.Group>
-            <Button compact basic> <Icon name ='left arrow'/></Button>
-            <Segment>
-            Focus
-            </Segment>
-            <Button compact basic> <Icon name ='right arrow'/></Button>
-        </Button.Group>
-        <Button compact basic >Link: On</Button>
+        
+        {/* <Button compact basic >Link: On</Button>
         <Button compact basic >Global Key: C Major</Button>
         <Button compact basic >BPM: 150</Button>
         <Button compact basic >Scale: Adapt</Button>
-        <Button compact basic >MASTER</Button>
-        <Button compact basic onClick={() => console.log(cardData)} >CardData?</Button>
+        <Button compact basic >MASTER</Button> */}
+        {/* <Button compact basic onClick={() => console.log(cardData)} >CardData?</Button> */}
         <div id='instrumentDisplay' style={{display:'flex', flexDirection:'row'}}>
-        {instrumentDisplay === 0 &&    
-        <div id='cards1'>
-        <Dropdown
-        selection
-        onChange={handleChangeMode}
-        options={modeOptions}
-        defaultValue='melody'
-        />
         <div style={{display: 'flex', flexDirection: 'row'}}>
             {mappedCards}
         </div>
-        </div>}
-        {instrumentDisplay === 1 &&
-        <div id='cards2'>
-        <Dropdown
-        selection
-        onChange={handleChangeMode}
-        options={modeOptions}
-        defaultValue='melody'
-        />
-        <div style={{display: 'flex', flexDirection: 'row'}}>
-            {mappedCards}
-        </div>
-        </div> }
         </div>
         </>
     )

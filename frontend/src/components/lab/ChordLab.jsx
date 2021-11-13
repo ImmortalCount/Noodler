@@ -1,11 +1,12 @@
-import {React, useState} from 'react'
+import {Children, React, useState} from 'react'
 import * as Tone from 'tone';
 import {Scale, Chord, Note} from '@tonaljs/tonal';
-import { Icon, Menu, Dropdown, Button } from 'semantic-ui-react';
+import { Icon, Menu, Dropdown, Button, Input } from 'semantic-ui-react';
 
 export default function ChordLab() {
     const [chords, setChords] = useState([['C3', 'E3', 'G3']])
     const [noteOptions, setNoteOptions] = useState("octave")
+    const [generateChordOptions, setGenerateChordOptions] = useState({intervals: 3, number: 3, root: 'C3'})
     var allScaleNotes = [];
     var scaleNotes = Scale.get('c major').notes;
     var allChromaticNotes = [];
@@ -23,39 +24,76 @@ export default function ChordLab() {
         }
     }
 
-    function generateChordStack(interval, stackHeight, root){
+    function generateChordStack(){
         var chordStack = [];
-
-        if (interval === undefined){
-            interval = 2;
-        }
-        if (stackHeight === undefined){
-            stackHeight = 3;
-        }
-
-        if (root === undefined){
-            root = 'C3';
-        }
-
+            var interval = generateChordOptions['intervals'];
+            var stackHeight = generateChordOptions['number'];
+            var root = generateChordOptions['root'];
         var startingIndex = allScaleNotes.indexOf(root)
         for (var i = 0; i < scaleNotes.length; i++){
             var oneChord = [];
             for (var j = 0; j < stackHeight; j++){
-                oneChord.push(allScaleNotes[startingIndex + i + (j * interval)])
+                oneChord.push(allScaleNotes[startingIndex + i + (j * (interval - 1))])
             }
             chordStack.push(oneChord)
         }
         setChords(chordStack)
     }
 
+    var testSeq1 = ['C3', 'E3' ,'G3' ,'D4']
+    var testChords1 = [['C3', 'E3', 'G3', 'A3'], ['F3', 'A3', 'B3'], ['D3', 'F3', 'A3'], ['G3', 'B3', 'E3']]
+    //Might need this
+    function chordSequenceToNoteString(chords){
+        var returnArr = [];
+        for (var i = 0; i < chords.length; i++){
+            var thisChordString = ''
+            for (var j = 0; j < chords[i].length; j++){
+                if (j === chords[i].length - 1){
+                    thisChordString += chords[i][j]
+                } else {
+                    thisChordString += chords[i][j] + ' '
+                }
+            }
+            returnArr.push([thisChordString])
+        }
+        return returnArr;
+    }
+
+
+    function noteStringHandler(notes){
+        var returnArr = []
+        if (notes.indexOf(' ') === -1){
+            returnArr.push(notes)
+        } else {
+            returnArr = notes.split(' ')
+        }
+        return returnArr
+    }
+    //============
+
+    
+
     const synth = new Tone.PolySynth().toDestination();
 
-    function playChords(notes){
-        const now = Tone.now();
-        for (var i = 0; i < notes.length; i++){
-         synth.triggerAttackRelease(notes[i], '8n', now + (i * 0.5))
-    }
-}
+    function playChords(){
+        Tone.Transport.start();
+        const convertedChords = chordSequenceToNoteString(chords)
+        var count = 0;
+        const synthPart = new Tone.Sequence(
+            function(time, note) {
+              synth.triggerAttackRelease(noteStringHandler(note), "10hz", time)
+              var highlightedChord = document.getElementById('chord_' + count)
+                highlightedChord.className = 'active chord'
+                setTimeout(() => {highlightedChord.className = 'inactive chord'}, 500)
+                count++
+            },
+           convertedChords,
+            "4n"
+          );
+          synthPart.start();
+          synthPart.loop = 1;
+      }
+
 //fix this thing in the morning, should make fifths
     function organizeChords(interval){
         var cloneChords = [...chords];
@@ -177,7 +215,8 @@ export default function ChordLab() {
 
     var handleClickUpChord = (e) =>{
         var clone = [...chords]
-        var x = e.currentTarget.parentNode.parentNode.id;
+        var parentID = e.currentTarget.parentNode.parentNode.parentNode.id;
+        var x = parentID.split('_')[1]
 
         if (noteOptions === 'scaler'){
             for (var y = 0; y < chords[x].length; y++){
@@ -227,9 +266,12 @@ export default function ChordLab() {
         }
     }
 
+    ///TEST
+
     var handleClickDownChord = (e) =>{
         var clone = [...chords]
-        var x = e.currentTarget.parentNode.parentNode.id;
+        var parentID = e.currentTarget.parentNode.parentNode.parentNode.id;
+        var x = parentID.split('_')[1]
 
         if (noteOptions === 'scaler'){
             for (var y = 0; y < chords[x].length; y++){
@@ -290,15 +332,103 @@ export default function ChordLab() {
 
     const handleDeleteChord =(e) => {
         var clone = [...chords]
-        var x = e.currentTarget.parentNode.id;
+        var parentID = e.currentTarget.parentNode.parentNode.id;
+        var x = parentID.split('_')[1]
         clone.splice(x, 1)
         setChords(clone);
     }
 
     var handlePlayThis = (e) => {
-        var x = Number(e.currentTarget.parentNode.id);
+        var parentID = e.currentTarget.parentNode.parentNode.id;
+        var x = parentID.split('_')[1]
+        console.log(parentID)
         synth.triggerAttackRelease(chords[x], '8n');
+        var thisChord = document.getElementById(parentID)
+        thisChord.className = 'active chord'
+        setTimeout(() => {thisChord.className ='inactive chord'}, 250)
+        
     }
+
+    //==========
+    function changePositionsUsingIDs(startingID, endingID){
+    var xfer;
+    var clone = [...chords]
+    var ex1 = startingID.split('_')
+    var ex2 = endingID.split('_')
+    if(ex1 === undefined || ex2 === undefined){
+        return
+    } 
+    var startingPosition = ex1[1]
+    var endingPosition = ex2[1]
+
+    xfer = clone[startingPosition]
+    clone.splice(startingPosition, 1)
+    clone.splice(endingPosition, 0, xfer)
+    setChords(clone)
+    
+}
+
+    //=================================
+    function getAllParentElementsByID(id){
+        var a = document.getElementById(id)
+        var els = [];
+        while (a){
+            els.unshift(a);
+            a = a.parentNode
+        }
+        var classIDs = [];
+        for (var i = 0; i < els.length; i++){
+            if (els[i].id !== undefined && els[i].id.length !== 0 && els[i].id !== 'root'){
+                classIDs.push(els[i])
+            }
+        }
+        return classIDs;
+    }
+    //=======Drag and drop functionality
+
+    const dragStartHandler = e => {
+        var obj = {id: e.target.id, className: e.target.className, message: 'dragside', type: 'dragside'}
+        e.dataTransfer.setData('text', JSON.stringify(obj));
+        
+    };
+    
+    const dragHandler = e => {
+    };
+    
+    const dragOverHandler = e => {
+        e.currentTarget.className = 'active chord'
+        e.preventDefault();
+    };
+    
+    const dragLeaveHandler = e => {
+        e.currentTarget.className = 'inactive chord'
+        e.preventDefault();
+    }
+    
+    //---------------------
+    const dropHandler = e => {
+        e.currentTarget.className = 'inactive chord'
+        e.stopPropagation();
+        e.nativeEvent.stopImmediatePropagation();
+        e.preventDefault();
+        var data = JSON.parse(e.dataTransfer.getData("text"));
+        changePositionsUsingIDs(data.id, e.currentTarget.id)
+        e.dataTransfer.clearData();
+        
+    }
+
+    const clickHandler = e => {
+        var childNodes = e.target.childNodes
+        var returnArr = []
+        for (var i = 0; i < childNodes.length; i++){
+            returnArr.push(childNodes)
+        }
+        // console.log(returnArr, 'returnArr')
+        // console.log(e.target.id, 'e.target')
+        // console.log(e.currentTarget.id, 'e.currentTarget')
+    }
+
+    //==========================================
 
     function mapChords(){
         var returnArr = [];
@@ -318,8 +448,8 @@ export default function ChordLab() {
                 )
             }
             returnArr.push(
-                <div  draggable='true' style={{display: 'flex', flexDirection: 'column-reverse', margin: '5px'}}>
-                <div id={i} style={{display: 'flex', flexDirection: 'row'}}>
+                <div  id={'chord_' + i} onClick={clickHandler} draggable onDragStart = {dragStartHandler} onDrag = {dragHandler} onDragOver = {dragOverHandler} onDragLeave={dragLeaveHandler} onDrop = {dropHandler}className='inactive chord' style={{display: 'flex', flexDirection: 'column-reverse', margin: '5px'}}>
+                <div  style={{display: 'flex', flexDirection: 'row'}}>
                 <Icon onClick={handlePlayThis} name="play"/>
                 { (noteOptions !== 'delete') && <div style={{display: 'flex', flexDirection: (noteOptions === 'insert') ? 'row' : 'column'}}>
                 <Icon onClick={handleClickUpChord} name= {(noteOptions === 'insert') ? "caret square left" : "caret square up" }/><Icon onClick={handleClickDownChord}name= {(noteOptions === 'insert') ? "caret square right" : "caret square down" }/>
@@ -335,10 +465,12 @@ export default function ChordLab() {
     }
 
     
+    
     //---Generate Options:
     //---*Stack Selection
     //---*Generate From Scale (Modal Popup)
     //---*Generate From Pattern (Modal Popup)
+    //----Options Play on change
 
     //---Export Options:
     //---*Map Chords to Player
@@ -355,26 +487,93 @@ export default function ChordLab() {
     //----Map
     //----MAKE DRAG AND DROPPING MOVING DEFAULT!!!
 
+    const handleGenerateChordDropdownOptions = (e, {value}) => {
+        'generateChordIntervalRange'
+        'generateChordNoteNumber'
+        console.log(e.target.id, value)
+        var clone = JSON.parse(JSON.stringify(generateChordOptions))
+        var thisID = e.target.id;
+        if (thisID === 'generateChordIntervalRange'){
+            clone['intervals'] = value;
+        } else if (thisID === 'generateChordNoteNumber'){
+            clone['number'] = value;
+        }
+
+        setGenerateChordOptions(clone)
+
+    }
+
     return (
         <>
         <Menu>
-         <Menu.Item> Play </Menu.Item>   
+         <Menu.Item onClick={() => playChords()}> Play </Menu.Item>   
          <Menu.Item onClick={()=> generateChordStack(2,3)}> Generate </Menu.Item>   
+         <Dropdown
+          simple
+          item
+          className='button icon'
+        >
+         <Dropdown.Menu>
+             <Dropdown.Item> Character
+                <Dropdown.Menu>
+                <Dropdown.Item>
+                intervals:
+                <Input type='number' 
+                onKeyDown={(e) => {e.preventDefault();}}
+                onChange={handleGenerateChordDropdownOptions}
+                id='generateChordIntervalRange'
+                min='1'
+                max='12'
+                style={{cursor: 'none'}}
+                value={generateChordOptions['intervals']}
+                />
+                </Dropdown.Item>
+                <Dropdown.Item>
+                # of notes:
+                <Input type='number' 
+                onKeyDown={(e) => {e.preventDefault();}}
+                onChange={handleGenerateChordDropdownOptions}
+                id='generateChordNoteNumber'
+                min='1'
+                max='12'
+                style={{cursor: 'none'}}
+                value={generateChordOptions['number']}
+                />
+                </Dropdown.Item>
+                </Dropdown.Menu>
+             </Dropdown.Item>
+             <Dropdown.Item> Progression
+                <Dropdown.Menu>
+                <Dropdown.Item>ALL</Dropdown.Item>
+                <Dropdown.Item>I IV VII III VI II V</Dropdown.Item>
+                <Dropdown.Item>I V II VI II VII IV</Dropdown.Item>
+                <Dropdown.Item>II V I IV VII III VI</Dropdown.Item>
+                <Dropdown.Item>I IV VII III VI V II</Dropdown.Item>
+                <Dropdown.Item>I VI IV V</Dropdown.Item>
+                <Dropdown.Item>II V I </Dropdown.Item>
+                <Dropdown.Item>I IV V IV</Dropdown.Item>
+                <Dropdown.Item>VI IV I V</Dropdown.Item>
+                <Dropdown.Item>I IV II V</Dropdown.Item>
+                <Dropdown.Item>I IV I V</Dropdown.Item>
+                <Dropdown.Item>I II IV IV</Dropdown.Item>
+                <Dropdown.Item>I III IV IV</Dropdown.Item>
+                </Dropdown.Menu>
+             </Dropdown.Item>
+                
+              </Dropdown.Menu>
+          </Dropdown>
          <Menu.Item> Edit </Menu.Item>   
          <Menu.Item> Options </Menu.Item>   
          <Menu.Item> Map </Menu.Item>   
          <Menu.Item> Export </Menu.Item>   
         </Menu>
         <Button.Group>
-            <Button basic onClick={() => setNoteOptions('octave')}>Octave</Button>
-            <Button basic onClick={() => setNoteOptions('scaler')}>Scale</Button>
-            <Button basic onClick={() => setNoteOptions('chromatic')}>Chromatic</Button>
-            <Button basic onClick={() => setNoteOptions('insert')}>Insert</Button>
-            <Button basic onClick={() => setNoteOptions('delete')}>Delete</Button>
+            <Button basic active={noteOptions === 'octave'} onClick={() => setNoteOptions('octave')}>Octave</Button>
+            <Button basic active={noteOptions === 'scaler'} onClick={() => setNoteOptions('scaler')}>Scale</Button>
+            <Button basic active={noteOptions === 'chromatic'} onClick={() => setNoteOptions('chromatic')}>Chromatic</Button>
+            <Button basic active={noteOptions === 'insert'} onClick={() => setNoteOptions('insert')}>Insert</Button>
+            <Button basic active={noteOptions === 'delete'} onClick={() => setNoteOptions('delete')}>Delete</Button>
         </Button.Group>
-        <div>
-            <h3>Current Chord</h3>
-        </div> 
         <div style={{display: 'flex', flexDirection: 'row'}}>
             {mapChords()}
         </div>

@@ -1,5 +1,5 @@
-import React, {useRef, useState} from 'react'
-import { Accordion, Icon, List} from 'semantic-ui-react'
+import React, {useState} from 'react'
+import { Accordion, Icon} from 'semantic-ui-react'
 import ChordLab from './ChordLab'
 import PatternLab from './PatternLab'
 import RhythmLab from './RhythmLab'

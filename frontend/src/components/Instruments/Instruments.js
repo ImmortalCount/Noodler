@@ -710,6 +710,27 @@ var instrumentSamples = {
             },
             baseUrl: '/soundfiles/electric_bass_finger/'
             
+        },
+        "drumkit_jazz":{
+            urls:{
+                C4: 'mp3_jazz-kit_JK_BD_02.mp3',
+                Db4: 'mp3_jazz-kit_JK_BD_06.mp3',
+                D4: 'mp3_jazz-kit_JK_BRSH_01.mp3',
+                Eb4: 'mp3_jazz-kit_JK_BRSH_02.mp3',
+                E4: 'mp3_jazz-kit_JK_HH_01.mp3',
+                F4: 'mp3_jazz-kit_JK_HH_02.mp3',
+                Gb4: 'mp3_jazz-kit_JK_PRC_03.mp3',
+                G4: 'mp3_jazz-kit_JK_PRC_04.mp3',
+                Ab4: 'mp3_jazz-kit_JK_PRC_05.mp3',
+                A4: 'mp3_jazz-kit_JK_PRC_06.mp3',
+                Bb4: 'mp3_jazz-kit_JK_PRC_09.mp3',
+                B4: 'mp3_jazz-kit_JK_SNR_01.mp3',
+                C5: 'mp3_jazz-kit_JK_SNR_02.mp3',
+                Db5: 'mp3_jazz-kit_JK_SNR_03.mp3',
+                D5: 'mp3_jazz-kit_JK_SNR_04.mp3',
+                Eb5: 'mp3_jazz-kit_JK_SNR_07.mp3',
+        },
+            baseUrl: '/soundfiles/drumkit_jazz/'
         }
     }    
 

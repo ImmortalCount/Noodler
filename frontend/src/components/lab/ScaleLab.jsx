@@ -1,5 +1,5 @@
 import {React, useState, useEffect} from 'react'
-import { Form, Checkbox , Icon, Dropdown, Menu, Button} from 'semantic-ui-react'
+import { Form, Checkbox , Icon, Dropdown, Menu, Button, Message, Input} from 'semantic-ui-react'
 import {Scale, ScaleType, Note} from '@tonaljs/tonal';
 import * as Tone from 'tone';
 import { useDispatch } from 'react-redux';
@@ -13,8 +13,11 @@ export default function ScaleLab() {
     var [scaleName, setScaleName] = useState('major');
     var [notes, setNotes] = useState(["C", "D", "E", "F", "G", "A", "B"]);
     var [scaleNumber, setScaleNumber] = useState(2773);
+    var [randomRange, setRandomRange] = useState({only: 7, min: 7, max: 7})
     var [display, setDisplay] = useState('off')
     var [options, setOptions] = useState('sharps')
+    var [playOptions, setPlayOptions] = useState('forward')
+    var [randomOptions, setRandomOptions] = useState('all')
     const [rootNote, setRootNote] = useState('C')
 
     const dispatch = useDispatch();
@@ -66,6 +69,7 @@ function createScaleSVG(){
         circle.setAttribute("fill", fill);
         circle.setAttribute("stroke", 'black');
         circle.setAttribute("stroke-width", '2');
+        circle.setAttribute("id", 'scale_' + i)
         var noteName = document.createElementNS("http://www.w3.org/2000/svg", 'text');
         noteName.setAttribute('x', xCenter + (radius * Math.cos(angle)));
         noteName.setAttribute('y', yCenter + (radius * Math.sin(angle)));
@@ -80,7 +84,6 @@ function createScaleSVG(){
         svg.appendChild(circle);
         svg.appendChild(noteName);
         angle += angleIncrement
-
     }
     //check if its there
     const scaleDiv = document.getElementById('divScaleInteractive');
@@ -95,10 +98,48 @@ function createScaleSVG(){
 
     useEffect (()=>{
       createScaleSVG()
-      // sendScaleData(notes)
+      sendScaleData(notes)
   }, [notes]);
 
-    function generateRandomScale(noteNumber){
+  function getNotePositions(){
+    var acceptableNotes = [
+      'C',
+      'C#',
+      'D',
+      'D#',
+      'E',
+      'F',
+      'F#',
+      'G',
+      'G#',
+      'A',
+      'A#',
+      'B'
+    ]
+    var cleanNotes = []
+    for (var i = 0; i < notes.length; i++){
+      if (acceptableNotes.includes(notes[i]) === false){
+        cleanNotes.push(Note.enharmonic(notes[i]))
+      } else {
+        cleanNotes.push(notes[i])
+      }
+    }
+    const notePositionKeyPair = {}
+    var count = 0;
+    
+    for (var j = 0; j < scaleDataBinary.length; j++){
+      if (scaleDataBinary[j] === 1){
+        notePositionKeyPair[cleanNotes[count]] = 'scale_' + j;
+        count++
+      }
+    }
+    return notePositionKeyPair;
+  }
+    function generateRandomScale(){
+      var min = Number(randomRange['min'])
+      var max = Number(randomRange['max'])
+      var noteNumber = Math.floor(Math.random() * (max - min + 1) + min)
+      
         var returnArr = [1,0,0,0,0,0,0,0,0,0,0,0];
         var returnScale = [];
         var rootChromaticScale = Scale.get(rootNote + ' chromatic').notes
@@ -129,16 +170,31 @@ function createScaleSVG(){
     }
 
     function generateRandomNamedScale(){
-        var allNamed = ScaleType.all();
-        var randIndex = Math.floor(Math.random() * (ScaleType.all().length))
+      var min = Number(randomRange['min'])
+      var max = Number(randomRange['max'])
+      if (max < 5){
+        return;
+      } 
+      if (min < 5){
+        min = 5
+      }
+      var allNamed = ScaleType.all();
+      var noteNumber = Math.floor(Math.random() * (max - min + 1) + min)
+      var allScalesOfACertainLength = [];
+      for (var i = 0; i < allNamed.length; i++){
+        if (allNamed[i]['intervals'].length === noteNumber){
+          allScalesOfACertainLength.push(allNamed[i])
+        }
+      }
+      if (allScalesOfACertainLength.length === 0){
+        return;
+      } else {
+        var randIndex = Math.floor(Math.random() * (allScalesOfACertainLength.length))
         var rootChromaticScale = Scale.get(rootNote + ' chromatic').notes
-
-        var chromaReturn = allNamed[randIndex]['chroma'].split("")
-
+        var chromaReturn = allScalesOfACertainLength[randIndex]['chroma'].split("")
         for (var k = 0; k < chromaReturn.length; k++){
             chromaReturn[k] = Number(chromaReturn[k])
         }
-
         var returnScale = [];
 
         for (var j = 0; j < chromaReturn.length; j++){
@@ -146,10 +202,19 @@ function createScaleSVG(){
                 returnScale.push(rootChromaticScale[j]);
             }
         }
-        setScaleName(allNamed[randIndex]['name']);
-        setScaleNumber(allNamed[randIndex]['setNum'])
+        setScaleName(allScalesOfACertainLength[randIndex]['name']);
+        setScaleNumber(allScalesOfACertainLength[randIndex]['setNum'])
         setScaleDataBinary(chromaReturn);
         setNotes(scaleHandler(returnScale, options));
+      }
+    }
+
+    function handleRandomClick(){
+      if (randomOptions === 'all'){
+        generateRandomScale()
+      } else if (randomOptions === 'named'){
+        generateRandomNamedScale()
+      }
     }
 
     function changeBinary(index, status){
@@ -250,14 +315,87 @@ function createScaleSVG(){
     Tone.Transport.start();
     var synth = new Tone.Synth().toDestination()
     var position = 0;
+    function handleNotes(){
+    var returnValues = [];
+    var noteValues =
+    [
+    'C3', 
+    'C#3', 
+    'D3', 
+    'D#3', 
+    'E3', 
+    'F3', 
+    'F#3', 
+    'G3', 
+    'G#3', 
+    'A3', 
+    'A#3', 
+    'B3',
+    'C4', 
+    'C#4', 
+    'D4', 
+    'D#4', 
+    'E4', 
+    'F4', 
+    'F#4', 
+    'G4', 
+    'G#4', 
+    'A4', 
+    'A#4', 
+    'B4',
+  ]
+
+  var rootIndex;
+  if (noteValues.indexOf(notes[0] + 3) === -1){
+    rootIndex = noteValues.indexOf((Note.enharmonic(notes[0]) + 3))
+  } else {
+    rootIndex = noteValues.indexOf(notes[0] + 3)
+  }
+
+  for (var i = 0; i < 13; i++){
+    if (i === 12){
+      returnValues.push(noteValues[rootIndex + i])
+    } else {
+      if (scaleDataBinary[i] === 1){
+        returnValues.push(noteValues[rootIndex + i])
+      }
+    }
+  }
+
+  if (playOptions === 'forward'){
+    return returnValues;
+  }
+  if (playOptions === 'reverse'){
+    return returnValues.reverse();
+  }
+  if (playOptions === 'random'){
+    var returnArr = [];
+    const startArr = returnValues.shift();
+    const endArr = returnValues.pop();
+        var j = 1;
+        while (j < returnValues.length + 1){
+            var randomIndex = (Math.floor(Math.random() * returnValues.length));
+            if (returnArr.includes(returnValues[randomIndex]) === false){
+                returnArr.push(returnValues[randomIndex])
+                j += 1;
+            }
+        }
+    returnArr.unshift(startArr)
+    returnArr.push(endArr)
+    return returnArr
+  }
+
+    }
+    var notePositions = getNotePositions();
+    var newNotes = handleNotes();
 //---Synthpart function 
         const synthPart = new Tone.Sequence(
           function(time, note) {
-            synth.triggerAttackRelease(note + 3, "10hz", time)
-            Tone.Draw.schedule(() => {
-                //notes
-
-            }, time)
+            synth.triggerAttackRelease(note, "10hz", time)
+            var highlightedCircle = document.getElementById(notePositions[Note.pitchClass(note)])
+            highlightedCircle.setAttribute('r', 29)
+            setTimeout(() => {highlightedCircle.setAttribute('r', 23)}, 250)
+            console.log(notePositions, note)
             //position
             if (position < notes.length -1){
                 position += 1;
@@ -267,13 +405,13 @@ function createScaleSVG(){
             //memory
 
           },
-         notes,
+         newNotes,
           "8n"
         );
         synthPart.start();
         synthPart.loop = 1;
     }
-      const dropdownOptions = [
+      const dropdownOptionsSharp = [
         { key: 1, text: 'C', value: 'C'},
         { key: 2, text: 'C#', value: 'C#'},
         { key: 3, text: 'D', value: 'D'},
@@ -288,16 +426,49 @@ function createScaleSVG(){
         { key: 12, text: 'B', value: 'B'}
       ]
 
+      const dropdownOptionsFlat = [
+        { key: 1, text: 'C', value: 'C'},
+        { key: 2, text: 'Db', value: 'Db'},
+        { key: 3, text: 'D', value: 'D'},
+        { key: 4, text: 'Eb', value: 'Eb'},
+        { key: 5, text: 'E', value: 'E'},
+        { key: 6, text: 'F', value: 'F'},
+        { key: 7, text: 'Gb', value: 'Gb'},
+        { key: 8, text: 'G', value: 'G'},
+        { key: 9, text: 'Ab', value: 'Ab'},
+        { key: 10, text: 'A', value: 'A'},
+        { key: 11, text: 'Bb', value: 'Bb'},
+        { key: 12, text: 'B', value: 'B'}
+      ]
+
       const playDropdownOptions = [
         { key: 'forward', text: 'forward', value: 'forward'},
         { key: 'reverse', text: 'reverse', value: 'reverse'},
         { key: 'random', text: 'random', value: 'random'},
       ]
 
+      const randomTypeOptions = [
+        { key: 'normie', text: 'normie', value: 'normie'},
+        { key: 'named', text: 'named', value: 'named'},
+        { key: 'obscure', text: 'obscure', value: 'obscure'},
+        { key: 'true', text: 'true', value: 'true'},
+      ]
+
+      const randomDropdownOptions = [
+        { key: 'min', text: 'min', value: 'min'},
+        { key: 'max', text: 'max', value: 'max'},
+        { key: 'type', text: 'type', value: 'type'},
+      ]
+
+      const displayDropdownOptions = [
+        { key: 'Guitar 1', text: 'Guitar 1', value: 'Guitar 1'},
+        { key: 'Guitar 2', text: 'Guitar 2', value: 'Guitar 2'},
+        { key: 'Guitar 3', text: 'Guitar 3', value: 'Guitar 3'},
+      ]
+
       const dragStartHandler = e => {
         var obj = {id: 1, className: 'test', message: 'scaleLab side', type: 'foreign'}
         e.dataTransfer.setData('text', JSON.stringify(obj));
-        console.log('draggin on scale lab')
     };
 
       
@@ -313,6 +484,24 @@ function createScaleSVG(){
         setRootNote(value);
       }
 
+      const onChangeRandomRange = (e, {value}) => {
+      var thisID = e.target.id
+      var clone  = JSON.parse(JSON.stringify(randomRange))
+      if (thisID === 'randomRangeMax'){
+        clone['max'] = value
+      } else if (thisID === 'randomRangeMin'){
+        clone['min'] = value
+      } else if (thisID === 'randomRangeFull'){
+        clone['min'] = 1
+        clone['max'] = 12
+      } else if (thisID === 'randomRangeOnly'){
+        clone['min'] = value
+        clone['max'] = value
+        clone['only'] = value
+      }
+      setRandomRange(clone)
+      }
+
       function noteMapper(notes){
         var returnArr = []
         for (var i = 0; i < notes.length; i++){
@@ -320,7 +509,9 @@ function createScaleSVG(){
         }
         return returnArr.join('')
       }
-
+      const handlePlayDropdown = (e, {value}) => {
+        setPlayOptions(value)
+      }
       function scaleHandler(scale, options){
         //options = sharps, flats, situational, classical
         var returnArr = []
@@ -350,11 +541,30 @@ function createScaleSVG(){
             return returnArr;
           }
       }
+      function testScaleNotesHighlight(){
+        var circle = document.getElementById('scale_' + 5)
+        circle.setAttribute('r', 29);
+      }
+
+      
+
+      function handleSharpsOrFlats(){
+        if (options === 'sharps'){
+          setOptions('flats')
+          setNotes(scaleHandler(notes, 'flats'));
+          setRootNote(Note.enharmonic(rootNote))
+        } else if (options === 'flats'){
+          setOptions('sharps')
+          setNotes(scaleHandler(notes, 'sharps'));
+          setRootNote(Note.enharmonic(rootNote))
+        }
+      }
 
     return (
         <>
         <Menu>
-        <Dropdown onChange={onChangeDropdown} options={dropdownOptions} text = {`Root: ${rootNote}`} simple item/>
+        <Menu.Item onClick={() => handleSharpsOrFlats()}>{options === 'sharps' ? '#' : 'b'}</Menu.Item>
+        <Dropdown onChange={onChangeDropdown} options={options === 'sharps' ? dropdownOptionsSharp : dropdownOptionsFlat} text = {`Root: ${rootNote}`} simple item/>
         <Button.Group>
         <Button basic onClick={()=> playNoteSequence()}><Icon name='play'/></Button>
         <Dropdown
@@ -362,27 +572,88 @@ function createScaleSVG(){
           item
           className='button icon'
           options={playDropdownOptions}
+          onChange={handlePlayDropdown}
           trigger={<></>}
         />
       </Button.Group>
       <Button.Group>
-        <Button basic onClick={() => generateRandomScale(7)}>Random</Button>
+        <Button basic onClick={() => handleRandomClick()}>Random</Button>
         <Dropdown
           simple
           item
           className='button icon'
-          options={playDropdownOptions}
-          trigger={<></>}
-        />
+        >
+          <Dropdown.Menu>
+            <Dropdown.Item>range
+            <Dropdown.Menu>
+                <Dropdown.Item>
+                only:
+                <Input type='number' 
+                onKeyDown={(e) => {e.preventDefault();}}
+                onChange={onChangeRandomRange}
+                id='randomRangeOnly'
+                min='1'
+                max='12'
+                value={randomRange['only']}
+                style={{cursor: 'none'}}
+                />
+                </Dropdown.Item>
+                <Dropdown.Item>
+                min:
+                <Input type='number' 
+                onKeyDown={(e) => {e.preventDefault();}}
+                onChange={onChangeRandomRange}
+                id='randomRangeMin'
+                min='1'
+                max='12'
+                style={{cursor: 'none'}}
+                value={randomRange['min']}
+                />
+                </Dropdown.Item>
+                <Dropdown.Item>
+                max:
+                <Input type='number' 
+                onKeyDown={(e) => {e.preventDefault();}}
+                onChange={onChangeRandomRange}
+                id='randomRangeMax'
+                min='1'
+                max='12'
+                style={{cursor: 'none'}}
+                value={randomRange['max']}
+                />
+                </Dropdown.Item>
+                <Dropdown.Item
+                 id='randomRangeFull'
+                 onClick={onChangeRandomRange}>
+                full
+                </Dropdown.Item> 
+              </Dropdown.Menu>
+            </Dropdown.Item>
+            <Dropdown.Item>randomness
+              <Dropdown.Menu>
+                <Dropdown.Item active={randomOptions === 'named'} onClick={()=> setRandomOptions('named')}>named scales</Dropdown.Item>
+                <Dropdown.Item active={randomOptions === 'all'} onClick={()=> setRandomOptions('all')}>true random</Dropdown.Item>
+              </Dropdown.Menu>
+            </Dropdown.Item>
+          </Dropdown.Menu>
+          </Dropdown>
       </Button.Group>
       <Button.Group>
       <Button basic onClick={() => toggleModes('previous', notes)}><Icon name='caret left'/></Button>
       <Button basic > Mode </Button>
       <Button basic onClick={() => toggleModes('next', notes)}><Icon name='caret right'/></Button>
       </Button.Group>
-      <Menu.Item>Options: Display 'Sharps'</Menu.Item>
-      <Menu.Item>Display: {display}</Menu.Item>
+      <Menu.Item></Menu.Item>
+      <Dropdown
+          text = {'Display   '}
+          simple
+          item
+          className='button icon'
+          options={displayDropdownOptions}
+          onChange={handlePlayDropdown}
+        />
       <Menu.Item onClick={() => console.log(notes, 'notes')}>Export</Menu.Item>
+      <Menu.Item onClick={() => console.log(getNotePositions())}>Test</Menu.Item>
       </Menu>
         <div>
         <div draggable='true' onDragStart={dragStartHandler} style={{height: '25px', width: '200px', backgroundColor:'wheat'}}>{rootNote} {scaleName}</div>
@@ -401,7 +672,6 @@ function createScaleSVG(){
         <button>Play on Change</button>
         <button onClick={()=> Tone.Transport.start()}> Play</button>
         <button onClick={()=> Tone.Transport.stop()}> Stop</button> */}
-        
         <div className='binaryRadioSelector' style={{display: 'flex', flexDirection: 'row'}}>
         <Form>
         <Form.Field>
@@ -411,7 +681,7 @@ function createScaleSVG(){
           <Checkbox
             radio
             label=''
-            checked={scaleDataBinary[0] === 1 ? 'true' : ''}
+            checked={scaleDataBinary[0] === 1}
             name='binaryRadioSelector0'
             value='0'
             onClick={() => changeBinary(0, 'on')}
@@ -421,7 +691,7 @@ function createScaleSVG(){
           <Checkbox
             radio
             label=''
-            checked={scaleDataBinary[0] === 0 ? 'true' : ''}
+            checked={scaleDataBinary[0] === 0}
             name='binaryRadioSelector0'
             value='1'
             onClick={() => changeBinary(0, 'off')}
@@ -436,7 +706,7 @@ function createScaleSVG(){
           <Checkbox
             radio
             label=''
-            checked={scaleDataBinary[1] === 1 ? 'true' : ''}
+            checked={scaleDataBinary[1] === 1}
             name='binaryRadioSelector1'
             value='0'
             onClick={() => changeBinary(1, 'on')}
@@ -446,7 +716,7 @@ function createScaleSVG(){
           <Checkbox
             radio
             label=''
-            checked={scaleDataBinary[1] === 0 ? 'true' : ''}
+            checked={scaleDataBinary[1] === 0}
             name='binaryRadioSelector1'
             value='1'
             onClick={() => changeBinary(1, 'off')}
@@ -461,7 +731,7 @@ function createScaleSVG(){
           <Checkbox
             radio
             label=''
-            checked={scaleDataBinary[2] === 1 ? 'true' : ''}
+            checked={scaleDataBinary[2] === 1}
             name='binaryRadioSelector2'
             value='0'
             onClick={() => changeBinary(2, 'on')}
@@ -471,7 +741,7 @@ function createScaleSVG(){
           <Checkbox
             radio
             label=''
-            checked={scaleDataBinary[2] === 0 ? 'true' : ''}
+            checked={scaleDataBinary[2] === 0}
             name='binaryRadioSelector2'
             value='1'
             onClick={() => changeBinary(2, 'off')}
@@ -486,7 +756,7 @@ function createScaleSVG(){
           <Checkbox
             radio
             label=''
-            checked={scaleDataBinary[3] === 1 ? 'true' : ''}
+            checked={scaleDataBinary[3] === 1}
             name='binaryRadioSelector3'
             value='0'
             onClick={() => changeBinary(3, 'on')}
@@ -496,7 +766,7 @@ function createScaleSVG(){
           <Checkbox
             radio
             label=''
-            checked={scaleDataBinary[3] === 0 ? 'true' : ''}
+            checked={scaleDataBinary[3] === 0}
             name='binaryRadioSelector3'
             value='1'
             onClick={() => changeBinary(3, 'off')}
@@ -511,7 +781,7 @@ function createScaleSVG(){
           <Checkbox
             radio
             label=''
-            checked={scaleDataBinary[4] === 1 ? 'true' : ''}
+            checked={scaleDataBinary[4] === 1}
             name='binaryRadioSelector4'
             value='0'
             onClick={() => changeBinary(4, 'on')}
@@ -521,7 +791,7 @@ function createScaleSVG(){
           <Checkbox
             radio
             label=''
-            checked={scaleDataBinary[4] === 0 ? 'true' : ''}
+            checked={scaleDataBinary[4] === 0}
             name='binaryRadioSelector4'
             value='1'
             onClick={() => changeBinary(4, 'off')}
@@ -536,7 +806,7 @@ function createScaleSVG(){
           <Checkbox
             radio
             label=''
-            checked={scaleDataBinary[5] === 1 ? 'true' : ''}
+            checked={scaleDataBinary[5] === 1}
             name='binaryRadioSelector5'
             value='0'
             onClick={() => changeBinary(5, 'on')}
@@ -546,7 +816,7 @@ function createScaleSVG(){
           <Checkbox
             radio
             label=''
-            checked={scaleDataBinary[5] === 0 ? 'true' : ''}
+            checked={scaleDataBinary[5] === 0}
             name='binaryRadioSelector5'
             value='1'
             onClick={() => changeBinary(5, 'off')}
@@ -561,7 +831,7 @@ function createScaleSVG(){
           <Checkbox
             radio
             label=''
-            checked={scaleDataBinary[6] === 1 ? 'true' : ''}
+            checked={scaleDataBinary[6] === 1}
             name='binaryRadioSelector6'
             value='0'
             onClick={() => changeBinary(6, 'on')}
@@ -571,7 +841,7 @@ function createScaleSVG(){
           <Checkbox
             radio
             label=''
-            checked={scaleDataBinary[6] === 0 ? 'true' : ''}
+            checked={scaleDataBinary[6] === 0}
             name='binaryRadioSelector6'
             value='1'
             onClick={() => changeBinary(6, 'off')}
@@ -586,7 +856,7 @@ function createScaleSVG(){
           <Checkbox
             radio
             label=''
-            checked={scaleDataBinary[7] === 1 ? 'true' : ''}
+            checked={scaleDataBinary[7] === 1}
             name='binaryRadioSelector7'
             value='0'
             onClick={() => changeBinary(7, 'on')}
@@ -596,7 +866,7 @@ function createScaleSVG(){
           <Checkbox
             radio
             label=''
-            checked={scaleDataBinary[7] === 0 ? 'true' : ''}
+            checked={scaleDataBinary[7] === 0}
             name='binaryRadioSelector7'
             value='1'
             onClick={() => changeBinary(7, 'off')}
@@ -611,7 +881,7 @@ function createScaleSVG(){
           <Checkbox
             radio
             label=''
-            checked={scaleDataBinary[8] === 1 ? 'true' : ''}
+            checked={scaleDataBinary[8] === 1}
             name='binaryRadioSelector8'
             value='0'
             onClick={() => changeBinary(8, 'on')}
@@ -621,7 +891,7 @@ function createScaleSVG(){
           <Checkbox
             radio
             label=''
-            checked={scaleDataBinary[8] === 0 ? 'true' : ''}
+            checked={scaleDataBinary[8] === 0}
             name='binaryRadioSelector8'
             value='1'
             onClick={() => changeBinary(8, 'off')}
@@ -636,7 +906,7 @@ function createScaleSVG(){
           <Checkbox
             radio
             label=''
-            checked={scaleDataBinary[9] === 1 ? 'true' : ''}
+            checked={scaleDataBinary[9] === 1}
             name='binaryRadioSelector9'
             value='0'
             onClick={() => changeBinary(9, 'on')}
@@ -646,7 +916,7 @@ function createScaleSVG(){
           <Checkbox
             radio
             label=''
-            checked={scaleDataBinary[9] === 0 ? 'true' : ''}
+            checked={scaleDataBinary[9] === 0}
             name='binaryRadioSelector9'
             value='1'
             onClick={() => changeBinary(9, 'off')}
@@ -661,7 +931,7 @@ function createScaleSVG(){
           <Checkbox
             radio
             label=''
-            checked={scaleDataBinary[10] === 1 ? 'true' : ''}
+            checked={scaleDataBinary[10] === 1}
             name='binaryRadioSelector10'
             value='0'
             onClick={() => changeBinary(10, 'on')}
@@ -671,7 +941,7 @@ function createScaleSVG(){
           <Checkbox
             radio
             label=''
-            checked={scaleDataBinary[10] === 0 ? 'true' : ''}
+            checked={scaleDataBinary[10] === 0}
             name='binaryRadioSelector10'
             value='1'
             onClick={() => changeBinary(10, 'off')}
@@ -686,7 +956,7 @@ function createScaleSVG(){
           <Checkbox
             radio
             label=''
-            checked={scaleDataBinary[11] === 1 ? 'true' : ''}
+            checked={scaleDataBinary[11] === 1}
             name='binaryRadioSelector11'
             value='0'
             onClick={() => changeBinary(11, 'on')}
@@ -696,7 +966,7 @@ function createScaleSVG(){
           <Checkbox
             radio
             label=''
-            checked={scaleDataBinary[11] === 0 ? 'true' : ''}
+            checked={scaleDataBinary[11] === 0}
             name='binaryRadioSelector11'
             value='1'
             onClick={() => changeBinary(11, 'off')}

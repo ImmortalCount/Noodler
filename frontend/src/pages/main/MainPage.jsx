@@ -2,16 +2,16 @@ import React,{useState} from 'react'
 import Player from '../../components/DragAndDrop/Player'
 import MenuFinder from '../../components/finder/MenuFinder'
 import Results from '../../components/finder/Results'
-import Guitar from '../../components/guitar/Guitar'
 import Lab from '../../components/lab/Lab'
 import Navbar from '../../components/navbar/Navbar'
 import Palette from '../../components/palette/Palette'
 import {Menu, Icon} from 'semantic-ui-react';
-import Finder from '../../components/finder/Finder'
+import GuitarSVG from '../../components/guitar/GuitarSVG'
 
 export default function MainPage() {
-    const [activeTabs, setActiveTabs] = useState(['player','guitar 1'])
-    const [insruments, setInstruments] = useState(['guitar 1', 'guitar 2'])
+    const [activeTabs, setActiveTabs] = useState(['player'])
+    const [masterInstrumentArray, setMasterInstrumentArray] = useState(['instr 1'])
+    const [activelyDisplayedInstruments, setActivelyDisplayedInstruments] = useState([0, 1])
 
     const onClickHandler = (e, titleProps) => {
         var temp = [...activeTabs]
@@ -23,13 +23,30 @@ export default function MainPage() {
        setActiveTabs(temp)
     }
 
-    const guitarAddHandler = (e, titleProps) => {
-        console.log('guitar added!')
+    function guitarAddHandler(){
+        var clone = [...masterInstrumentArray]
+        clone.push('instr ' + (clone.length + 1))
+        setMasterInstrumentArray(clone)
     }
-    const guitarSubtractHandler = (e, titleProps) => {
-        console.log('guitar added!')
+
+    function guitarSubtractHandler(){
+        var clone = [...masterInstrumentArray]
+        clone.pop()
+        setMasterInstrumentArray(clone)
     }
-    
+    function mapMenuItems(){
+            return (
+                masterInstrumentArray.map((instrument, idx) => 
+                <Menu.Item
+                name={instrument}
+                active={activeTabs.includes(instrument)}
+                onClick={onClickHandler}
+                key={'mappedInstr' + idx}
+                />
+                )
+            )
+    }
+
 function Midbar() {
         return (
             <Menu>
@@ -37,6 +54,11 @@ function Midbar() {
                 name='options'
                 active={activeTabs.includes('options')}
                 onClick={onClickHandler}
+                />
+                <Menu.Item
+                name='test'
+                active
+                onClick={() => console.log(activeTabs)}
                 />
                 <Menu.Item
                 name='explorer'
@@ -48,11 +70,11 @@ function Midbar() {
                 active={activeTabs.includes('social')}
                 onClick={onClickHandler}
                 />
-                <Menu.Item
+                {/* <Menu.Item
                 name='lab'
                 active={activeTabs.includes('lab')}
                 onClick={onClickHandler}
-                />
+                /> */}
                 <Menu.Item
                 name='palette'
                 active={activeTabs.includes('palette')}
@@ -69,25 +91,16 @@ function Midbar() {
                 onClick={onClickHandler}
                 />
                 <Menu.Menu position='right'>
-                <Menu.Item
-                name='guitar 1'
-                active={activeTabs.includes('guitar 1')}
-                onClick={onClickHandler}
-                />
-                <Menu.Item
-                name='guitar 2'
-                active={activeTabs.includes('guitar 1')}
-                onClick={onClickHandler}
-                />
+                {mapMenuItems()}
                 <Menu.Item
                 name='add'
-                onClick={guitarAddHandler}
+                onClick={() => guitarAddHandler()}
                 >
                 <Icon name='add'/>
                 </Menu.Item>
                 <Menu.Item
                 name='subtract'
-                onClick={guitarSubtractHandler}
+                onClick={() => guitarSubtractHandler()}
                 >
                 <Icon name='minus'/>
                 </Menu.Item>
@@ -100,7 +113,12 @@ function Midbar() {
         <>
         <div>
             <Navbar/>
-            <div className="tophalf"> <Guitar/></div>
+            <div className="tophalf"> 
+            <GuitarSVG 
+            masterInstrumentArray = {masterInstrumentArray}
+            activelyDisplayedInstruments = {activelyDisplayedInstruments}
+            />
+            </div>
             <Midbar/>
         </div>
         <div className="bottomhalf" style={{display: 'flex', flexDirection: 'row', backgroundColor: 'white'}}>
@@ -111,7 +129,10 @@ function Midbar() {
             {activeTabs.includes('palette') && <Palette/>}
             </div>
             <div className="bottomright"> 
-            {activeTabs.includes('player') && <Player/>}
+            {activeTabs.includes('player') && 
+            <Player
+            masterInstrumentArray = {masterInstrumentArray}
+            />}
             </div>
         </div>
         </>
