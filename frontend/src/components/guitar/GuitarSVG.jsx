@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef} from 'react'
+import React, { useState, useEffect, useLayoutEffect, useRef} from 'react'
 import * as Tone from 'tone';
 import { allSynths } from './allSynths';
 import { useSelector } from 'react-redux';
@@ -7,7 +7,7 @@ import {moduleMarkerCreator, moduleMarkerCreatorCompact, loopLengthCreator, find
 import { shadeHexColor, showAll } from './guitarDisplayFunctions';
 import {noteValues, romanNumerals} from './guitarSVGConstants';
 import { guitarPrototype, bassPrototype } from './instrumentPrototypes';
-import { data1 } from './dummyData';
+import { data1, data2 } from './dummyData';
 import { Note } from '@tonaljs/tonal';
 
 
@@ -57,7 +57,10 @@ export default function GuitarSVG({masterInstrumentArray, activelyDisplayedInstr
         "acoustic_bass",
         "electric_bass_finger"
     ]
-
+    useEffect(() => {
+        handleInstrumentUpdate();
+    }, [masterInstrumentArray])
+    
     useEffect(() => {
         loadNoteSequenceAndVisualDataOntoTimeline(data)
     }, [data, instruments])
@@ -74,9 +77,7 @@ export default function GuitarSVG({masterInstrumentArray, activelyDisplayedInstr
     }, [instruments]);
     //====================================
     //=====Update instruments
-    useEffect(() => {
-        handleInstrumentUpdate();
-    }, [masterInstrumentArray])
+
 
 function findIndex(name){
         for (var z = 0; z < noteValues.length; z++){
@@ -601,6 +602,25 @@ function noteStringHandler(notes){
     }
     return returnArr
 }
+
+function handleInstrumentUpdate(){
+    var clone = [...instruments]
+    var cloneData =[...data]
+    var clonePrototype = JSON.parse(JSON.stringify(guitarPrototype))
+    if (masterInstrumentArray.length === instruments.length){
+        return
+    } else if (masterInstrumentArray.length > instruments.length){
+        clone.push(clonePrototype)
+        setInstruments(clone)
+    } else if (masterInstrumentArray.length < instruments.length){
+        clone.pop()
+        cloneData.pop()
+        console.log('is this thing on?!')
+        console.log(clone, 'KLON3')
+        setInstruments(clone)
+        setData(cloneData)
+    }
+}
 //======
 
 function loadNoteSequenceAndVisualDataOntoTimeline(data){
@@ -713,27 +733,13 @@ function loadNoteSequenceAndVisualDataOntoTimeline(data){
                 .loop = 1;
             }  
     }
-   
     for (var j = 0; j < data.length; j++){
         setUpSequence(data[j]['data'], allSynths[instruments[j]['instrument']], j, data[j]['displayOnly'])
     }
 }
 //----------------------------------
 
-function handleInstrumentUpdate(){
-    var clone = [...instruments]
-    var clonePrototype = JSON.parse(JSON.stringify(guitarPrototype))
-    if (masterInstrumentArray.length === instruments.length){
-        return
-    } else if (masterInstrumentArray.length > instruments.length){
-        clone.push(clonePrototype)
-        console.log(clonePrototype, '!?!?!?!?!?')
-        setInstruments(clone)
-    } else if (masterInstrumentArray.length < instruments.length){
-        clone.pop()
-        setInstruments(clone)
-    }
-}
+
 
 //========reload guitar on change? good
 
@@ -861,8 +867,7 @@ function addRemoveGuitars(action){
     if (action === 'add'){
         clone.push(guitarPrototype)
         setInstruments(clone)
-    }
-    if (action === 'remove'){
+    } else if (action === 'remove'){
         clone.pop()
         setInstruments(clone)
     }
@@ -937,7 +942,7 @@ function displayByPitchClass(notes, highlights, board){
     return (
         <>
         {mapGuitarSVGContainers(instruments)}
-        <Button compact basic onClick={() => console.log(instruments)}>test</Button>
+        <Button compact basic onClick={() => console.log(data)}>test</Button>
         <Button compact basic onClick={() => Tone.Transport.stop()}><Icon name='stop'/></Button>
         <Button compact basic onClick={() => Tone.Transport.pause()}><Icon name='pause'/></Button>
         <Button compact basic onClick={() => Tone.Transport.start()}><Icon name='play'/> </Button>

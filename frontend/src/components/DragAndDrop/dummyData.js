@@ -1,12 +1,12 @@
 export const initialData = [
     {
         chordData: {
-            chordName: 'Cmaj',
+            chordName: 'CM',
             chord: ['C3', 'E3', 'G3'],
         },
         rhythmData: {
             rhythmName: 'Default: Str 8s',
-            rhythm: [['C3', 'C3'], ['C3', 'C3'], ['C3', 'C3'], ['C3', 'C3']],
+            rhythm: [['O', 'O'], ['O', 'O'], ['O', 'O'], ['O', 'O']],
         },
         patternData: {
             patternName: 'Pattern: Arp Run',
@@ -17,9 +17,8 @@ export const initialData = [
             scale: ['C', 'D', 'E', 'F', 'G', 'A', 'B'],
         },
         keyData: {
-            keyName: 'Key: C Major',
-            root: 'C',
-            type: 'Major',
+            keyName: 'Key: C',
+            root: 'C'
         },
         countData: {
             countName: '4',
@@ -30,12 +29,12 @@ export const initialData = [
     },
     {
         chordData: {
-            chordName: 'Dmin',
+            chordName: 'Dm',
             chord: ['D3', 'F3', 'A3'],
         },
         rhythmData: {
             rhythmName: 'Hard Swing',
-            rhythm: [['C3', 'X', 'C3'], ['C3', 'X', 'C3'], ['C3', 'X', 'C3'], ['C3', 'X', 'C3']],
+            rhythm: [['O', 'X', 'O'], ['O', 'X', 'O'], ['O', 'X', 'O'], ['O', 'X', 'O']],
         },
         patternData: {
             patternName: 'Pattern: normal variation',
@@ -46,9 +45,8 @@ export const initialData = [
             scale: ['D', 'E', 'F', 'G', 'A', 'B', 'C']
         },
         keyData: {
-            keyName: 'Key: C Major',
-            root: 'C',
-            type: 'Major',
+            keyName: 'Key: C',
+            root: 'C'
         },
         countData: {
             countName: '4',
@@ -59,12 +57,12 @@ export const initialData = [
     },
     {
         chordData: {
-            chordName: 'Emin',
+            chordName: 'Em',
             chord: ['E3', 'G3', 'B3'],
         },
         rhythmData: {
             rhythmName: 'Whole, Half-Half, Triplet, Quarter-Stop-Quarter-Stop',
-            rhythm: [['C3'], ['C3', 'C3'], ['C3', 'C3', 'C3'], ['C3', 'X', 'C3', 'X']],
+            rhythm: [['O'], ['O', 'O'], ['O', 'O', 'O'], ['O', 'X', 'O', 'X']],
         },
         patternData: {
             patternName: 'Pattern: scale run and return',
@@ -75,13 +73,12 @@ export const initialData = [
             scale: ['E', 'F', 'G', 'A', 'B', 'C', 'D']
         },
         keyData: {
-            keyName: 'Key: C Major',
-            root: 'C',
-            type: 'Major',
+            keyName: 'Key: C',
+            root: 'C'
         },
         countData: {
-            countName: '5',
-            count: 5,
+            countName: '4',
+            count: 4,
         },
         output: [],
         position: []

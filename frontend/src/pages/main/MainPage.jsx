@@ -7,9 +7,10 @@ import Navbar from '../../components/navbar/Navbar'
 import Palette from '../../components/palette/Palette'
 import {Menu, Icon} from 'semantic-ui-react';
 import GuitarSVG from '../../components/guitar/GuitarSVG'
+import Explorer from '../../components/finder/Explorer'
 
 export default function MainPage() {
-    const [activeTabs, setActiveTabs] = useState(['player'])
+    const [activeTabs, setActiveTabs] = useState(['player', 'explorer' ])
     const [masterInstrumentArray, setMasterInstrumentArray] = useState(['instr 1'])
     const [activelyDisplayedInstruments, setActivelyDisplayedInstruments] = useState([0, 1])
 
@@ -30,9 +31,14 @@ export default function MainPage() {
     }
 
     function guitarSubtractHandler(){
-        var clone = [...masterInstrumentArray]
-        clone.pop()
-        setMasterInstrumentArray(clone)
+        if (masterInstrumentArray.length === 1){
+            return
+        } else {
+            var clone = [...masterInstrumentArray]
+            clone.pop()
+            setMasterInstrumentArray(clone)
+        }
+        
     }
     function mapMenuItems(){
             return (
@@ -70,11 +76,11 @@ function Midbar() {
                 active={activeTabs.includes('social')}
                 onClick={onClickHandler}
                 />
-                {/* <Menu.Item
+                <Menu.Item
                 name='lab'
                 active={activeTabs.includes('lab')}
                 onClick={onClickHandler}
-                /> */}
+                />
                 <Menu.Item
                 name='palette'
                 active={activeTabs.includes('palette')}
@@ -123,8 +129,9 @@ function Midbar() {
         </div>
         <div className="bottomhalf" style={{display: 'flex', flexDirection: 'row', backgroundColor: 'white'}}>
             <div className="bottomleft" style={{display: 'flex', flexDirection: 'row', backgroundColor: 'white'}}> 
-            {activeTabs.includes('explorer') && <MenuFinder/>}
-            {activeTabs.includes('explorer') && <Results/>}
+            {/* {activeTabs.includes('explorer') && <MenuFinder/>}
+            {activeTabs.includes('explorer') && <Results/>} */}
+            {activeTabs.includes('explorer') && <Explorer/>}
             {activeTabs.includes('lab') && <Lab/>}
             {activeTabs.includes('palette') && <Palette/>}
             </div>

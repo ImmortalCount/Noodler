@@ -1,22 +1,23 @@
 import {React, useState, useEffect, useRef} from 'react'
 import * as Tone from 'tone';
-import { Menu, Button } from 'semantic-ui-react';
+import { Menu, Button, Input } from 'semantic-ui-react';
 import instrumentSamples from '../Instruments/Instruments.js'
 import './rhythmlab.css'
 
 
 
-export default function RhythmLab() {
+export default function RhythmLab({importedRhythmData}) {
     const drumKit = new Tone.Sampler(instrumentSamples.drumkit_jazz).toDestination()
-    var notesC = [['O', 'X'], ['O', ['O', 'X'], 'O'], ['X', 'O', ['O', 'X'],'X'], ['O']]
-    var notesD = [['O'], ['O'], ['O'], ['O'], ['O']]
+    var initialNotes = [['O'], ['O'], ['O'], ['O']]
     var testPattern = ['A4', 'B4', 'C4', 'D4', 'E4', 'F4', 'G4', 'A5', 'B5', 'C5', 'D5', 'E5', 'F5']
     var [melodyNotes, setMelodyNotes] = useState(['A4', 'B4', 'C4', 'D4', 'A5', 'B4', 'G4'])
-    var [notes, setNotes] = useState(notesD)
+    var [name, setName] = useState('Rhythm 1')
+    var [notes, setNotes] = useState(initialNotes)
     var [playNoteOrderByID, setPlayNoteOrderByID] = useState([])
     var [mappedNotes, setMappedNotes] = useState([])
     var [metronomeNotes, setMetronomeNotes] = useState([['Db4'], ['Db4'], ['Db4'], ['Db4']])
     var [playConstant, setPlayConstant] = useState(1)
+    var [loop, setLoop] = useState(false);
     Tone.Transport.bpm.value = 120
     var [moduleLengthDisplay, setModuleLengthDisplay] = useState(notes.length);
 //------Returns an array of objects in order of when they are going to be played, as well as their className by Level and their ID (idx)
@@ -30,15 +31,25 @@ useEffect(() => {
     generateMetronomeNotes()
 }, [moduleLengthDisplay])
 
+useEffect(() => {
+    if (importedRhythmData['rhythm'] !== undefined){
+        setNotes(importedRhythmData['rhythm'])
+        setName(importedRhythmData['rhythmName'])
+    }
+    
+}, [importedRhythmData])
+
 function loopOn(){
     Tone.Transport.loopStart = 0;
-    Tone.Transport.loopEnd = 2.5;
+    Tone.Transport.loopEnd = 2;
 
     // console.log(Tone.Transport.loopEnd)
     if (Tone.Transport.loop !== true){
         Tone.Transport.loop = true;
+        setLoop(true)
     } else {
         Tone.Transport.loop = false;
+        setLoop(false)
     }
     
     
@@ -462,6 +473,15 @@ function flattenNotes(notes, returnArr){
     
 };
 
+const dragStartHandlerSpecial = e => {
+    var obj = {id: 'special', className: 'rhythmData', message: {
+        rhythmName: name,
+        rhythm: notes,
+        length: [notes.length]
+    }, type: 'foreign'}
+    e.dataTransfer.setData('text', JSON.stringify(obj));
+}
+
 const dragHandler = e => {
 };
 
@@ -641,6 +661,7 @@ function setEverythingToInactive(){
 }
 
 function playSynth(){
+    Tone.Transport.start();
     var position = 0;
     var previouslyActivated = [];
         const synthPart = new Tone.Sequence(
@@ -709,12 +730,13 @@ const onChangeModuleLength = e => {
     return (
         <>
         <Menu>
-         <Menu.Item onClick={() => playSynth()}>load</Menu.Item>  
-         <Menu.Item onClick={() => Tone.Transport.stop(), () => Tone.Transport.start()}> Play </Menu.Item> 
+         <Menu.Item onClick={() => playSynth()}>Play</Menu.Item>  
          <Menu.Item onClick={() => Tone.Transport.stop()}> Stop </Menu.Item> 
-         <Menu.Item onClick={() => loopOn(notes)}> Loop On: Off </Menu.Item>   
+         <Menu.Item onClick={() => loopOn(notes)}> Loop: {loop ? 'On' : 'Off'} </Menu.Item>   
          <Menu.Item onClick={()=> randomRhythmGenerator()}> Generate </Menu.Item>   
-         <Menu.Item onClick={()=> shortenPattern(notes)}> Shorten </Menu.Item>  
+         <Menu.Item onClick={()=> randomRhythmGenerator()}>  Import </Menu.Item>   
+         <Menu.Item onClick={()=> mapNotesToRhythm(notes, testPattern)}>  Map </Menu.Item>   
+         {/* <Menu.Item onClick={()=> shortenPattern(notes)}> Shorten </Menu.Item>  
          <Menu.Item onClick={()=> lengthenPattern(notes)}> Lengthen </Menu.Item>   
          <Menu.Item> Edit </Menu.Item>   
          <Menu.Item> Options </Menu.Item>   
@@ -727,7 +749,7 @@ const onChangeModuleLength = e => {
          <Menu.Item onClick={() => setEverythingToInactive()}> reset View Test </Menu.Item>   
          <Menu.Item onClick={() =>console.log(notes)}> Notes </Menu.Item>   
          <Menu.Item onClick={() =>console.log(squishTiming(13, 8))}> SquishTiming </Menu.Item>   
-         <Menu.Item onClick={() =>console.log(Tone.Time("4n").toSeconds()) * 5}> BPM? </Menu.Item>   
+         <Menu.Item onClick={() =>console.log(Tone.Time("4n").toSeconds()) * 5}> BPM? </Menu.Item>    */}
         </Menu>
         <Button.Group>
             <Button active ={activeButton === 'X'}compact basic onClick ={() => handleControls('X')}>X</Button>
@@ -735,24 +757,21 @@ const onChangeModuleLength = e => {
             <Button active ={activeButton === 'add'} compact basic onClick ={() =>handleControls('add')}>Add</Button>
             <Button active ={activeButton === 'add'} compact basic onClick ={() =>handleControls('replace')}>Replace</Button>
             <Button active ={activeButton === 'remove'} compact basic onClick ={() => handleControls('remove')}>Notes</Button>
-            <Button active ={activeButton === 'subdivide'} compact basic onClick ={() => handleControls('subdivide')}>Subdivide</Button>
+            {/* <Button active ={activeButton === 'subdivide'} compact basic onClick ={() => handleControls('subdivide')}>Subdivide</Button>
             <Button active ={activeButton === 'subdivide'} compact basic onClick ={() => handleControls('2')}>2</Button>
             <Button active ={activeButton === 'subdivide'} compact basic onClick ={() => handleControls('3')}>3</Button>
             <Button active ={activeButton === 'undivide'} compact basic onClick ={() => handleControls('undivide')}>Undivide</Button>
             <Button active ={activeButton === 'lengthen'} compact basic onClick ={() => handleControls('lengthen')}>Lengthen</Button>
             <Button active ={activeButton === 'shorten'} compact basic onClick ={() => handleControls('shorten')}>Shorten</Button>
-            <Button active ={activeButton === 'duplicate'} compact basic onClick ={() => handleControls('shorten')}>Shorten</Button>
+            <Button active ={activeButton === 'duplicate'} compact basic onClick ={() => handleControls('duplicate')}>Duplicate</Button> */}
         </Button.Group>
-        <div>
-            <h3>current scale: ?</h3>
-            <h3>current chord: ?</h3>
-            <h3>To do:Loop, Drag, ProperPlay, import from chord lab, import from pattern lab</h3>
+        {/* <div>
             <h3>Melody Notes</h3>
             <div style={{display: 'flex', flexDirection: 'row', width: '500px'}} >
            {mapMelodyNotes(melodyNotes)}
        </div>
             <h3>Notes</h3>
-        </div>
+        </div> */}
         <div>Length: {moduleLengthDisplay}</div>
         <input type="range" min='1' max='16' step='1' defaultValue={moduleLengthDisplay} onMouseUp={handleModuleLengthChange} onChange={onChangeModuleLength}/>
         
@@ -760,21 +779,27 @@ const onChangeModuleLength = e => {
            {mappedNotes}
        </div>
        <div>
-            <h3>Export</h3>
-            <div draggable='true' style={{height: '25px', width: '125px', backgroundColor: 'wheat'}}>Rhythm</div>
+            <h3>Rhythm</h3>
+            <div draggable onDragStart={dragStartHandlerSpecial} style={{height: '25px', width: '125px', backgroundColor: 'wheat'}}>{name}</div>
         </div>
         <div>
-            <h3>Export</h3>
+            <h3>Name</h3>
+            <Input type='text'
+            value={name}
+            onInput={e => setName(e.target.value)}
+            />
+        </div>
+        {/* <div>
+            <h3>Pattern</h3>
             <div draggable='true' style={{height: '25px', width: '125px', backgroundColor: 'wheat'}}>Pattern</div>
         </div>
         <div>
-            <h3>Export</h3>
-            <div draggable='true' style={{height: '25px', width: '125px', backgroundColor: 'wheat'}}>Rhy-Pat</div>
-        </div>
-        <div>
-            <h3>Export</h3>
-            <div draggable='true' style={{height: '25px', width: '125px', backgroundColor: 'wheat'}}>Length</div>
-        </div>
+            <h3>Name</h3>
+            <Input type='text'
+            value={name}
+            onInput={e => setName(e.target.value)}
+            />
+        </div> */}
         </>
     )
 }

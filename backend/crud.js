@@ -10,7 +10,7 @@ async function main() {
         // Make the appropriate DB calls
         await createModule(client, {
             name: "prototype module",
-            series: 'part 2 of the jazz pack',
+            series: 'part 3 of the jazz pack',
             author: 'devnaut',
             category: 'jazz', 
             key: 1,

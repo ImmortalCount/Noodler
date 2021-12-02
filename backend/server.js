@@ -7,7 +7,9 @@ const app = express();
 app.use(cors())
 app.use(express.json())
 
+
 app.use("/api/v1/modules", modules)
+// app.use("/api/v1/users", '')
 //this is to load static things?
 app.use('/', express.static('public'))
 app.use("*", (req, res) => res.status(404).json({error: "not found"}))

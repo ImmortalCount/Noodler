@@ -8,7 +8,7 @@ import { bindActionCreators } from 'redux';
 
 import '../../../public/Do_Mayor_armadura.svg'
 
-export default function ScaleLab() {
+export default function ScaleLab({importedScaleData}) {
     var [scaleDataBinary, setScaleDataBinary] = useState([1,0,1,0,1,1,0,1,0,1,0,1])
     var [scaleName, setScaleName] = useState('major');
     var [notes, setNotes] = useState(["C", "D", "E", "F", "G", "A", "B"]);
@@ -20,9 +20,9 @@ export default function ScaleLab() {
     var [randomOptions, setRandomOptions] = useState('all')
     const [rootNote, setRootNote] = useState('C')
 
-    const dispatch = useDispatch();
+    // const dispatch = useDispatch();
 
-    const {sendScaleData, receiveScaleData} = bindActionCreators(actionCreators, dispatch);
+    // const {sendScaleData, receiveScaleData} = bindActionCreators(actionCreators, dispatch);
 
 
 function createScaleSVG(){
@@ -98,8 +98,23 @@ function createScaleSVG(){
 
     useEffect (()=>{
       createScaleSVG()
-      sendScaleData(notes)
+      // sendScaleData(notes)
   }, [notes]);
+
+  useEffect(() => {
+    var newNotes = importedScaleData['scale']
+    if (newNotes !== undefined){
+      var newBinary = importedScaleData['binary']
+      var newName = importedScaleData['scaleName']
+      var newNumber = importedScaleData['number']
+      setNotes(newNotes)
+      setScaleName(newName.split(' ').slice(1).join(' '))
+      setScaleNumber(newNumber)
+      setScaleDataBinary(newBinary)
+      setRootNote(newNotes[0])
+      createScaleSVG()
+    }
+  }, [importedScaleData])
 
   function getNotePositions(){
     var acceptableNotes = [
@@ -395,7 +410,6 @@ function createScaleSVG(){
             var highlightedCircle = document.getElementById(notePositions[Note.pitchClass(note)])
             highlightedCircle.setAttribute('r', 29)
             setTimeout(() => {highlightedCircle.setAttribute('r', 23)}, 250)
-            console.log(notePositions, note)
             //position
             if (position < notes.length -1){
                 position += 1;
@@ -447,27 +461,20 @@ function createScaleSVG(){
         { key: 'random', text: 'random', value: 'random'},
       ]
 
-      const randomTypeOptions = [
-        { key: 'normie', text: 'normie', value: 'normie'},
-        { key: 'named', text: 'named', value: 'named'},
-        { key: 'obscure', text: 'obscure', value: 'obscure'},
-        { key: 'true', text: 'true', value: 'true'},
-      ]
-
-      const randomDropdownOptions = [
-        { key: 'min', text: 'min', value: 'min'},
-        { key: 'max', text: 'max', value: 'max'},
-        { key: 'type', text: 'type', value: 'type'},
-      ]
-
       const displayDropdownOptions = [
         { key: 'Guitar 1', text: 'Guitar 1', value: 'Guitar 1'},
         { key: 'Guitar 2', text: 'Guitar 2', value: 'Guitar 2'},
         { key: 'Guitar 3', text: 'Guitar 3', value: 'Guitar 3'},
       ]
-
+  
       const dragStartHandler = e => {
-        var obj = {id: 1, className: 'test', message: 'scaleLab side', type: 'foreign'}
+        var obj = {id: 'special', className: 'scaleData', message: 
+        {scaleName: rootNote + ' ' + scaleName, 
+        scale: notes, 
+        binary: scaleDataBinary,
+        number: scaleNumber,
+      }, 
+        type: 'foreign'}
         e.dataTransfer.setData('text', JSON.stringify(obj));
     };
 
@@ -653,7 +660,6 @@ function createScaleSVG(){
           onChange={handlePlayDropdown}
         />
       <Menu.Item onClick={() => console.log(notes, 'notes')}>Export</Menu.Item>
-      <Menu.Item onClick={() => console.log(getNotePositions())}>Test</Menu.Item>
       </Menu>
         <div>
         <div draggable='true' onDragStart={dragStartHandler} style={{height: '25px', width: '200px', backgroundColor:'wheat'}}>{rootNote} {scaleName}</div>
@@ -661,17 +667,6 @@ function createScaleSVG(){
         <p>{noteMapper(notes)}</p>
         </div>
         <div id="divScaleInteractive"></div>
-        {/* <img src="Do_Mayor_armadura.svg" alt="" /> */}
-        {/* <button onClick={() => generateRandomScale(7)} >Generate Random Scale: 7 Notes</button>
-        <button onClick={() => generateRandomNamedScale()}>Generate Named Scale</button>
-        <button onClick={() => toggleModes('previous')}> <Icon name='arrow left'></Icon>Mode</button>
-        <button onClick={() => toggleModes('next')}> Mode <Icon name='arrow right'></Icon></button>
-        <button onClick={() => console.log(Scale.get('Db chromatic').notes)}>Generate Modes</button>
-        <button onClick={()=> Tone.start()}>Initialize</button>
-        <button>Root lock</button>
-        <button>Play on Change</button>
-        <button onClick={()=> Tone.Transport.start()}> Play</button>
-        <button onClick={()=> Tone.Transport.stop()}> Stop</button> */}
         <div className='binaryRadioSelector' style={{display: 'flex', flexDirection: 'row'}}>
         <Form>
         <Form.Field>

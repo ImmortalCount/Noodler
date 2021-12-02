@@ -1,6 +1,8 @@
   
 const express = require('express')
 const mongodb = require('mongodb')
+const bcrypt = require('bcrypt')
+
 import {MongoClient} from 'mongodb'
 
 const app = express()
@@ -51,4 +53,16 @@ app.delete('/delete-data', function (req, res) {
       res.send('Successfully deleted!')
     }
   )
+})
+
+app.post('/register', async (req, res) => {
+  try {
+    const hashedPassword = await bcrypt.hash(req.body.password, 10)
+    users.push({
+      id: Date.now()
+    })
+  } catch {
+
+  }
+  req.body.email
 })

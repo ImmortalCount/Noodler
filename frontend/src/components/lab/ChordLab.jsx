@@ -1,9 +1,9 @@
-import {Children, React, useState} from 'react'
+import {React, useState, useEffect} from 'react'
 import * as Tone from 'tone';
 import {Scale, Chord, Note} from '@tonaljs/tonal';
 import { Icon, Menu, Dropdown, Button, Input } from 'semantic-ui-react';
 
-export default function ChordLab() {
+export default function ChordLab({importedChordData}) {
     const [chords, setChords] = useState([['C3', 'E3', 'G3']])
     const [noteOptions, setNoteOptions] = useState("octave")
     const [generateChordOptions, setGenerateChordOptions] = useState({intervals: 3, number: 3, root: 'C3'})
@@ -39,6 +39,13 @@ export default function ChordLab() {
         }
         setChords(chordStack)
     }
+
+    useEffect(() => {
+        if (importedChordData['chord'] !== undefined){
+            setChords([importedChordData['chord']])
+        }
+        
+    }, [importedChordData])
 
     var testSeq1 = ['C3', 'E3' ,'G3' ,'D4']
     var testChords1 = [['C3', 'E3', 'G3', 'A3'], ['F3', 'A3', 'B3'], ['D3', 'F3', 'A3'], ['G3', 'B3', 'E3']]
@@ -385,12 +392,26 @@ export default function ChordLab() {
         return classIDs;
     }
     //=======Drag and drop functionality
-
     const dragStartHandler = e => {
-        var obj = {id: e.target.id, className: e.target.className, message: 'dragside', type: 'dragside'}
+        var idx = Number(e.target.id.split('_')[1])
+        var obj = {id: e.target.id, className: 'chordData', message: {
+            chordName: Chord.detect(chords[idx])[0],
+            chord: chords[idx],
+            position: []
+        }, type: 'foreign'}
         e.dataTransfer.setData('text', JSON.stringify(obj));
-        
+        console.log(obj)
     };
+
+    const dragStartHandlerSpecial = e => {
+        var idx = 0
+        var obj = {id: 'special', className: 'chordData', message: {
+            chordName: Chord.detect(chords[idx])[0],
+            chord: chords[idx],
+            position: []
+        }, type: 'foreign'}
+        e.dataTransfer.setData('text', JSON.stringify(obj));
+    }
     
     const dragHandler = e => {
     };
@@ -407,13 +428,20 @@ export default function ChordLab() {
     
     //---------------------
     const dropHandler = e => {
+        var data = JSON.parse(e.dataTransfer.getData("text"));
+        if (data['id'] === 'special'){
+            e.currentTarget.className = 'inactive chord'
+            return
+        } else {
         e.currentTarget.className = 'inactive chord'
         e.stopPropagation();
         e.nativeEvent.stopImmediatePropagation();
         e.preventDefault();
-        var data = JSON.parse(e.dataTransfer.getData("text"));
+        
         changePositionsUsingIDs(data.id, e.currentTarget.id)
         e.dataTransfer.clearData();
+        }
+        
         
     }
 
@@ -564,6 +592,7 @@ export default function ChordLab() {
           </Dropdown>
          <Menu.Item> Edit </Menu.Item>   
          <Menu.Item> Options </Menu.Item>   
+         <Menu.Item> Display </Menu.Item>   
          <Menu.Item> Map </Menu.Item>   
          <Menu.Item> Export </Menu.Item>   
         </Menu>
@@ -579,7 +608,7 @@ export default function ChordLab() {
         </div>
         <div>
             <h3>Export</h3>
-            <div draggable='true' style={{height: '25px', width: '125px', backgroundColor: 'wheat'}}>C Maj</div>
+            <div draggable onDragStart={dragStartHandlerSpecial} style={{height: '25px', width: '125px', backgroundColor: 'wheat'}}>{Chord.detect(chords[0])[0]}</div>
         </div>
         {/* <button onClick={()=> organizeChords()}>Organize Chords</button>
         <button onClick={()=> playChords(chords)}>Play</button>

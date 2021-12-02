@@ -1,4 +1,5 @@
 
+import Player from "./components/DragAndDrop/Player.jsx";
 import Guitar from "./components/guitar/Guitar.jsx";
 import ChordLab from "./components/lab/ChordLab.jsx";
 import Lab from "./components/lab/Lab.jsx";
@@ -13,12 +14,14 @@ function App() {
   return (
     <>
     {/* <Guitar/> */}
-    {/* <ScaleLab/>
-    <ChordLab/>
+    <MainPage/>
+    {/* <ScaleLab/> */}
+    {/* <ChordLab/>
     <PatternLab/>
     <RhythmLab/> */}
-    <MainPage/>
+    
   {/* <Lab/> */}
+  {/* <Player/> */}
     {/* <PlayerTest/> */}
     </>
     

@@ -4,7 +4,7 @@ import ModulesController from './modules.controller.js';
 const router = express.Router();
 
 router.route("/").get(ModulesController.apiGetModules)
-// router.route("/").post(ModulesController.apiPostModule)
+router.route("/").post(ModulesController.apiUploadModule)
 // router.route("/").put(ModulesController.apiUpdateModule)
 // router.route("/").delete(ModulesController.apiDeleteModule)
 // router.route("/id/:id").get(ModulesController.apiGetModulesById)

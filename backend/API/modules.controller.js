@@ -33,6 +33,10 @@ export default class ModulesController {
         }
         res.json(response)
     }
+    static async apiUploadModule(req, res, next){
+        await modulesDAO.addModule()
+        res.json({status: 'sucess'})
+    }
     
 
 

@@ -2,9 +2,9 @@ import mongodb from "mongodb";
 const ObjectId = mongodb.ObjectId;
 
 const dataModulePrototype = {
-    _id: "id",
+    // _id: ObjectId,
     name: "prototype module",
-    series: 'part 1 of the jazz pack',
+    series: 'part 5 of the jazz pack',
     author: 'devnaut',
     category: 'jazz', 
     key: 0,
@@ -72,9 +72,9 @@ export default class modulesDAO {
         }
     }
 
-    static async addModule(obj){
+    static async addModule(){
         try {
-            return await modules.insertOne(obj)
+            return await modules.insertOne(dataModulePrototype)
         } catch (e) {
             console.error(`Unable to add module: ${e}`)
             return {error: e}

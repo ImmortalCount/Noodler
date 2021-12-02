@@ -1,63 +1,27 @@
 import React, { useState, useEffect, useRef} from 'react'
 import DragAndFillCard from './DragAndFillCard'
-import {Button, Dropdown, Menu} from 'semantic-ui-react';
+import {Button, Dropdown, Menu, Icon} from 'semantic-ui-react';
 import { Note, Scale, Chord} from '@tonaljs/tonal';
 import { useDispatch } from 'react-redux';
 import { bindActionCreators } from 'redux';
 import { actionCreators } from '../../store/index.js';
-import { initialData, initialData4 } from './dummyData';
-import { cardDataPrototype } from './cardDataPrototype';
-// import * as Tone from 'tone';
-
+import { initialData} from './dummyData';
+import { playerDataPrototype } from './dataPrototypes';
 
 export default function Player({masterInstrumentArray}) {
-    var [cardData, setCardData] = useState(initialData);
     const [sequence, setSequence] = useState(convertModuleDataIntoPlayableSequence(initialData))
     const [instrumentFocus, setInstrumentFocus] = useState(0);
-    const [playerData, setPlayerData] = useState({mode: 'melody', data: initialData})
+    const [mainModule, setMainModule] = useState(0)
+    const [playerData, setPlayerData] = useState([{mode: 'off', highlight: [], data: initialData, reserveData: []}])
+    var [activeButton, setActiveButton] = useState('swap')
     var controls = useRef('swap')
     const dispatch = useDispatch();
     const {sendModuleData, receiveModuleData} = bindActionCreators(actionCreators, dispatch);
 
     useEffect (()=>{
-        sendModuleData(JSON.stringify(sequence)) 
-    }, [cardData, sequence]);
+        sendModuleData(JSON.stringify(convertModuleDataIntoPlayableSequence2(playerData))) 
+    }, [playerData]);
 
-function convertMelodyModeDataIntoChordModeData(dataObj){
-    var clone = JSON.parse(JSON.stringify(dataObj))
-    for (var i = 0; i < clone.length; i++){
-        var scale = clone[i]['scaleData']['scale']
-        var notes = clone[i]['chordData']['chord']
-        var newPattern = notesAndScaleToPattern(notes, scale)
-        clone[i]['rhythmData']['rhythmName'] = 'Str 4s'
-        clone[i]['rhythmData']['rhythm'] = [['C3'], ['C3'], ['C3'], ['C3']]
-        clone[i]['patternData']['patternName'] = 'Full Chord:' + newPattern
-        clone[i]['patternData']['pattern'] = [newPattern, newPattern, newPattern, newPattern]
-    }
-    return clone;
-}
-
-function convertMelodyModeDataIntoDisplayScaleModeData(dataObj){
-    var returnArr = []
-    var clone = JSON.parse(JSON.stringify(dataObj))
-    for (var i = 0; i < clone.length; i++){
-        returnArr.push(clone[i]['scaleData']['scale'])
-    }
-    return returnArr;
-}
-
-function convertMelodyModeDataIntoDisplayChordNotesModeData(dataObj){
-    var returnArr = []
-    var clone = JSON.parse(JSON.stringify(dataObj))
-    for (var i = 0; i < clone.length; i++){
-        var tempArr = [];
-        for (var j = 0; j < clone[i]['chordData']['chord'].length; j++){
-            tempArr.push(Note.pitchClass(clone[i]['chordData']['chord'][j]))
-        }
-        tempArr.push(returnArr)
-    }
-    return returnArr;
-}
 
 function qualityOfChordNameParser(chordName){
     if (chordName === undefined || chordName === null || chordName.length === 0){
@@ -108,61 +72,6 @@ function setRomanNumeralsByKey(chord, root){
 
     return returnValue + returnChord;
 }
-
-
-
-function notesAndScaleToPattern(notes, scale, root){
-        if (root === undefined){
-            root = scale[0] + 3
-        }
-        var chromaticScale = Scale.get('c chromatic').notes
-        var allNotes = [];
-        var allChromaticNotes = [];
-        var patternExport = [];
-        for (var i = 0; i < 10; i++){
-            for (var j = 0; j < scale.length; j++){
-                allNotes.push(scale[j] + i)
-            }
-        }
-    
-        for (var m = 0; m < 10; m++){
-            for (var n = 0; n < chromaticScale.length; n++){
-                allChromaticNotes.push(chromaticScale[n] + m)
-            }
-        }
-
-        var rootIndex = allNotes.indexOf(root);
-        var rootChromaticIndex = allChromaticNotes.indexOf(root);
-        for (var k = 0; k < notes.length; k++){
-            if (notes[k].includes(" ")){
-                var tempExport = [];
-                var tempArr = notes[k].split(" ");
-                for (var l = 0; l < tempArr.length; l++){
-                    if (allNotes.indexOf(tempArr[l]) === -1){
-                        if (allChromaticNotes.indexOf(tempArr[l]) === -1){
-                        tempExport.push( "*" + (allChromaticNotes.indexOf(Note.enharmonic(tempArr[l])) - rootChromaticIndex))
-                        } else {
-                        tempExport.push("*" + (allChromaticNotes.indexOf(tempArr[l]) - rootChromaticIndex));
-                        }
-                    } else {
-                        tempExport.push(allNotes.indexOf(tempArr[l]) - rootIndex)
-                    }
-                }
-                patternExport.push(tempExport)
-            } else {
-                if (allNotes.indexOf(notes[k]) === -1){
-                    if (allChromaticNotes.indexOf(notes[k]) === -1){
-                    patternExport.push( "*" + (allChromaticNotes.indexOf(Note.enharmonic(notes[k])) - rootChromaticIndex))
-                    } else {
-                    patternExport.push("*" + (allChromaticNotes.indexOf(notes[k]) - rootChromaticIndex));
-                    }
-                } else {
-                    patternExport.push(allNotes.indexOf(notes[k]) - rootIndex)
-                }
-            }
-        }
-        return patternExport
-    }
 
     //generate notes from patternData using scaleData
 function patternAndScaleToNotes(pattern, scale, root){
@@ -230,7 +139,7 @@ function notesIntoRhythm(notes, rhythm){
         function recursiveNoteToRhythmMapper(cloneRhythm){
                 for (var i = 0; i < cloneRhythm.length; i++){
                     if (Array.isArray(cloneRhythm[i]) === false){
-                        if (cloneRhythm[i] === 'C3'){
+                        if (cloneRhythm[i] === 'O'){
                             if (cloneNotes[count] === undefined){
                                 cloneRhythm[i] = 'X'
                             } else {
@@ -248,25 +157,7 @@ function notesIntoRhythm(notes, rhythm){
         return cloneRhythm;
     }
 
-function countExpansionOrContraction(rhythmicNotes, count){
-        if (count < 0){
-            count = 0;
-        }
-        var cloneRhythmicNotes = [...rhythmicNotes];
-        if (count <= rhythmicNotes.length){
-            return cloneRhythmicNotes.slice(0, count)
-        }
-        else {
-            for (var i = rhythmicNotes.length; i < count; i++){
-                cloneRhythmicNotes.push(['X'])
-            }
-            return cloneRhythmicNotes;
-        }
-    }
-
-
-
-    function convertModuleDataIntoPlayableSequence(data){
+function convertModuleDataIntoPlayableSequence(data){
         var returnObject = 
         {displayOnly: false,
         highlight: [],
@@ -288,126 +179,183 @@ function countExpansionOrContraction(rhythmicNotes, count){
         return [returnObject];
     }
 
+    function scaleIntoScaleDisplayNotes(scale, duration){
+        if (duration === undefined){
+            duration = 4;
+        }
+        var returnArr = []
+        var cleanScale = [];
+        for (var h = 0; h < scale.length; h++){
+            cleanScale.push(Note.pitchClass(scale[h]))
+        }
+        var noteStr = cleanScale.join(' ')
+        for (var i = 0; i < duration; i++){
+            returnArr.push([noteStr])
+        }
+        return returnArr;
+    }
 
+    function handleOffMode(duration){
+        if (duration === undefined){
+            duration = 4;
+        }
+        var returnArr = [];
+        for (var i = 0; i < duration; i++){
+            returnArr.push(['X'])
+        }
+        return returnArr;
+    }
+
+    function convertModuleDataIntoPlayableSequence2(playerData){
+        var returnArr = [];
+        for (var h = 0; h < playerData.length; h++){
+            var returnObject = 
+            {displayOnly: true,
+            highlight: [],
+            data: []};
+            if (playerData[h]['mode'] === 'melody' || playerData[h]['mode'] === 'chord'){
+                returnObject['displayOnly'] = false;
+                for (var i = 0; i < playerData[h]['data'].length; i++){
+                    var innerObject = {speed:'', notes:[]}
+                    var rhythm = playerData[h]['data'][i]['rhythmData']['rhythm'];
+                    var pattern = playerData[h]['data'][i]['patternData']['pattern']
+                    var scale = playerData[h]['data'][i]['scaleData']['scale']
+                    var notes = patternAndScaleToNotes(pattern, scale)
+                    var sequence = notesIntoRhythm(notes, rhythm)
+                    innerObject['speed'] = '4n'
+                    innerObject['notes'] = sequence
+                    returnObject['data'].push(innerObject)
+                    }
+                returnArr.push(returnObject)
+            } else if (playerData[h]['mode'] === 'off'){
+                returnObject['displayOnly'] = true;
+                for (var i = 0; i < playerData[h]['data'].length; i++){
+                    var innerObject = {speed:'', notes:[]}
+                    innerObject['speed'] = '4n'
+                    innerObject['notes'] = handleOffMode();
+                    returnObject['data'].push(innerObject)
+                    }
+                returnArr.push(returnObject)
+            } else if (playerData[h]['mode'] === 'scale'){
+                returnObject['displayOnly'] = true;
+                for (var i = 0; i < playerData[h]['data'].length; i++){
+                    var innerObject = {speed:'', notes:[]}
+                    var scale = playerData[h]['data'][i]['scaleData']['scale']
+                    var sequence = scaleIntoScaleDisplayNotes(scale)
+                    innerObject['speed'] = '4n'
+                    innerObject['notes'] = sequence
+                    returnObject['data'].push(innerObject)
+                    }
+                returnArr.push(returnObject)
+            } else if (playerData[h]['mode'] === 'chordTones'){
+                returnObject['displayOnly'] = true;
+                for (var i = 0; i < playerData[h]['data'].length; i++){
+                    var innerObject = {speed:'', notes:[]}
+                    var chord = playerData[h]['data'][i]['chordData']['chord']
+                    var sequence = scaleIntoScaleDisplayNotes(chord)
+                    innerObject['speed'] = '4n'
+                    innerObject['notes'] = sequence
+                    returnObject['data'].push(innerObject)
+                    }
+                returnArr.push(returnObject)
+            }
             
+        }
+        return returnArr;
+    }
 
-    //----------
-    
 
-    //handling dragging
+
+function handleControls(type){
+        controls.current = type;
+        setActiveButton(type);
+    }
     //----------------------------------
-    const dragStartHandler = e => {
-        var obj = {id: e.currentTarget.id, className: e.target.className, message: 'dragside', type: 'dragside'}
+const dragStartHandler = e => {
+        var obj = {id: e.currentTarget.id, className: e.target.className, message: 'local', type: 'local'}
         e.dataTransfer.setData('text', JSON.stringify(obj));
-        console.log('draggin')
-        
+        console.log(obj)
     };
 
-    const dragHandler = e => {
+const dragHandler = e => {
     };
 
-    const dragOverHandler = e => {
+const dragOverHandler = e => {
         e.preventDefault();
     };
 
     //---------------------
-    const dropHandler = e => {
+const dropHandler = e => {
         e.preventDefault();
+        var clone = JSON.parse(JSON.stringify(playerData))
         var data = JSON.parse(e.dataTransfer.getData("text"));
-        var startIndex = Number(data['id'])
-        var endIndex = Number(e.currentTarget.id)
+        var ex2 = e.currentTarget.id.split('_')
+        var endIndex = Number(ex2[1])
+        var endInstrument = Number(ex2[2])
         var message = data['message']
         var type = data['type']
-        if (type === 'foreign'){
-            console.log(message, 'message');
-            return
-        }
-        
         var className = data['className']
+        if (type === 'foreign'){
+            clone[endInstrument]['data'][endIndex][className] = message;
+        } else {
+            var ex1 = data['id'].split('_')
+        var startIndex = Number(ex1[1])
+        var startInstrument = Number(ex1[2])
 
         if (controls.current === 'replace'){
             if (className === 'box'){
-                cardData[endIndex] = cardData[startIndex]
+                clone[endInstrument]['data'][endIndex] = clone[startInstrument]['data'][startIndex] 
             } else {
-                cardData[endIndex][className] = cardData[startIndex][className]
+                clone[endInstrument]['data'][endIndex][className] = clone[startInstrument]['data'][startIndex][className] 
             }
-            setCardData(cardData)
-            setSequence(convertModuleDataIntoPlayableSequence(cardData))
-            setMappedCards((mapCards(cardData)))
-            e.dataTransfer.clearData();
-        }
-        if (controls.current === 'swap'){
+        } else if (controls.current === 'swap'){
             var placeholder;
             if (className === 'box'){
-                placeholder = cardData[endIndex]
-                cardData[endIndex] = cardData[startIndex];
-                cardData[startIndex] = placeholder;
+                placeholder = clone[endInstrument]['data'][endIndex]
+                clone[endInstrument]['data'][endIndex] = clone[startInstrument]['data'][startIndex];
+                clone[startInstrument]['data'][startIndex] = placeholder
             } else {
-                placeholder = cardData[endIndex][className]
-                cardData[endIndex][className] = cardData[startIndex][className];
-                cardData[startIndex][className]= placeholder;
+                placeholder = clone[endInstrument]['data'][endIndex][className]
+                clone[endInstrument]['data'][endIndex][className] = clone[startInstrument]['data'][startIndex][className];
+                clone[startInstrument]['data'][startIndex][className] = placeholder;
             }
-            setCardData(cardData)
-            setSequence(convertModuleDataIntoPlayableSequence(cardData))
-            setMappedCards((mapCards(cardData)))
-            e.dataTransfer.clearData();
-        }
-        if (controls.current === 'fill'){
+        } else if (controls.current === 'fill'){
             if (className === 'box'){
-                for (var i = endIndex; i < cardData.length;i++){
-                    cardData[i] = cardData[startIndex]
+                for (var i = endIndex; i < clone[endInstrument]['data'].length;i++){
+                    clone[endInstrument]['data'][i] = clone[startInstrument]['data'][startIndex] 
                 }
             } else {
-                for (var j = endIndex; j < cardData.length;j++){
-                    cardData[j][className] = cardData[startIndex][className]
+                for (var j = endIndex; j < clone[endInstrument]['data'].length;j++){
+                    clone[endInstrument]['data'][j][className] = clone[startInstrument]['data'][startIndex][className]
                 }
             }
-            setCardData(cardData)
-            setSequence(convertModuleDataIntoPlayableSequence(cardData))
-            setMappedCards((mapCards(cardData)))
-            e.dataTransfer.clearData();
-        }
-        if (controls.current === 'reverseFill'){
+        } else if (controls.current === 'reverseFill'){
             if (className === 'box'){
                 for (var k = endIndex; k > -1; k--){
-                    cardData[k] = cardData[startIndex]
+                    clone[endInstrument]['data'][k] = clone[startInstrument]['data'][startIndex] 
                 }
             } else {
                 for (var l = endIndex; l > -1; l--){
-                    cardData[l][className] = cardData[startIndex][className]
+                    clone[endInstrument]['data'][l][className] = clone[startInstrument]['data'][startIndex][className]
                 }
             }
-            setCardData(cardData)
-            setSequence(convertModuleDataIntoPlayableSequence(cardData))
-            setMappedCards((mapCards(cardData)))
-            e.dataTransfer.clearData();
+        } else if (controls.current === 'reOrder'){
+            if (className === 'box'){
+            var xfer;
+            xfer = clone[startInstrument]['data'][startIndex]
+            clone[startInstrument]['data'].splice(startIndex, 1)
+            clone[endInstrument]['data'].splice(endIndex, 0, xfer)
+            } else {
+                return
+            }
+        }
         }
         
+        setPlayerData(clone)
+        e.dataTransfer.clearData()
     }
 
-    //-----------------------------------
-    
-
-    //currentTarget returns parent div
-    //Target just returns currently clicked div
-    const hasId = e => {
-        console.log(e.target.parentNode.id)
-        console.log(e.target.className)
-    }
-
-    const addBox = e => {
-        var clone = JSON.parse(JSON.stringify(cardDataPrototype))
-        var spliceIndex = Number((e.currentTarget.id).split('_')[0]);
-        cardData.splice(spliceIndex + 1, 0, clone);
-        setMappedCards((mapCards(cardData)));
-    }
-
-    const removeBox =() =>{
-        cardData.pop();
-        setMappedCards((mapCards(cardData)));
-    }
-
-    function mapCards(cardData){
+    function mapCards(cardData, instrument){
         return (
             cardData.map((cardData, idx) => 
             <DragAndFillCard
@@ -415,8 +363,8 @@ function countExpansionOrContraction(rhythmicNotes, count){
             onDrag = {dragHandler}
             dragOverHandler = {dragOverHandler}
             dropHandler = {dropHandler}
-            id={idx}
-            key={idx}
+            id={'playerCards_' + idx + '_' + instrument}
+            key={'playerCards_' + idx + '_' + instrument}
             romanNumeralName={setRomanNumeralsByKey(cardData.chordData.chord, cardData.keyData.root)}
             chordName={cardData.chordData.chordName}
             rhythmName={cardData.rhythmData.rhythmName}
@@ -424,22 +372,22 @@ function countExpansionOrContraction(rhythmicNotes, count){
             scaleName={cardData.scaleData.scaleName}
             countName={cardData.countData.countName}
             keyName={cardData.keyData.keyName}
-            hasId={hasId}
-            addBox={addBox}
             />
             )
         )
     }
 
-    var [mappedCards, setMappedCards] = useState(mapCards(cardData))
-    
-    var [activeButton, setActiveButton] = useState('swap')
-
-    function handleControls(type){
-        controls.current = type;
-        setActiveButton(type);
+    function superMapCards(){
+        var returnArr = [];
+        for (var i = 0; i < playerData.length; i++){
+            returnArr.push(
+                (instrumentFocus === i) && <div style={{display: 'flex', flexDirection: 'row'}}>
+                    {mapCards(playerData[i]['data'], i)}
+                </div>
+                )
+        }
+        return returnArr;
     }
-
 
     const modeOptions = [
         {key: 'off', text: 'Mode: Off', value: 'off'},
@@ -449,21 +397,17 @@ function countExpansionOrContraction(rhythmicNotes, count){
         {key: 'chordTones', text: 'Mode: Display Chord Tones', value: 'chordTones'},
     ]
 
-    const handleChangeMode = (e, {value}) => {
-        // setMode(value)
-
-        // if (value === 'melody'){
-        //     setCardData(melodyModeData)
-        //     setSequence(convertModuleDataIntoPlayableSequence(melodyModeData))
-        //     setMappedCards((mapCards(melodyModeData)))
-        // }
-        // if (value === 'chord'){
-        //     setCardData(chordModeData)
-        //     setSequence(convertModuleDataIntoPlayableSequence(chordModeData))
-        //     setMappedCards((mapCards(chordModeData)))
-        // }
-        console.log(value)
-
+    const handleChangeMode = (e, {id, value}) => {
+        var clone = [...playerData]
+        var idx = Number(id.split("_")[1])
+        clone[idx]['mode'] = value;
+        if (value === 'melody'){
+            console.log('changed to melody!')
+        } else if (value === 'chord'){
+            console.log('changed to chord!')
+        }
+        console.log(playerData[idx]['mode'])
+        setPlayerData(clone)
     }
 
     function mapMenuItems(){
@@ -473,61 +417,65 @@ function countExpansionOrContraction(rhythmicNotes, count){
             )
         )
 }
-function handlePlayerUpdate(){
-    // var clone = [...instruments]
-    // var clonePrototype = JSON.parse(JSON.stringify(guitarPrototype))
-    // if (masterInstrumentArray.length === instruments.length){
-    //     return
-    // } else if (masterInstrumentArray.length > instruments.length){
-    //     clone.push(clonePrototype)
-    //     console.log(clonePrototype, '!?!?!?!?!?')
-    //     setInstruments(clone)
-    // } else if (masterInstrumentArray.length < instruments.length){
-    //     clone.pop()
-    //     setInstruments(clone)
-    // }
-}
-    
-    //Features
-    //Recommended Scale: On Off (implement it first)
-    //Build in Initialize
-    //Mute
-    //Show loop Options
-    //Advance Edit in Navbar
-    //Add Box Remove Box
-    //Classic Drag and Drop
+    function mapDropdowns(){
+        return (
+        masterInstrumentArray.map((instrument, idx) =>
+        (instrumentFocus === idx && <Dropdown
+                selection
+                onChange={handleChangeMode}
+                options={modeOptions}
+                value = {playerData[idx]['mode']}
+                key={idx}
+                id = {'dropdown_' + idx}
+                />
+            )
+            
+        )
+        )
+    }
 
+useEffect(() => {
+    handlePlayerUpdate()
+}, [masterInstrumentArray])
+
+function handlePlayerUpdate(){
+    var clone = [...playerData]
+    var clonePrototype = {mode: 'off', data: playerData[mainModule]['data']}
+    if (masterInstrumentArray.length === clone.length){
+        return
+    } else if (masterInstrumentArray.length > clone.length){
+        clone.push(clonePrototype)
+        setPlayerData(clone)
+    } else if (masterInstrumentArray.length < clone.length){
+        clone.pop()
+        setPlayerData(clone)
+        if (instrumentFocus > 0){
+            setInstrumentFocus(instrumentFocus -1)
+        }
+        
+    }
+}
     return (
         <>
         <Menu>
         <Button.Group>
         {mapMenuItems()}
         </Button.Group>
-        <Dropdown
-        selection
-        onChange={handleChangeMode}
-        options={modeOptions}
-        defaultValue='melody'
-        />
+        {mapDropdowns()}
         </Menu>
-        
         <Button.Group>
+            {/* <Button active ={activeButton === 'swap'}compact basic onClick ={() => console.log(convertModuleDataIntoPlayableSequence2(playerData))}>Test</Button> */}
             <Button active ={activeButton === 'swap'}compact basic onClick ={() => handleControls('swap')}>Swap</Button>
             <Button active ={activeButton === 'replace'} compact basic onClick ={() => handleControls('replace')}>Replace</Button>
-            <Button active ={activeButton === 'fill'} compact basic onClick ={() =>handleControls('fill')}>Fill</Button>
-            <Button active ={activeButton === 'reverseFill'} compact basic onClick ={() => handleControls('reverseFill')}>Reverse Fill</Button>
-            <Button active ={activeButton === 'reOrder'} compact basic onClick ={() => handleControls('swap')}>Reorder</Button>
+            <Button active ={activeButton === 'reOrder'} compact basic onClick ={() => handleControls('reOrder')}>Reorder</Button>
+            <Button active ={activeButton === 'reverseFill'} compact basic onClick ={() => handleControls('reverseFill')}><Icon name='angle left'/>Fill</Button>
+            <Button active ={activeButton === 'fill'} compact basic onClick ={() =>handleControls('fill')}>Fill<Icon name='angle right'/></Button>
+            <Button active ={activeButton === 'clone'}compact basic onClick ={() => handleControls('clone')}>Clone</Button>
+            <Button active ={activeButton === 'delete'}compact basic onClick ={() => handleControls('delete')}>Delete</Button>
         </Button.Group>
-        
-        {/* <Button compact basic >Link: On</Button>
-        <Button compact basic >Global Key: C Major</Button>
-        <Button compact basic >BPM: 150</Button>
-        <Button compact basic >Scale: Adapt</Button>
-        <Button compact basic >MASTER</Button> */}
-        {/* <Button compact basic onClick={() => console.log(cardData)} >CardData?</Button> */}
         <div id='instrumentDisplay' style={{display:'flex', flexDirection:'row'}}>
-        <div style={{display: 'flex', flexDirection: 'row'}}>
-            {mappedCards}
+        <div>
+            {superMapCards()}
         </div>
         </div>
         </>

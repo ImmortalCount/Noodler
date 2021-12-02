@@ -24,3 +24,10 @@ MongoClient.connect(
             console.log(`listening on port ${port}`)
         })
     })
+
+//Do I need this shit?
+// i bcryptjs body-parser concurrently express is-empty jsonwebtoken
+//mongoose
+//passport
+//passport-jwt validator
+//
