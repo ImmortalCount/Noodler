@@ -8,6 +8,8 @@ import RhythmLab from "./components/lab/RhythmLab.jsx";
 import ScaleLab from "./components/lab/ScaleLab.jsx";
 import PlayerTest from "./components/PlayerTest/PlayerTest.jsx";
 import MainPage from "./pages/main/MainPage.jsx";
+import Login from './pages/login/Login.jsx'
+import Register from './pages/register/Register.jsx'
 
 
 function App() {
@@ -15,11 +17,13 @@ function App() {
     <>
     {/* <Guitar/> */}
     <MainPage/>
+    {/* <Login/> */}
+    {/* <Register/> */}
     {/* <ScaleLab/> */}
     {/* <ChordLab/>
     <PatternLab/>
     <RhythmLab/> */}
-    
+
   {/* <Lab/> */}
   {/* <Player/> */}
     {/* <PlayerTest/> */}
