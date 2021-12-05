@@ -3,11 +3,11 @@ import bcrypt from 'bcryptjs'
 
 const componentsSchema = mongoose.Schema(
     {
-        chords: { type: Array, required: true },
-        rhythms: { type: Array, required: true },
-        patterns: { type: Array, required: true },
-        scales: { type: Array, required: true },
-        modules: { type: Array, required: true },
+        chords: { type: Array},
+        rhythms: { type: Array},
+        patterns: { type: Array},
+        scales: { type: Array},
+        modules: { type: Array},
       },
       {
         timestamps: true,
@@ -16,11 +16,11 @@ const componentsSchema = mongoose.Schema(
 
 const collectionsSchema = mongoose.Schema(
     {
-        chords: { type: Array, required: true },
-        rhythms: { type: Array, required: true },
-        patterns: { type: Array, required: true },
-        scales: { type: Array, required: true },
-        modules: { type: Array, required: true },
+        chords: { type: Array},
+        rhythms: { type: Array},
+        patterns: { type: Array},
+        scales: { type: Array},
+        modules: { type: Array},
       },
       {
         timestamps: true,
@@ -48,8 +48,8 @@ const userSchema = mongoose.Schema(
           required: true,
           default: false,
         },
-        components: componentsSchema,
-        collections: collectionsSchema,
+        components: {type: Object, required: false},
+        collections: {type: Object, required: false},
         songs: {
             type: Array,
             required: false,
