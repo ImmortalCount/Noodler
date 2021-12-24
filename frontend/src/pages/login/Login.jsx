@@ -4,7 +4,7 @@ import {Link} from 'react-router-dom'
 import {useDispatch, useSelector} from 'react-redux'
 import {login} from '../../store/actions/userActions'
 
-export default function Login() {
+export default function Login({location, history}) {
     const [email, setEmail] = useState('')
     const [password, setPassword] = useState('')
 
@@ -16,7 +16,6 @@ export default function Login() {
     const loginHandler = (e) => {
       e.preventDefault()
       dispatch(login(email, password))
-      
     }
 
     return (
@@ -45,9 +44,15 @@ export default function Login() {
             onChange={(e) => setPassword(e.target.value)}
           />
 
-          <Button onClick={loginHandler} color='teal' fluid size='large'>
+          <Button onClick={loginHandler} color='teal' fluid size='large' loading={loading}>
             Login
           </Button>
+          <Button as={Link} to='/' color='teal' fluid size='large' loading={loading}>
+            Start Noodling
+          </Button>
+          {userInfo && <Button  color='teal'>
+            Success {userInfo.name}
+          </Button>}
         </Segment>
       </Form>
       <Message>

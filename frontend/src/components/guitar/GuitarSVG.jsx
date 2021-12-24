@@ -14,7 +14,7 @@ import { Note } from '@tonaljs/tonal';
 export default function GuitarSVG({masterInstrumentArray, activelyDisplayedInstruments}) {
     const state = useSelector((state) => state.module)
     //Change it so that noteColors is global?
-    const [instruments, setInstruments] = useState([{instrument:'acoustic_guitar_nylon', noteColors: '', scale:[], tuning:['F4','C4','G3','D3','A2','E2'],stringNumber:6,fretNumber: 24}])
+    const [instruments, setInstruments] = useState([{instrument:'acoustic_guitar_nylon', noteColors: '', scale:[], tuning:['E4','B3','G3','D3','A2','E2'],stringNumber:6,fretNumber: 24}])
     const [module, setModule] = useState(0);
     const [noteColors, setNoteColors] = useState('')
     const globalPosition = useRef(0); 
@@ -23,7 +23,7 @@ export default function GuitarSVG({masterInstrumentArray, activelyDisplayedInstr
         displayOnly: false,
         highlights: [],
         master: true, 
-        data: [{speed:'4n', notes:[['D4','X','D4 F4 A4', 'E4'],['X','X', 'D4 F4 A4', 'X'],['X', 'G4','D4 F4 A4', 'X'],['B4', 'X','D4 F4 A4', 'F5']]}, {speed:'4n', notes:[['G5','X', 'F5', 'X'],['E5','X', 'D5', 'X'],['B4','X', 'E4', 'X'],['B4', 'X','E4', 'X']]}, {speed:'4n', notes:[['C4','X', 'D4', 'X'],['E4','X', 'F4', 'X'],['G4', 'X','C4', 'X'],['D4','X', 'C4', 'X']]}, {speed:'4n' , notes:[['A4','X', 'C4', 'X'],['D4','X', 'E4', 'X'],['A5','X', 'C5', 'X'],['D5','X', 'E5', 'X']]}]
+        data: [{speed:1, notes:[['D4','X','D4 F4 A4', 'E4'],['X','X', 'D4 F4 A4', 'X'],['X', 'G4','D4 F4 A4', 'X'],['B4', 'X','D4 F4 A4', 'F5']]}, {speed:1, notes:[['G5','X', 'F5', 'X'],['E5','X', 'D5', 'X'],['B4','X', 'E4', 'X'],['B4', 'X','E4', 'X']]}, {speed: 1, notes:[['C4','X', 'D4', 'X'],['E4','X', 'F4', 'X'],['G4', 'X','C4', 'X'],['D4','X', 'C4', 'X']]}, {speed:1 , notes:[['A4','X', 'C4', 'X'],['D4','X', 'E4', 'X'],['A5','X', 'C5', 'X'],['D5','X', 'E5', 'X']]}]
     }
     ])
     const [audioSettings, setAudioSettings] = useState([
@@ -43,6 +43,7 @@ export default function GuitarSVG({masterInstrumentArray, activelyDisplayedInstr
     const [bpm, setBpm] = useState(120)
     const [focus, setFocus] = useState(0)
     const [loop, setLoop] = useState(false)
+    const [loopEnd, setLoopEnd] = useState(1)
     const [moduleMarkers, setModuleMarkers] = useState(moduleMarkerCreator(data))
     
     //=====Consts
@@ -68,8 +69,11 @@ export default function GuitarSVG({masterInstrumentArray, activelyDisplayedInstr
     useEffect(() => {
         if (state !== "Initial Module Data"){
             setData(JSON.parse(state))
+            setModuleMarkers(moduleMarkerCreator(JSON.parse(state)))
+        } else {
+            return
         }
-        setModuleMarkers(moduleMarkerCreator(data))
+        
     }, [state])
 
     useEffect (()=>{
@@ -606,7 +610,7 @@ function noteStringHandler(notes){
 function handleInstrumentUpdate(){
     var clone = [...instruments]
     var cloneData =[...data]
-    var clonePrototype = JSON.parse(JSON.stringify(guitarPrototype))
+    var clonePrototype = guitarPrototype
     if (masterInstrumentArray.length === instruments.length){
         return
     } else if (masterInstrumentArray.length > instruments.length){
@@ -615,13 +619,18 @@ function handleInstrumentUpdate(){
     } else if (masterInstrumentArray.length < instruments.length){
         clone.pop()
         cloneData.pop()
-        console.log('is this thing on?!')
-        console.log(clone, 'KLON3')
         setInstruments(clone)
         setData(cloneData)
     }
 }
 //======
+
+function playHandler(){
+    Tone.start();
+    Tone.Transport.cancel();
+    loadNoteSequenceAndVisualDataOntoTimeline(data)
+    Tone.Transport.start();
+}
 
 function loadNoteSequenceAndVisualDataOntoTimeline(data){
     Tone.Transport.cancel();
@@ -726,7 +735,7 @@ function loadNoteSequenceAndVisualDataOntoTimeline(data){
         }
                 },
                data[i]['notes'],
-                data[i]['speed']
+                (data[i]['speed'] * Tone.Time('4n').toSeconds()) 
               )
               
                 .start(moduleMarkers[i])
@@ -786,11 +795,12 @@ function loopOn(){
     }
 }
 
+//Temp storage for direction NEXT on module play
 function handlePreviousNextModulePlay(direction){
     var currentTime = Tone.Time(Tone.Transport.position).toSeconds();
-    
+    // console.log(currentTime, lastCurrentTime.current)
     if (direction === 'next'){
-        Tone.Transport.position = findBetween(currentTime, moduleMarkers)['next']
+        Tone.Transport.position = findBetween(currentTime + 0.01, moduleMarkers)['next']
     }
     if (direction === 'previous'){
         Tone.Transport.position = findBetween(currentTime, moduleMarkers)['previous']
@@ -850,13 +860,13 @@ const onChangeInstrument = (e, {id, value}) => {
     var idx = Number(id.split("_")[1])
 
    if (guitarInstruments.includes(value)){
-       clone[idx] = guitarPrototype
+       clone[idx] = JSON.parse(JSON.stringify(guitarPrototype))
        clone[idx]['instrument'] = value;
     setInstruments(clone)
        
    }
    if (bassInstruments.includes(value)){
-    clone[idx] = bassPrototype
+    clone[idx] = JSON.parse(JSON.stringify(bassPrototype))
     clone[idx]['instrument'] = value;
     setInstruments(clone)
     }
@@ -888,7 +898,6 @@ function mapGuitarSVGContainers(instruments){
         <Dropdown
         search
         selection
-
         id={`instrument_${idx}`}
         options={instrumentOptions}
         onChange={onChangeInstrument}
@@ -898,7 +907,6 @@ function mapGuitarSVGContainers(instruments){
         placeholder={instruments['tuning']}
         search
         selection
-
         id={`tuning_${idx}`}
         onChange={onChangeTuning}
         options={tuningOptions}
@@ -942,10 +950,10 @@ function displayByPitchClass(notes, highlights, board){
     return (
         <>
         {mapGuitarSVGContainers(instruments)}
-        <Button compact basic onClick={() => console.log(data)}>test</Button>
+        <Button compact basic onClick={() => console.log(moduleMarkers)}>test</Button>
         <Button compact basic onClick={() => Tone.Transport.stop()}><Icon name='stop'/></Button>
         <Button compact basic onClick={() => Tone.Transport.pause()}><Icon name='pause'/></Button>
-        <Button compact basic onClick={() => Tone.Transport.start()}><Icon name='play'/> </Button>
+        <Button compact basic onClick={() => playHandler()}><Icon name='play'/> </Button>
         <Button compact basic active={loop === true} onClick={()=>loopOn()}><Icon name='retweet'/></Button>
         <Button compact basic onClick={() => handlePreviousNextModulePlay('previous')} ><Icon name='fast backward'/></Button>
         <Button compact basic onClick={() => handlePreviousNextModulePlay('current')} ><Icon name='eject'/></Button>
@@ -953,8 +961,8 @@ function displayByPitchClass(notes, highlights, board){
         <Button compact basic onClick={() => globalPosition.current--}><Icon name='arrow down'/></Button>
         <Button compact basic onClick={() => globalPosition.current++}><Icon name='arrow up'/></Button>
         <Button compact basic onClick={() => globalPosition.current = -1}><Icon name='arrows alternate vertical'/></Button>
-        <Button compact basic onClick={()=>console.log('backstep')}><Icon name='step backward'/></Button>
-        <Button compact basic onClick={()=>console.log('forwardstep')}><Icon name='step forward'/></Button>
+        {/* <Button compact basic onClick={()=>console.log('backstep')}><Icon name='step backward'/></Button>
+        <Button compact basic onClick={()=>console.log('forwardstep')}><Icon name='step forward'/></Button> */}
         {/* <Button compact basic onClick={() => addRemoveGuitars('add')} >Add Guitar</Button> */}
         {/* <Button compact basic onClick={() => addRemoveGuitars('remove')} >Remove Guitar</Button> */}
         {/* <Button compact basic onClick={() => showAll()} >Show All</Button> */}

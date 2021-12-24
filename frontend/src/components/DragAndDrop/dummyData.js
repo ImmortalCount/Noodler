@@ -406,3 +406,186 @@ export const initialData4 = [
         position: []
     },
 ];
+
+export const initialDataType2 = [
+    {   
+        name: 'module 1',
+        moduleName: 'module 1',
+        desc: '',
+        author: '',
+        authorId: '',
+        dataType: 'module',
+        pool: '',
+        data: {
+            chordData: {
+                chordName: 'Dm',
+                chord: ['D3', 'F3', 'A3'],
+            },
+            rhythmData: {
+                rhythmName: 'Hard Swing',
+                rhythm: [['O', 'X', 'O'], ['O', 'X', 'O'], ['O', 'X', 'O'], ['O', 'X', 'O']],
+                speed: 1,
+                length: 4,
+                notes: 8
+            },
+            patternData: {
+                patternName: 'Pattern: normal variation',
+                pattern: [1, 4, 1, 8, 2, 12, 8, 7],
+                position: [],
+            },
+            scaleData: {
+                scaleName: 'D Dorian',
+                scale: ['D', 'E', 'F', 'G', 'A', 'B', 'C'],
+                binary: [1, 0, 1, 1, 0, 1, 0, 1, 0, 1, 1, 0],
+                number: 2902
+            },
+            keyData: {
+                keyName: 'Key: C',
+                root: 'C'
+            },
+            countData: {
+                countName: '4',
+                count: 4,
+            },
+        }
+    },
+    {   
+        name: 'module 2',
+        moduleName: 'module 2',
+        desc: '',
+        author: '',
+        authorId: '',
+        dataType: 'module',
+        pool: '',
+        data: {
+            chordData: {
+                name: 'GM',
+                chordName: 'GM',
+                chord: ['G3', 'B3', 'D4'],
+            },
+            rhythmData: {
+                rhythmName: 'Hard Swing 5',
+                name: 'Hard Swing 5',
+                rhythm: [['O', 'X', 'X'], ['O', 'X', 'X'], ['O', 'X', 'O'], ['O', 'X', 'O'], ['O', 'X', 'O']],
+                speed: 1,
+                length: 5,
+                notes: 8
+            },
+            patternData: {
+                patternName: 'Pattern: normal variation',
+                name: 'Pattern: normal variation',
+                pattern: [1, 4, 1, 8, 2, 12, 8, 7],
+                position: [],
+            },
+            scaleData: {
+                scaleName: 'G Mixolydian',
+                name: 'G Mixolydian',
+                scale: ['G', 'A', 'B', 'C', 'D', 'E', 'F'],
+                binary: [1, 0, 1, 0, 1, 1, 0, 1, 0, 1, 1, 0],
+                number: 2774
+            },
+            keyData: {
+                keyName: 'Key: C',
+                name: 'Key: C',
+                root: 'C'
+            },
+            countData: {
+                countName: '4',
+                count: 4,
+            },
+        }
+    },
+    {
+        name: 'module 3',
+        moduleName: 'module 3',
+        desc: '',
+        author: '',
+        authorId: '',
+        dataType: 'module',
+        pool: '',
+        data: {
+            chordData: {
+                chordName: 'CM',
+                name: 'CM',
+                chord: ['C3', 'E3', 'G3'],
+            },
+            rhythmData: {
+                rhythmName: 'Hard Swing',
+                name: 'Hard Swing',
+                    rhythm: [['O', 'X', 'O'], ['O', 'X', 'O'], ['O', 'X', 'O'], ['O', 'X', 'O']],
+                    speed: 1,
+                    length: 4,
+                    notes: 8
+            },
+            patternData: {
+                patternName: 'Pattern: normal variation',
+                name: 'Pattern: normal variation',
+                pattern: [1, 4, 1, 8, 2, 12, 8, 7],
+                position: [],
+            },
+            scaleData: {
+                scaleName: 'C Major',
+                name: 'C Major',
+                scale: ['C', 'D', 'E', 'F', 'G', 'A', 'B'],
+                binary: [1, 0, 1, 0, 1, 1, 0, 1, 0, 1, 0, 1],
+                number: 2773
+            },
+            keyData: {
+                keyName: 'Key: C',
+                name: 'Key: C',
+                root: 'C'
+            },
+            countData: {
+                countName: '4',
+                name: '4',
+                count: 4,
+            },
+        }  
+    },
+    {
+        name: 'module 4',
+        moduleName: 'module 4',
+        desc: '',
+        author: '',
+        authorId: '',
+        dataType: 'module',
+        pool: '',
+        data: {
+            chordData: {
+                chordName: 'CM',
+                name: 'CM',
+                chord: ['C3', 'E3', 'G3'],
+            },
+            rhythmData: {
+                rhythmName: 'Hard Swing',
+                name: 'Hard Swing',
+                    rhythm: [['O', 'X', 'O'], ['O', 'X', 'O'], ['O', 'X', 'O'], ['O', 'X', 'O']],
+                    speed: 1,
+                    length: 4,
+                    notes: 8
+            },
+            patternData: {
+                patternName: 'Pattern: normal variation',
+                name: 'Pattern: normal variation',
+                pattern: [1, 4, 1, 8, 2, 12, 8, 7],
+                position: [],
+            },
+            scaleData: {
+                scaleName: 'C Major',
+                name: 'C Major',
+                scale: ['C', 'D', 'E', 'F', 'G', 'A', 'B'],
+                binary: [1, 0, 1, 0, 1, 1, 0, 1, 0, 1, 0, 1],
+                number: 2773
+            },
+            keyData: {
+                keyName: 'Key: C',
+                root: 'C'
+            },
+            countData: {
+                countName: '4',
+                count: 4,
+            },
+        }  
+    },
+    
+]

@@ -1,7 +1,5 @@
 import React,{useState} from 'react'
 import Player from '../../components/DragAndDrop/Player'
-import MenuFinder from '../../components/finder/MenuFinder'
-import Results from '../../components/finder/Results'
 import Lab from '../../components/lab/Lab'
 import Navbar from '../../components/navbar/Navbar'
 import Palette from '../../components/palette/Palette'
@@ -10,7 +8,7 @@ import GuitarSVG from '../../components/guitar/GuitarSVG'
 import Explorer from '../../components/finder/Explorer'
 
 export default function MainPage() {
-    const [activeTabs, setActiveTabs] = useState(['player', 'explorer' ])
+    const [activeTabs, setActiveTabs] = useState(['explorer', 'player' ])
     const [masterInstrumentArray, setMasterInstrumentArray] = useState(['instr 1'])
     const [activelyDisplayedInstruments, setActivelyDisplayedInstruments] = useState([0, 1])
 
@@ -61,21 +59,21 @@ function Midbar() {
                 active={activeTabs.includes('options')}
                 onClick={onClickHandler}
                 />
-                <Menu.Item
+                {/* <Menu.Item
                 name='test'
                 active
                 onClick={() => console.log(activeTabs)}
-                />
+                /> */}
                 <Menu.Item
                 name='explorer'
                 active={activeTabs.includes('explorer')}
                 onClick={onClickHandler}
                 />
-                <Menu.Item
+                {/* <Menu.Item
                 name='social'
                 active={activeTabs.includes('social')}
                 onClick={onClickHandler}
-                />
+                /> */}
                 <Menu.Item
                 name='lab'
                 active={activeTabs.includes('lab')}
@@ -86,11 +84,11 @@ function Midbar() {
                 active={activeTabs.includes('palette')}
                 onClick={onClickHandler}
                 />
-                <Menu.Item
+                {/* <Menu.Item
                 name='mixer'
                 active={activeTabs.includes('mixer')}
                 onClick={onClickHandler}
-                />
+                /> */}
                 <Menu.Item
                 name='player'
                 active={activeTabs.includes('player')}
@@ -129,10 +127,10 @@ function Midbar() {
         </div>
         <div className="bottomhalf" style={{display: 'flex', flexDirection: 'row', backgroundColor: 'white'}}>
             <div className="bottomleft" style={{display: 'flex', flexDirection: 'row', backgroundColor: 'white'}}> 
-            {/* {activeTabs.includes('explorer') && <MenuFinder/>}
-            {activeTabs.includes('explorer') && <Results/>} */}
             {activeTabs.includes('explorer') && <Explorer/>}
-            {activeTabs.includes('lab') && <Lab/>}
+            {activeTabs.includes('lab') && <Lab
+            masterInstrumentArray = {masterInstrumentArray}
+            />}
             {activeTabs.includes('palette') && <Palette/>}
             </div>
             <div className="bottomright"> 

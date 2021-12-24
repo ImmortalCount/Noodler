@@ -5,7 +5,7 @@ import './palette.css'
 export default function Palette() {
     const activeTabStates = [
         "Components",
-        "Collections",
+        // "Collections",
         "Songs",
     ]
 
@@ -23,27 +23,11 @@ export default function Palette() {
     var [storage, setStorage] = useState(
         {
             "Components": {
-                "Modules": ['A Module', 'B Module'],
-                "Scales": [{
-                    scaleName: 'C harmonic major',
-                    scale: ['C', 'D', 'E', 'F', 'G', 'G#', 'B'],
-                }],
-                "Chords": [{
-                    chordName: 'CM',
-                    chord: ['C3', 'E3', 'G3'],
-                    position: [],
-                }],
-                "Patterns": [{
-                    patternName: 'Boogie 1',
-                    type: 'normal',
-                    pattern: [0, 6, 3, 8, -7, 0, 12],
-                    position: [],
-                }],
-                "Rhythms": [{
-                    rhythmName: '4ths',
-                    rhythm: [["O"], ["O"], ["O"], ["O"]],
-                    length: 4,
-                }],
+                "Modules": [],
+                "Scales": [],
+                "Chords": [],
+                "Patterns": [],
+                "Rhythms": [],
             },
             "Collections": {
                 "Modules": ['A Module Collection', 'B Module Collection'],
@@ -51,7 +35,7 @@ export default function Palette() {
                 "Patterns": ['Pattern Collections'],
                 "Rhythms": ['Rhythm Collections'],
             },
-            "Songs": ['In A Gadda Da Vida']
+            "Songs": []
         }
     )
 
@@ -59,55 +43,57 @@ export default function Palette() {
     const [activeSubTab, setActiveSubTab] = useState(1)
 
     function mapRegularComponents(arr, type){
-        var groupTag;
         var name;
         var dataClass;
+        let color;
+        var groupTag;
+        if (activeTab !== 0){
+            return
+        }
         if (type === 'Scales'){
             groupTag = 'scales'
             name = 'scaleName'
             dataClass = 'scaleData'
+            color = 'lightcoral'
         } else if (type === 'Chords'){
             groupTag = 'chords'
             name = 'chordName'
             dataClass = 'chordData'
+            color = 'lightsalmon'
         } else if (type === 'Patterns'){
             groupTag = 'patterns'
             name = 'patternName'
             dataClass = 'patternData'
+            color = 'lightblue'
         } else if (type === 'Rhythms'){
             groupTag = 'rhythms'
             name = 'rhythmName'
             dataClass = 'rhythmData'
-
+            color = 'lightseagreen'
+        } else if (type === 'Modules'){
+            groupTag = 'modules'
+            name = 'moduleName'
+            dataClass = 'moduleData'
+            color = 'wheat'
         } else {
             return
-        }
+        } 
 
         return (
             arr.map((arr, idx) => 
-            <div id={'palette_' + groupTag + '_' + idx} key={'palette_' + groupTag + '_' + idx} draggable onDragStart = {dragStartHandler} onDrag = {dragHandler} onDragOver = {dragOverHandler} onDragLeave={dragLeaveHandler} onDrop = {dropHandler}  className={dataClass} style={{marginTop: '10px', marginBottom: '10px', height: '25px', width: '175px',backgroundColor: 'wheat'}}>{arr[name]}</div>
+            <div id={'palette_' + groupTag + '_' + idx} key={'palette_' + groupTag + '_' + idx} draggable onDragStart = {dragStartHandler} onDrag = {dragHandler} onDragOver = {dragOverHandler} onDragLeave={dragLeaveHandler} onDrop = {dropHandler}  className={dataClass} style={{marginTop: '10px', marginBottom: '10px', height: '25px', width: '175px',backgroundColor: color}}>{arr[name]}</div>
             )
         )
             
     }
 
-    function mapModuleComponent(){
-
-    }
-
-    function mapCollectionComponent(){
+    function mapSongs(){
         return (
-            <>
-            <Icon name='folder'/>
-            <Icon name='folder open'/>
-            </>
+            storage['Songs'].map((song, idx) => 
+            <div id={'palette_song_' + idx} key={'palette_song_'+ idx} draggable onDragStart = {dragStartHandlerSong} onDrag = {dragHandler} onDragOver = {dragOverHandler} onDragLeave={dragLeaveHandler} onDrop = {dropHandler}  className='songData' style={{marginTop: '10px', marginBottom: '10px', height: '25px', width: '175px',backgroundColor:'wheat'}}>{song}</div>
+            )
         )
     }
-
-    function mapSong(){
-
-    }
-
 
     function onClickHandler(direction, type){
         if (direction === 'right'){
@@ -151,10 +137,13 @@ export default function Palette() {
         var pos = Number(ex[2])
         var obj = {id: 'special', className: e.target.className, message: 
         storage[activeTabStates[activeTab]][activeSubTabStates[activeSubTab]][pos],
-         type: 'foreign'}
+         type: 'palette'}
         e.dataTransfer.setData('text', JSON.stringify(obj));
-        console.log(obj)
     };
+
+    const dragStartHandlerSong = e => {
+
+    }
 
     const dragHandler = e => {
     };
@@ -170,8 +159,7 @@ export default function Palette() {
     const dropHandler = e => {
         var cloneStorage = JSON.parse(JSON.stringify(storage))
         var data = JSON.parse(e.dataTransfer.getData("text"));
-        if (data['id'] === 'special'){
-            console.log(data['className'])
+        if (data['type'] !== 'palette'){
            if (data['className'] === 'chordData'){
             cloneStorage['Components']['Chords'].push(data['message'])
             setActiveTab(0)
@@ -194,7 +182,6 @@ export default function Palette() {
         } else {
             return
         }
-        console.log(data)
         setStorage(cloneStorage)
         e.stopPropagation();
         e.nativeEvent.stopImmediatePropagation();
@@ -203,34 +190,20 @@ export default function Palette() {
         
         
     }
-    console.log(storage[activeTabStates[activeTab]][activeSubTabStates[activeSubTab]][0], 'TEST!')
-    function InnerPalette(){
-        return (
-            <div style={({height: '500px', width: '100px', background: 'wheat'})}></div>
-        )
-    }
-    const Panes = [
-        {menuItem: 'Rhythms', render: () => <Tab.Pane style={{innerHeight: '500px'}}> <InnerPalette/> </Tab.Pane> },
-        {menuItem: 'Scales', render: () => <Tab.Pane> <InnerPalette/> </Tab.Pane> },
-        {menuItem: 'Patterns', render: () => <Tab.Pane> <InnerPalette/> </Tab.Pane> },
-        {menuItem: 'Rhythmic Patterns', render: () => <Tab.Pane> <InnerPalette/> </Tab.Pane> },
-        {menuItem: 'Chords', render: () => <Tab.Pane> <InnerPalette/> </Tab.Pane> },
-        {menuItem: 'Modules', render: () => <Tab.Pane> <InnerPalette/> </Tab.Pane> },
-    ]
-    const Tabs = () => <Tab menu ={{color: 'teal', inverted: 'true'}} panes ={Panes}/>
 
     return (
         <>
         <div onDrop={dropHandler} onDragOver={dragOverHandler}>
-         <List relaxed divided size='large' className='fixed-width' onDrop={() => console.log('DROPPED!?!?!?!? LIST')} >
-         <Button.Group className='no-padding'>
+         <List relaxed divided size='large' className='fixed-width'>
+        <div style={{display:'flex', flexDirection:'column'}}>
+        <Button.Group className='no-padding'>
             <Button compact basic onClick={() => onClickHandler('left', 'tab')}> <Icon name ='left arrow'/></Button>
             <Segment>
             {activeTabStates[activeTab]}
             </Segment>
             <Button compact basic onClick={() => onClickHandler('right', 'tab')}> <Icon name ='right arrow'/></Button>
         </Button.Group>
-        {activeTab !== 2 && 
+        {activeTab !== 1 && 
         <Button.Group className='no-padding'>
             <Button compact basic onClick={() => onClickHandler('left', 'subTab')}> <Icon name ='left arrow'/></Button>
             <Segment>
@@ -238,20 +211,20 @@ export default function Palette() {
             </Segment>
             <Button compact basic onClick={() => onClickHandler('right', 'subTab')}> <Icon name ='right arrow'/></Button>
         </Button.Group>}
+        </div>
         <List.Item className='Item'>
             {/* <List.Icon name='clock' size='large' verticalAlign='middle' /> */}
             <List.Content>
-                <List.Header> {activeTab !== 2 ? activeSubTabStates[activeSubTab] : 'Songs'}</List.Header>
+                <List.Header> {activeTab !== 1 ? activeSubTabStates[activeSubTab] : 'Songs'}</List.Header>
                 <List.Description>
-                    {activeTab !== 2 &&
+                    {activeTab !== 1 &&
                     <div >
                     {mapRegularComponents(storage[activeTabStates[activeTab]][activeSubTabStates[activeSubTab]], activeSubTabStates[activeSubTab])}
                     </div>}
-                    {activeTab === 2 &&
+                    {activeTab === 1 &&
                     <div>
-                        {storage['Songs']}
+                        {mapSongs()}
                     </div>}
-                   
                 </List.Description>
             </List.Content>
         </List.Item>

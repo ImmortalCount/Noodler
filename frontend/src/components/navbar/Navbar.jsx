@@ -1,10 +1,16 @@
 import React, {useState} from 'react'
 import { Menu, Select } from 'semantic-ui-react'
+import { Link } from 'react-router-dom';
+import { useSelector, useDispatch } from 'react-redux';
+import {logout} from '../../store/actions/userActions.js'
 
 export default function Navbar() {
     var activeItem;
     var OnClickHandler;
-    var [logedInUserName, setLoggedInUserName] = useState(null)
+
+    const userLogin = useSelector((state) => state.userLogin)
+    const { userInfo } = userLogin
+    const dispatch = useDispatch()
 
     var accountOptions = [
         { key: 'name', text: 'Name', value: 'name' },
@@ -12,13 +18,11 @@ export default function Navbar() {
         { key: 'logout', text: 'Logout', value: 'logout' },
     ]
 
-    const loginHandler = () => {
-        setLoggedInUserName('User1')
+    const logoutHandler = () => {
+        dispatch(logout())
     }
 
-    const logoutHandler = () => {
-        setLoggedInUserName(null)
-    }
+
 
     return (
         <Menu>
@@ -28,13 +32,13 @@ export default function Navbar() {
             onClick={OnClickHandler}
             />
             <Menu.Item
-            name='explorer'
-            active={activeItem === 'explorer'}
+            name='collections'
+            active={activeItem === 'collections'}
             onClick={OnClickHandler}
             />
             <Menu.Item
-            name='social'
-            active={activeItem === 'social'}
+            name='pools'
+            active={activeItem === 'pools'}
             onClick={OnClickHandler}
             />
             <Menu.Item
@@ -48,26 +52,25 @@ export default function Navbar() {
             onClick={OnClickHandler}
             />
             <Menu.Item
-            name={logedInUserName}
-            active={activeItem === 'player'}
-            onClick={OnClickHandler}
+            name='test'
+            onClick={() => console.log(userInfo)}
             />
             <Menu.Menu position='right'>
-            {!(logedInUserName === null) &&
+            {(userInfo) &&
                 <Menu.Item
-                name='account'
+                name={userInfo.name}
                 active={activeItem === 'account'}
                 onClick={OnClickHandler}
                 />
             }
-            {(logedInUserName === null) && 
-            <Menu.Item
+            {!(userInfo) && 
+            <Menu.Item as={Link}
+            to='/login'
             name='login'
             active={activeItem === 'login'}
-            onClick={loginHandler}
             />
             }
-            {!(logedInUserName === null) &&
+            {(userInfo) &&
             <Menu.Item
             name='logout'
             active={activeItem === 'logout'}

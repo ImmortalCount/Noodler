@@ -1,42 +1,98 @@
 
 import { React, useState, useEffect, useRef} from 'react'
 import * as Tone from 'tone';
+import { useDispatch, useSelector} from 'react-redux';
+import { insertData } from '../../store/actions/dataPoolActions';
 import { toMidi, midiToNoteName } from '@tonaljs/midi';
 import { Note, Scale, Chord} from '@tonaljs/tonal';
-import { Menu, Button, Input } from 'semantic-ui-react';
-import { keySynth } from './keySynth';
+import { Menu, Button, Input, Icon, Dropdown} from 'semantic-ui-react';
+import { keySynth } from './synths';
+import { setLabData } from '../../store/actions/labDataActions';
+import { scaleHandler } from './utils';
+import { keyMap } from './keymap';
 
 
 export default function PatternLab({importedPatternData}) {
 
-const chromaticScale = [
-    'C',
-    'C#',
-    'D',
-    'D#',
-    'E',
-    'F',
-    'F#',
-    'G',
-    'G#',
-    'A',
-    'A#',
-    'B'
-]
-//['C', 'D', 'E', 'G', 'A']
-var [notes, setNotes] = useState(['C4', 'D4', 'E4', 'G5', 'C5', 'B4', 'G4', 'A4'])
-var [pattern, setPattern] = useState([''])
-var [scaleLock, setScaleLock] = useState(true)
-var [playOnKeyPress, setPlayOnKeyPress] = useState(false)
-var [name, setName] = useState('Pattern 1')
-var scale = ['C', 'D', 'E', 'F', 'G', 'A', 'B'];
-var octave = 4;
+const [notes, setNotes] = useState(['A2', 'B2', 'C3', 'D3', 'E3', 'F3', 'G3', 'A3'])
+const [pattern, setPattern] = useState(['0 1 2 4 7 4 2 1'])
+const [scaleLock, setScaleLock] = useState(true)
+const [playOnKeyPress, setPlayOnKeyPress] = useState(false)
+const [name, setName] = useState('Pattern 1')
+const [options, setOptions] = useState('sharps')
+const [noteOptions, setNoteOptions] = useState('octave')
+const [allOptions, setAllOptions] = useState('octave')
+const [edit, setEdit] = useState('off')
+const [notesTruePatternFalse, setNotesTruePatternFalse] = useState(true)
+const [octave, setOctave] = useState(3)
+const [generatePatternLength, setGeneratePatternLength] = useState(8)
+const [manipulate, setManipulate] = useState(false)
+const [playNoteOnClick, setPlayNoteOnClick] = useState(true)
+const [startOnScaleDegree, setStartOnScaleDegree] = useState(true)
+const [generateScaleDegree, setGenerateScaleDegree] = useState(1)
+const isMuted = false;
+
+const dispatch = useDispatch()
+
+const labData = useSelector(state => state.labData)
+const {labInfo} = labData
+
+const allScaleNotes = [];
+const scaleNotes = labInfo && labInfo['scaleLab'] && labInfo['scaleLab']['scale'] ? scaleHandler(labInfo['scaleLab']['scale'], options): Scale.get('c major').notes;
+const allChromaticNotes = [];
+const chromaticNotes = scaleHandler(Scale.get('c chromatic').notes, options);
+
+//generate chromatic notes
+
+for (var o = 0; o < 10; o++){
+    for (var p = 0; p < chromaticNotes.length; p++){
+        allChromaticNotes.push(chromaticNotes[p] + o)
+    }
+}
+
+//generate all scale specific notes
+    for (var n = 0; n < allChromaticNotes.length; n++){
+        if (scaleNotes.includes(Note.pitchClass(allChromaticNotes[n]))){
+            allScaleNotes.push(allChromaticNotes[n])
+        }
+    }
+
+    function patternAndScaleToNotes2(patternArr){
+        var notesExport = [];
+        var root = scaleNotes[0] + 3
+        const allNotes = Note.sortedNames(allScaleNotes);
+        //------------
+        var startingIndex;
+        if (allNotes.indexOf(root) === -1){
+            startingIndex = allNotes.indexOf(Note.enharmonic(root))
+        } else {
+            startingIndex = allNotes.indexOf(root)
+        }
+        var startingChromaticIndex;
+        if (allChromaticNotes.indexOf(root) === -1){
+            startingChromaticIndex = allChromaticNotes.indexOf(Note.enharmonic(root))
+        } else {
+            startingChromaticIndex = allChromaticNotes.indexOf(root);
+        }
+        for (var k = 0; k < patternArr.length; k++){
+            //check if flag is added to patternArr
+            if (typeof patternArr[k] === 'string'){
+                notesExport.push(allChromaticNotes[startingChromaticIndex + Number(patternArr[k].split("").slice(1).join(""))])
+            } else {
+                notesExport.push(allNotes[startingIndex + patternArr[k]])
+            }
+        }
+        setNotes(notesExport)
+        // playAll(notesExport)
+    }
+
+
 
 useEffect(() => {
     if (importedPatternData['pattern'] !== undefined){
         setPattern(importedPatternData['pattern'])
         setName(importedPatternData['patternName'])
-        console.log(patternAndScaleToNotes(importedPatternData['pattern'], scale))
+        patternAndScaleToNotes2(importedPatternData['pattern'])
     }
     
 }, [importedPatternData])
@@ -44,6 +100,33 @@ useEffect(() => {
 useEffect(() => {
     patternExtraction()
 }, [notes])
+
+// useEffect(() => {
+//     // patternAndScaleToNotes()
+// }, [scaleNotes])
+
+useEffect(() => {
+        let newInfo = {...labInfo}
+        const patternDataPrototype = {
+            name: name,
+            patternName: name,
+            desc: '',
+            type: 'pattern',
+            length: notes.length,
+            pattern: pattern,
+            position: [],
+            author: '',
+            authorId: '',
+            dataType: 'pattern',
+            pool: '',
+        }
+        newInfo['patternLab'] = patternDataPrototype
+        dispatch(setLabData(newInfo))
+    }, [notes, name, pattern])
+
+// useEffect(() => {
+//     patternAndScaleToNotes()
+// }, [scaleNotes])
 
 //=======Drag and drop functionality
 function changePositionsUsingIDs(startingID, endingID){
@@ -58,7 +141,7 @@ function changePositionsUsingIDs(startingID, endingID){
 }
 
 const dragStartHandler = e => {
-    var obj = {id: e.target.id, className: e.target.className, message: 'foreign', type: 'foreign'}
+    var obj = {id: e.target.id, className: e.target.className, message: '', type: 'patternLab'}
     e.dataTransfer.setData('text', JSON.stringify(obj));
 };
 
@@ -67,7 +150,7 @@ const dragStartHandlerSpecial = e => {
         patternName: name,
         pattern: pattern,
         position: []
-    }, type: 'foreign'}
+    }, type: 'patternLabExport'}
     e.dataTransfer.setData('text', JSON.stringify(obj));
 }
 
@@ -75,67 +158,30 @@ const dragHandler = e => {
 };
 
 const dragOverHandler = e => {
-    e.currentTarget.className = 'active chord'
+    e.currentTarget.className = 'active note'
     e.preventDefault();
 };
 
 const dragLeaveHandler = e => {
-    e.currentTarget.className = 'inactive chord'
+    e.currentTarget.className = 'inactive note'
     e.preventDefault();
 }
 
 //---------------------
 const dropHandler = e => {
-    e.currentTarget.className = 'inactive chord'
+    e.currentTarget.className = 'inactive note'
     e.stopPropagation();
     e.nativeEvent.stopImmediatePropagation();
     e.preventDefault();
     var data = JSON.parse(e.dataTransfer.getData("text"));
-    changePositionsUsingIDs(data.id, e.target.id)
-    e.dataTransfer.clearData();
-    
+    if (data.type !== 'patternLab'){
+        return
+    } else {
+        changePositionsUsingIDs(data.id, e.currentTarget.id)
+        e.dataTransfer.clearData();
+    }
 }
 
-var keyMap = [
-//lower row
-{key: 'z', note: 'C', octave: '0'},
-{key: 'x', note: 'D', octave: '0'},
-{key: 'c', note: 'E', octave: '0'},
-{key: 'v', note: 'F', octave: '0'},
-{key: 'b', note: 'G', octave: '0'},
-{key: 'n', note: 'A', octave: '0'},
-{key: 'm', note: 'B', octave: '0'},
-{key: ',', note: 'C', octave: '1'},
-{key: '.', note: 'D', octave: '1'},
-{key: '/', note: 'E', octave: '1'},
-//middle row
-{key: 's', note: 'C#', octave: '0'},
-{key: 'd', note: 'D#', octave: '0'},
-{key: 'g', note: 'F#', octave: '0'},
-{key: 'h', note: 'G#', octave: '0'},
-{key: 'j', note: 'A#', octave: '0'},
-{key: 'l', note: 'C#', octave: '1'},
-{key: ';', note: 'D#', octave: '1'},
-//upper row
-{key: 'q', note: 'C', octave: '1'},
-{key: 'w', note: 'D', octave: '1'},
-{key: 'e', note: 'E', octave: '1'},
-{key: 'r', note: 'F', octave: '1'},
-{key: 't', note: 'G', octave: '1'},
-{key: 'y', note: 'A', octave: '1'},
-{key: 'u', note: 'B', octave: '1'},
-{key: 'i', note: 'C', octave: '2'},
-{key: 'o', note: 'D', octave: '2'},
-{key: 'p', note: 'E', octave: '2'},
-//number row
-{key: '2', note: 'C#', octave: '1'},
-{key: '3', note: 'D#', octave: '1'},
-{key: '5', note: 'F#', octave: '1'},
-{key: '6', note: 'G#', octave: '1'},
-{key: '7', note: 'A#', octave: '1'},
-{key: '9', note: 'C#', octave: '2'},
-{key: '0', note: 'D#', octave: '2'},
-]
 var [keyPressed, setKeyPressed] = useState(false);
 var keydownEvent = (e) => {
     if (keyPressed === false){
@@ -145,14 +191,13 @@ var keydownEvent = (e) => {
         } else {
             let obj = keyMap.find(o => o.key === e.key);
             if (scaleLock){
-                if (!scale.includes(obj.note)){
+                if (obj && obj.note && !scaleNotes.includes(obj.note)){
                     return
-                } else if (obj.note !== undefined) {
+                } else if (obj && obj.note !== undefined) {
                 const now = Tone.now();
                 var playNote = (obj.note + (Number(obj.octave) + Number(octave)));
                 keySynth.triggerAttackRelease(playNote, "8n", now);
                 document.removeEventListener('keydown', keydownEvent);
-                console.log(obj.note)
                 newNotes.push(playNote)
                 setNotes(newNotes)
                 }
@@ -161,7 +206,6 @@ var keydownEvent = (e) => {
                 var playNote = (obj.note + (Number(obj.octave) + Number(octave)));
                 keySynth.triggerAttackRelease(playNote, "8n", now);
                 document.removeEventListener('keydown', keydownEvent);
-                console.log(obj.note)
                 newNotes.push(playNote)
                 setNotes(newNotes)
         }
@@ -180,100 +224,268 @@ document.addEventListener('keyup', keyUpEvent)
 
 
 function playAll(){
-    const now = Tone.now();
-    const synth = new Tone.Synth().toDestination()
-   for (var i = 0; i < notes.length; i++){
-    synth.triggerAttackRelease(notes[i], '8n', now + (i * 0.2))
-    // document.getElementById('pattern_' + i).className = 'active';
+    if (isMuted){
+        return
     }
-}
-
-var handleNotesClick = () => {
-    console.log(notes);
-}
-
-// function randomIntFromInterval(min, max) { // min and max included 
-//     return Math.floor(Math.random() * (max - min + 1) + min)
-//   }
-
-function generateRandomScale(noteNumber){
-    var returnArr = [1,0,0,0,0,0,0,0,0,0,0,0];
-    var returnScale = [];
-    var i = 1;
-    while (i < noteNumber){
-        var randomIndex = (Math.floor(Math.random() * 11) + 1);
-        if (returnArr[randomIndex] !== 1){
-            returnArr[randomIndex] = 1;
-            i += 1;
-        }
-    }
-    for (var j = 0; j < returnArr.length; j++){
-        if (returnArr[j] === 1){
-            returnScale.push(chromaticScale[j] + 4);
-        }
-    }
-    var digit = parseInt(returnArr.join(""), 2)
-    console.log(Scale.get(returnArr.join("")).name, `Scale: ${digit}`)
-    setNotes(returnScale)
-}
-
-function generateAllModes(binaryNoteArr){
-var modes = [];
-var cloneScale = [...binaryNoteArr];
-
-    for (var i = 0; i < 12; i++){
-            var current = [...cloneScale]
-            if (current[0] === 1){
-                modes.push(current);
-            }
-            
-            cloneScale.push(cloneScale.shift());
-        }
-    console.log(modes);
+    Tone.start()
+    Tone.Transport.cancel()
+    Tone.Transport.stop()
+    Tone.Transport.start();
+    var count = 0;
+    const synthPart = new Tone.Sequence(
+        function(time, note) {
+          keySynth.triggerAttackRelease(note, "10hz", time)
+          var highlightedChord = document.getElementById('pattern_' + count)
+            highlightedChord.className = 'active note'
+            setTimeout(() => {highlightedChord.className = 'inactive note'}, 250)
+            count++
+        },
+       notes,
+        "8n"
+      );
+      synthPart.start();
+      synthPart.loop = 1;
 }
 
 function generateRandomMelody(){
-    var melodyLength = 8;
     var returnArr = [];
-    var testArr = [
-        'C2',
-        'D2', 
-        'E2', 
-        'F2', 
-        'G2', 
-        'A2', 
-        'B2', 
-        'C3',
-        'D3', 
-        'E3', 
-        'F3', 
-        'G3', 
-        'A3', 
-        'B3',
-        'C4',
-        'D4', 
-        'E4', 
-        'F4', 
-        'G4', 
-        'A4', 
-        'B4',  
-    ]
-    for (var i = 0; i < melodyLength; i++){
-        var randomIndex = Math.floor(Math.random() * testArr.length);
-        returnArr.push(testArr[randomIndex])
+    for (var i = 0; i < generatePatternLength; i++){
+        var upOctave = Math.random() < 0.5
+        var randomIndex = Math.floor(Math.random() * scaleNotes.length);
+        if (upOctave){
+            returnArr.push(scaleNotes[randomIndex] + (octave + 1))
+        } else {
+            returnArr.push(scaleNotes[randomIndex] + octave)
+        }
     }
+    
 setNotes(returnArr);
 }
-//still runs a bit funky
+
+const handleClickUp = (e) => {
+    var clone = [...notes]
+   const x = e.currentTarget.parentNode.parentNode.id
+   const idx = Number(x.split('_')[1])
+   if (noteOptions === 'scale'){
+        if (allScaleNotes.indexOf(notes[idx]) === -1){
+            var chromaIndex = allChromaticNotes.indexOf(notes[idx]);
+            if (chromaIndex === -1){
+                chromaIndex = allChromaticNotes.indexOf(Note.enharmonic(notes[idx]));
+            }
+            var matched = false;
+            var count = 0;
+            while (matched === false){
+                if (allScaleNotes.indexOf(allChromaticNotes[chromaIndex + count]) !== -1){
+                    clone[idx] = allScaleNotes[allScaleNotes.indexOf(allChromaticNotes[chromaIndex + count])];
+                    matched = true;
+                } else {
+                    count++;
+                }
+            }
+        } else {
+        clone[idx] = allScaleNotes[allScaleNotes.indexOf(clone[idx]) + 1];
+        }
+        setNotes(clone)
+   } else if (noteOptions === 'octave'){
+        var note = Note.pitchClass(notes[idx])
+        var octave = Note.octave(notes[idx])
+        clone[idx] = note + (octave + 1)
+        setNotes(clone)
+   } else if (noteOptions === 'chromatic'){
+    var chromaIndex = allChromaticNotes.indexOf(notes[idx])
+    if (allChromaticNotes.indexOf(notes[idx]) === -1){
+        chromaIndex = allChromaticNotes.indexOf(Note.enharmonic(notes[idx]))
+    }
+    clone[idx] = allChromaticNotes[chromaIndex + 1];
+    setNotes(clone)
+   } else if (noteOptions === 'insert'){
+       var newNote = clone[idx]
+       clone.splice(idx, 0, newNote)
+       setNotes(clone)
+   } else {
+       return
+   }
+}
+
+const handleClickDown = (e) => {
+   var clone = [...notes]
+   const x = e.currentTarget.parentNode.parentNode.id
+   const idx = Number(x.split('_')[1])
+   if (noteOptions === 'scale'){
+        if (allScaleNotes.indexOf(notes[idx]) === -1){
+            var chromaIndex = allChromaticNotes.indexOf(notes[idx]);
+            if (chromaIndex === -1){
+                chromaIndex = allChromaticNotes.indexOf(Note.enharmonic(notes[idx]));
+            }
+            var matched = false;
+            var count = 0;
+            while (matched === false){
+                if (allScaleNotes.indexOf(allChromaticNotes[chromaIndex + count]) !== -1){
+                    clone[idx] = allScaleNotes[allScaleNotes.indexOf(allChromaticNotes[chromaIndex + count])];
+                    matched = true;
+                } else {
+                    count--;
+                }
+            }
+        } else {
+        clone[idx] = allScaleNotes[allScaleNotes.indexOf(clone[idx]) - 1];
+        }
+        setNotes(clone)
+   } else if (noteOptions === 'octave'){
+        var note = Note.pitchClass(notes[idx])
+        var octave = Note.octave(notes[idx])
+        clone[idx] = note + (octave + -1)
+        setNotes(clone)
+   } else if (noteOptions === 'chromatic'){
+        var chromaIndex = allChromaticNotes.indexOf(notes[idx])
+        if (allChromaticNotes.indexOf(notes[idx]) === -1){
+            chromaIndex = allChromaticNotes.indexOf(Note.enharmonic(notes[idx]))
+        }
+        clone[idx] = allChromaticNotes[chromaIndex - 1];
+        setNotes(clone)
+   } else if (noteOptions === 'insert'){
+    var newNote = clone[idx]
+    clone.splice(idx, 0, newNote)
+    setNotes(clone)
+   } else {
+       return
+   }
+}
+
+const handleDeleteNote = (e) => {
+    var clone = [...notes]
+    const x = e.currentTarget.parentNode.id
+    const idx = Number(x.split('_')[1])
+    clone.splice(idx, 1)
+    console.log(idx)
+    setNotes(clone)
+}
+
+const handleEditAllUp = () => {
+var clone = [...notes]
+if (allOptions === 'scale'){
+    for (var i = 0; i < clone.length; i++){
+        if (allScaleNotes.indexOf(notes[i]) === -1){
+            var chromaIndex = allChromaticNotes.indexOf(notes[i]);
+            if (chromaIndex === -1){
+                chromaIndex = allChromaticNotes.indexOf(Note.enharmonic(notes[i]));
+            }
+            var matched = false;
+            var count = 0;
+            while (matched === false){
+                if (allScaleNotes.indexOf(allChromaticNotes[chromaIndex + count]) !== -1){
+                    clone[i] = allScaleNotes[allScaleNotes.indexOf(allChromaticNotes[chromaIndex + count])];
+                    matched = true;
+                } else {
+                    count++;
+                }
+            }
+        } else {
+        clone[i] = allScaleNotes[allScaleNotes.indexOf(clone[i]) + 1];
+        }
+    }
+    setNotes(clone)
+} else if (allOptions === 'octave') {
+    for (var i = 0; i < clone.length; i++){
+        var note = Note.pitchClass(notes[i])
+        var octave = Note.octave(notes[i])
+        clone[i] = note + (octave + 1)
+        setNotes(clone)
+    }
+} else if (allOptions === 'chromatic'){
+    for (var i = 0; i < clone.length; i++){
+        var chromaIndex = allChromaticNotes.indexOf(notes[i])
+        if (allChromaticNotes.indexOf(notes[i]) === -1){
+            chromaIndex = allChromaticNotes.indexOf(Note.enharmonic(notes[i]))
+        }
+        clone[i] = allChromaticNotes[chromaIndex + 1];
+    }
+        setNotes(clone)
+} else {
+    return
+}
+}
+
+
+const handleEditAllDown = () => {
+    var clone = [...notes]
+    if (allOptions === 'scale'){
+        for (var i = 0; i < clone.length; i++){
+            if (allScaleNotes.indexOf(notes[i]) === -1){
+                var chromaIndex = allChromaticNotes.indexOf(notes[i]);
+                if (chromaIndex === -1){
+                    chromaIndex = allChromaticNotes.indexOf(Note.enharmonic(notes[i]));
+                }
+                var matched = false;
+                var count = 0;
+                while (matched === false){
+                    if (allScaleNotes.indexOf(allChromaticNotes[chromaIndex + count]) !== -1){
+                        clone[i] = allScaleNotes[allScaleNotes.indexOf(allChromaticNotes[chromaIndex + count])];
+                        matched = true;
+                    } else {
+                        count--;
+                    }
+                }
+            } else {
+            clone[i] = allScaleNotes[allScaleNotes.indexOf(clone[i]) - 1];
+            }
+        }
+        setNotes(clone)
+    } else if (allOptions === 'octave') {
+        for (var i = 0; i < clone.length; i++){
+            var note = Note.pitchClass(notes[i])
+            var octave = Note.octave(notes[i])
+            clone[i] = note + (octave - 1)
+            setNotes(clone)
+        }
+    } else if (allOptions === 'chromatic'){
+        for (var i = 0; i < clone.length; i++){
+            var chromaIndex = allChromaticNotes.indexOf(notes[i])
+            if (allChromaticNotes.indexOf(notes[i]) === -1){
+                chromaIndex = allChromaticNotes.indexOf(Note.enharmonic(notes[i]))
+            }
+            clone[i] = allChromaticNotes[chromaIndex - 1];
+        }
+            setNotes(clone)
+    } else {
+        return
+    }
+    }
+
+const handleDeleteAll = () => {
+    setNotes([])
+    setAllOptions('delete')
+}
+
+const handlePlayThis = (e) => {
+    if (playNoteOnClick){
+        var parentID = e.currentTarget.id;
+        var x = parentID.split('_')[1]
+        keySynth.triggerAttackRelease(notes[x], '8n');
+        var thisNote = document.getElementById(parentID)
+        thisNote.className = 'active note'
+        setTimeout(() => {thisNote.className ='inactive note'}, 250)
+    } else {
+        return
+    }
+}
+
 function mapNotes(notes){
     return (
-        notes.map((note, idx) => 
-        <div id={'pattern_' + idx} key={'pattern_' + idx} draggable onDragStart = {dragStartHandler} onDrag = {dragHandler} onDragOver = {dragOverHandler} onDragLeave={dragLeaveHandler} onDrop = {dropHandler}  className='inactive chord' style={{marginLeft: '5px', height: '25px', width: '25px'}}>{note}</div>
+        notes.map((note, idx) =>
+        <div id={'pattern_' + idx} onClick={handlePlayThis} key={'pattern_' + idx} draggable onDragStart = {dragStartHandler} onDrag = {dragHandler} onDragOver = {dragOverHandler} onDragLeave={dragLeaveHandler} onDrop = {dropHandler}  className='inactive note' style={{display: 'flex', flexDirection: 'row', height: '50px', width: '50px', backgroundColor: 'wheat', margin: '1px'}}>
+                        {note}
+                        {(edit === 'on' && noteOptions !== 'delete') && <div style={{display: 'flex', flexDirection: (noteOptions === 'insert') ? 'row' : 'column'}}>
+                        <Icon onClick={handleClickUp} name={(noteOptions === 'insert') ? "caret square left" : "caret square up"}/><Icon onClick={handleClickDown}name={(noteOptions === 'insert') ? "caret square right" : "caret square down"}/>
+                        </div>}
+                        {(edit === 'on' && noteOptions === 'delete') &&<Icon onClick={handleDeleteNote} name= 'trash alternate outline' />}
+                    </div>
         )
     )
 }
 
-function reverseMelody(notes){
+
+const reverseMelody = () => {
     var returnArr = [];
     for (var i = notes.length -1; i > -1; i--){
         returnArr.push(notes[i])
@@ -281,10 +493,10 @@ function reverseMelody(notes){
     setNotes(returnArr);
 }
 
-function invertMelodyChromatically(notes){
+const invertMelodyChromatically = () =>{
     var midiNotes = [];
     var noteDistances = [0];
-    var invertedNoteDistances = [];
+    var invertedNoteDistances = []
     var finalNotes = [];
     for (var i = 0; i < notes.length; i++){
         midiNotes.push(toMidi(notes[i]))
@@ -303,24 +515,15 @@ function invertMelodyChromatically(notes){
     
 }
 
-function invertMelodyScalar(notes){
-    var allNotes = [];
+const invertMelodyScalar = () => {
     var allIndices = [];
     var noteDistances = [];
     var invertedNoteDistances = [];
     var finalNotes = [];
-    var scale = ['C', 'D', 'E', 'F', 'G', 'A', 'B']
-    for (var i = 0; i < 10; i++){
-        for (var j = 0; j < scale.length; j++){
-            allNotes.push(scale[j] + i)
-        }
-    }
 
-    // var refNoteIndex = allNotes.indexOf(notes[0]);
     for (var k = 0; k < notes.length; k++){
-        allIndices.push(allNotes.indexOf(notes[k]))
+        allIndices.push(allScaleNotes.indexOf(notes[k]))
     }
-
 
     for (var l = 0; l < allIndices.length; l++){
         noteDistances.push(allIndices[l] - allIndices[0])
@@ -330,14 +533,14 @@ function invertMelodyScalar(notes){
     var refIndex = allIndices[0]
  
     for (var m = 0; m < invertedNoteDistances.length; m++){
-            var finalNote = allNotes[invertedNoteDistances[m] + refIndex]
+            var finalNote = allScaleNotes[invertedNoteDistances[m] + refIndex]
             finalNotes.push((finalNote))
     }
 
     setNotes(finalNotes)
 }
 
-function shuffleNotes(){
+const shuffleNotes = () => {
     var cloneNotes = [...notes]
     var returnArr = [];
     for (var i = 0; i < cloneNotes.length; i++){
@@ -356,15 +559,15 @@ function shuffleNotes(){
 
 function patternExtraction(){
 
-    var root = scale[0] + 3
+    var root = scaleNotes[0] + 3
     
     var chromaticScale = Scale.get('c chromatic').notes
     var allNotes = [];
     var allChromaticNotes = [];
     var patternExport = [];
     for (var i = 0; i < 10; i++){
-        for (var j = 0; j < scale.length; j++){
-            allNotes.push(scale[j] + i)
+        for (var j = 0; j < scaleNotes.length; j++){
+            allNotes.push(scaleNotes[j] + i)
         }
     }
 
@@ -391,31 +594,10 @@ function patternExtraction(){
     setPattern(patternExport);
 }
 
-function patternAndScaleToNotes(pattern, scale, root){
-    var allNotes = [];
-    var allChromaticNotes = [];
-    var chromaticScale = Scale.get('c chromatic').notes
+function patternAndScaleToNotes(){
     var notesExport = [];
-    if (root === undefined){
-        root = 'C3'
-    }
-    var simplifiedScale = [];
-    for (var h = 0; h < scale.length; h++){
-        simplifiedScale.push(Note.simplify(scale[h]))
-    }
-    //[0, "*1", 1, "*3", 3, 4, "*10"]
-    for (var i = 0; i < 10; i++){
-        for (var j = 0; j < simplifiedScale.length; j++){
-            allNotes.push(simplifiedScale[j] + i)
-        }
-    }
-    allNotes = Note.sortedNames(allNotes);
-    //chromatic notes
-    for (var m = 0; m < 10; m++){
-        for (var n = 0; n < chromaticScale.length; n++){
-            allChromaticNotes.push(chromaticScale[n] + m)
-        }
-    }
+    var root = scaleNotes[0] + 3
+    const allNotes = Note.sortedNames(allScaleNotes);
     //------------
     var startingIndex;
     if (allNotes.indexOf(root) === -1){
@@ -431,7 +613,6 @@ function patternAndScaleToNotes(pattern, scale, root){
     }
     for (var k = 0; k < pattern.length; k++){
         //check if flag is added to pattern
-        
         if (typeof pattern[k] === 'string'){
             notesExport.push(allChromaticNotes[startingChromaticIndex + Number(pattern[k].split("").slice(1).join(""))])
         } else {
@@ -440,53 +621,6 @@ function patternAndScaleToNotes(pattern, scale, root){
     }
     setNotes(notesExport)
     // playAll(notesExport)
-}
-
-function changeOctaves(notes, direction){
-    var returnArr = []
-    var change;
-    if (direction === 'down'){
-        change = - 1;
-    } else {
-        change = 1;
-    }
-    for (var i = 0; i < notes.length; i++){
-            var pitchClass = Note.pitchClass(notes[i])
-            var newOct = Number(Note.octave(notes[i])) + change;
-            returnArr.push(pitchClass + newOct);
-    }
-    setNotes(returnArr);
-}
-
-function player(pattern, scale, root){
-    patternAndScaleToNotes(pattern, scale, root)
-
-}
-
-//takes up/down as direction 
-function changeScaleTones(notes, scale, direction){
-var allNotes = [];
-var returnArr = [];
-var mod;
-
-if (direction === 'up'){
-    mod = 1;
-} else {
-    mod = -1;
-}
-
-for (var i = 0; i < 10; i++){
-    for (var j = 0; j < scale.length; j++){
-        allNotes.push(scale[j] + i)
-    }
-}
-
-
-for (var k = 0; k < notes.length; k++){
-    var shiftedNote = allNotes[allNotes.indexOf(notes[k]) + mod]
-    returnArr.push(shiftedNote)
-}
-    setNotes(returnArr);
 }
 
 function clearNotes(){
@@ -605,51 +739,138 @@ if (keyType === 'minor'){
 }
 }
 
-//for scale lab
-// console.log(Scale.get("101010010100").name, 'name');
-//Drag and Drop Default
+function handleExport(){
+    const patternDataPrototype = {
+        patternName: name,
+        type: 'normal',
+        length: notes.length,
+        pattern: pattern,
+        position: [],
+        author: 'NoodleMan0',
+        authorId: 'Noodleman0_id',
+        pool: 'global',
+    }
+    dispatch(insertData(patternDataPrototype))
+}
+
+const handleEditOptions = () => {
+    setManipulate(false)
+    if (edit === 'off'){
+        setEdit('on')
+    } else if (edit === 'on'){
+        setEdit('all')
+    } else if (edit === 'all'){
+        setEdit('off')
+    }
+}
+
+const handleManipulateOptions = () => {
+    setEdit('off')
+    setManipulate(!manipulate)
+}
 
     return (
         <>
         <Menu>
          <Menu.Item onClick={() => playAll()}> Play </Menu.Item>   
-         <Menu.Item onClick={() => shuffleNotes()}> Shuffle </Menu.Item>   
-         <Menu.Item onClick={()=> generateRandomMelody()}> Generate </Menu.Item>    
-         <Menu.Item onClick={()=> setScaleLock(!scaleLock)}> Scale lock: {scaleLock ? 'ON' : 'OFF'} </Menu.Item>    
-         <Menu.Item onClick={() => setNotes([])}> Clear </Menu.Item>   
-         <Menu.Item onClick={() => setPlayOnKeyPress(!playOnKeyPress)}>Play on Keypress: {playOnKeyPress ? 'ON' : 'OFF'} </Menu.Item>
-         {/* <Menu.Item> Options </Menu.Item>      
-         <Menu.Item> Chords Allowed? </Menu.Item>      
-         <Menu.Item> Import Scale Lab </Menu.Item>      
-         <Menu.Item> Import Chord Lab </Menu.Item>      
-         <Menu.Item> Export </Menu.Item>    */}
+         <Menu.Item onClick={()=> generateRandomMelody()}> Generate </Menu.Item>
+         <Dropdown
+          simple
+          item
+          className='button icon'
+        > 
+            <Dropdown.Menu>
+                <Dropdown.Item>
+                length of pattern
+                <Input type='number' 
+                onKeyDown={(e) => {e.preventDefault()}}
+                onChange={(e, {value}) => setGeneratePatternLength(value)}
+                id='generateChordIntervalRange'
+                min='1'
+                max='99'
+                style={{cursor: 'none'}}
+                value={generatePatternLength}
+                />
+                </Dropdown.Item>
+                {/* <Dropdown.Item onClick={() => setStartOnScaleDegree(!startOnScaleDegree)}>
+                start on scale degree: {startOnScaleDegree ? 'on' : 'off'}
+                </Dropdown.Item>
+                {startOnScaleDegree && <Dropdown.Item>
+                scale degree to start on
+                <Input type='number' 
+                onKeyDown={(e) => {e.preventDefault()}}
+                onChange={(e, {value}) => setGenerateScaleDegree(value)}
+                id='generateChordIntervalRange'
+                min='1'
+                max='99'
+                style={{cursor: 'none'}}
+                value={generateScaleDegree}
+                />
+                </Dropdown.Item>} */}
+            </Dropdown.Menu> 
+        </Dropdown>   
+         <Menu.Item onClick={handleEditOptions}> Edit: {edit} </Menu.Item>      
+         <Menu.Item onClick={handleManipulateOptions}> Manipulate: {manipulate ? 'on' : 'off'} </Menu.Item>    
+         <Dropdown
+         simple
+         item
+         text='Options'
+         >
+        <Dropdown.Menu>
+            <Dropdown.Item onClick={() => setNotesTruePatternFalse(!notesTruePatternFalse)}>
+            View: {notesTruePatternFalse ? 'notes': 'pattern'} 
+            </Dropdown.Item>
+            <Dropdown.Item onClick={()=> setScaleLock(!scaleLock)}>
+            Scale lock: {scaleLock ? 'on' : 'off'}
+            </Dropdown.Item>
+            <Dropdown.Item onClick={() => setPlayOnKeyPress(!playOnKeyPress)}>
+            Play on Keypress: {playOnKeyPress ? 'on' : 'off'} 
+            </Dropdown.Item>
+            <Dropdown.Item onClick={() => setPlayNoteOnClick(!playNoteOnClick)}>
+            Play Note on Click:{playNoteOnClick ? 'on': 'off'} 
+            </Dropdown.Item>
+        </Dropdown.Menu>
+        </Dropdown>       
+         <Menu.Item onClick={() => handleExport()}>Export </Menu.Item>
         </Menu>
+        {edit === 'on' && 
         <Button.Group>
-            <Button compact basic onClick ={() => console.log('click')}>preNote</Button>
-            <Button  compact basic onClick ={() => console.log('click')}>normalNote</Button>
-            <Button  compact basic onClick ={() => console.log('click')}>postNote</Button>
-            <Button  compact basic onClick ={() => console.log('click')}>chromatic</Button>
-            <Button compact basic onClick ={() => console.log('click')}>scale</Button>
-            <Button  compact basic onClick ={() => console.log('click')}>octave</Button>
+            <Button  compact basic active={noteOptions === 'octave'} onClick ={() => setNoteOptions('octave')}>Octave</Button>
+            <Button compact basic active={noteOptions === 'scale'} onClick ={() => setNoteOptions('scale')}> Scale</Button>
+            <Button  compact basic active={noteOptions === 'chromatic'} onClick ={() => setNoteOptions('chromatic')}>Chromatic</Button>
+            <Button  compact basic active={noteOptions === 'insert'} onClick ={() => setNoteOptions('insert')}>Insert</Button>
+            <Button  compact basic active={noteOptions === 'delete'} onClick ={() => setNoteOptions('delete')}>Delete</Button>
         </Button.Group>
+        }
+        {edit === 'all' &&
         <Button.Group>
-            <Button  compact basic onClick ={() => console.log('click')}>up</Button>
-            <Button  compact basic onClick ={() => console.log('click')}>down</Button>
-            <Button  compact basic onClick ={() => console.log('click')}>all chromatic</Button>
-            <Button compact basic onClick ={() => console.log('click')}>all scale</Button>
-            <Button  compact basic onClick ={() => console.log('click')}>all octave</Button>
+            <Button  compact basic active={allOptions === 'octave'} onClick ={() => setAllOptions('octave')}>Octave</Button>
+            <Button compact basic active={allOptions === 'scale'} onClick ={() => setAllOptions('scale')}>Scale</Button>
+            <Button  compact basic active={allOptions === 'chromatic'} onClick ={() => setAllOptions('chromatic')}>Chromatic</Button>
+            <Button  compact basic active={allOptions === 'delete'} onClick ={handleDeleteAll}>Delete</Button>
+            <Button  compact basic onClick ={() => handleEditAllUp('up')}>Up</Button>
+            <Button  compact basic onClick ={() => handleEditAllDown('down')}>Down</Button>
         </Button.Group>
-        <div>Scale: C Major</div>
-        <div>Octave: {octave}</div>
-        <div id='display' style={{display: 'flex', flexDirection: 'row'}}>
-            Melody: {mapNotes(notes)}
-        </div>
-        <div>
-            Pattern: {pattern}
-        </div>
+        }
+        {manipulate &&
+        <Button.Group>
+            <Button  compact basic onClick ={shuffleNotes}>Shuffle</Button>
+            <Button  compact basic onClick ={reverseMelody}>Reverse Melody</Button>
+            <Button  compact basic onClick ={invertMelodyChromatically}>Invert Melody</Button>
+            <Button  compact basic onClick ={() => patternAndScaleToNotes()}>Fit Pattern To Scale</Button>
+        </Button.Group>
+        }
+  
+        { notesTruePatternFalse && <div id='display' style={{display: 'flex', flexDirection: 'row'}}>
+            {mapNotes(notes)}
+        </div>}
+        {!notesTruePatternFalse && <div id='display' style={{display: 'flex', flexDirection: 'row'}}>
+            {mapNotes(pattern)}
+        </div>}
+        <div>{notes.length} {notes.length > 1 ? 'notes' : 'note'}</div>
         <div>
             <h3>Export</h3>
-            <div draggable onDragStart={dragStartHandlerSpecial} style={{height: '25px', width: '125px', backgroundColor: 'wheat'}}>{name}</div>
+            <div draggable onDragStart={dragStartHandlerSpecial} style={{height: '25px', width: '125px', backgroundColor: 'lightblue'}}>{name}</div>
         </div>
         <div>
             <h3>Name</h3>
@@ -658,34 +879,6 @@ if (keyType === 'minor'){
             onInput={e => setName(e.target.value)}
             />
         </div>
-        {/* <button> Key Controls</button> */}
-        {/* <button onClick={() => generateRandomMelody()}>Generate Random Melody</button> */}
-        {/* <button>Length of Melody: 8</button> */}
-        {/* <button onClick={() => playAll(notes)}> Play All </button> */}
-        {/* <button> Notes </button> */}
-        {/* <button>Input: on</button> */}
-        {/* <button onClick={handleNotesClick}> Notes display</button>
-        <button onClick={() => generateRandomScale(7)}>Generate Random Scale</button> */}
-        {/* <button>Generate Random Rhythm</button> */}
-        {/* <button>Rhythm duration</button> */}
-        {/* <button>Generate Random Melodic Rhythm</button> */}
-        {/* <button onClick={() => generateAllModes([1, 0, 0, 1, 0, 1, 1, 1, 0, 1, 1, 0])}>All modes</button>
-        <button>Scale lock: off</button>
-        <button> Next Mode </button>
-        <button>Previous Mode</button>
-        <button onClick ={() => reverseMelody(notes)}> Reverse Melody </button>
-        <button onClick={() => invertMelodyScalar(notes)}> Invert Melody: Scalar</button>
-        <button onClick={() => invertMelodyChromatically(notes)}> Invert Melody: Chromatically</button>
-        <button onClick={() => shuffleNotes(notes)}>shuffle</button>
-        <button onClick={() => changeScaleTones(notes, scale, 'up')}> Up a scale tone</button>
-        <button onClick={() => changeScaleTones(notes, scale, 'down')}> Down a scale tone</button>
-        <button>up a semitone</button>
-        <button>down a semitone</button>
-        <button onClick={() => changeOctaves(notes, 'up')}>up an octave</button>
-        <button onClick={() => changeOctaves(notes, 'down')}>Down an octave</button>
-        <button onClick={() => patternExtraction(notes, scale)}>Pattern extraction</button>
-        <button onClick={() => patternAndScaleToNotes(pattern, scale)}>Play extracted pattern</button>
-        <button onClick={() => clearNotes()}>Clear notes</button>   */}
         </>
     )
 }

@@ -24,17 +24,17 @@ export const login = (email, password) => async (dispatch) => {
             },
         }
 
-        const {data} = await http.post(
+        const {data}= await http.post(
             'users/login',
-            {email, password},
+            {'email': email, 'password': password},
             config
         )
-
         dispatch({
             type: USER_LOGIN_SUCCESS,
             payload: data,
         })
-
+        console.log(data, '!!!')
+        
         localStorage.setItem('userInfo', JSON.stringify(data))
     } catch (error) {
         dispatch({

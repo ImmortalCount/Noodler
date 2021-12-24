@@ -2,13 +2,14 @@ import {React, useState, useEffect} from 'react'
 import { Form, Checkbox , Icon, Dropdown, Menu, Button, Message, Input} from 'semantic-ui-react'
 import {Scale, ScaleType, Note} from '@tonaljs/tonal';
 import * as Tone from 'tone';
-import { useDispatch } from 'react-redux';
-import { actionCreators } from '../../store';
-import { bindActionCreators } from 'redux';
+import { useDispatch, useSelector } from 'react-redux';
+import { setLabData } from '../../store/actions/labDataActions';
+import { scaleHandler } from './utils';
 
 import '../../../public/Do_Mayor_armadura.svg'
+import { keySynth } from './synths';
 
-export default function ScaleLab({importedScaleData}) {
+export default function ScaleLab({importedScaleData, masterInstrumentArray}) {
     var [scaleDataBinary, setScaleDataBinary] = useState([1,0,1,0,1,1,0,1,0,1,0,1])
     var [scaleName, setScaleName] = useState('major');
     var [notes, setNotes] = useState(["C", "D", "E", "F", "G", "A", "B"]);
@@ -18,11 +19,21 @@ export default function ScaleLab({importedScaleData}) {
     var [options, setOptions] = useState('sharps')
     var [playOptions, setPlayOptions] = useState('forward')
     var [randomOptions, setRandomOptions] = useState('all')
+    const isMuted = false;
+
+    function setInit(){
+      setNotes(["C", "D", "E", "F", "G", "A", "B"])
+      setScaleNumber(2773)
+      setScaleName('major')
+      setScaleDataBinary([1,0,1,0,1,1,0,1,0,1,0,1])
+    }
+
     const [rootNote, setRootNote] = useState('C')
 
-    // const dispatch = useDispatch();
+    const dispatch = useDispatch()
 
-    // const {sendScaleData, receiveScaleData} = bindActionCreators(actionCreators, dispatch);
+    const labData = useSelector(state => state.labData)
+    const {labInfo} = labData
 
 
 function createScaleSVG(){
@@ -96,10 +107,7 @@ function createScaleSVG(){
     scaleDiv.appendChild(svg);
   }
 
-    useEffect (()=>{
-      createScaleSVG()
-      // sendScaleData(notes)
-  }, [notes]);
+   
 
   useEffect(() => {
     var newNotes = importedScaleData['scale']
@@ -115,6 +123,23 @@ function createScaleSVG(){
       createScaleSVG()
     }
   }, [importedScaleData])
+
+  useEffect (()=>{
+    createScaleSVG()
+    let newInfo = {...labInfo}
+    const scaleDataPrototype = {
+        name: rootNote + ' ' + scaleName,
+        scaleName: rootNote + ' ' + scaleName,
+        binary: scaleDataBinary,
+        desc: '',
+        scale: notes,
+        dataType: 'scale',
+        pool: '',
+    }
+    newInfo['scaleLab'] = scaleDataPrototype
+    dispatch(setLabData(newInfo))
+    // sendScaleData(notes)
+}, [notes]);
 
   function getNotePositions(){
     var acceptableNotes = [
@@ -327,8 +352,13 @@ function createScaleSVG(){
 
     //---Play notes:
     function playNoteSequence(){
+    if (isMuted){
+      return
+    }
+    Tone.start()
+    Tone.Transport.cancel()
+    Tone.Transport.stop()
     Tone.Transport.start();
-    var synth = new Tone.Synth().toDestination()
     var position = 0;
     function handleNotes(){
     var returnValues = [];
@@ -406,7 +436,7 @@ function createScaleSVG(){
 //---Synthpart function 
         const synthPart = new Tone.Sequence(
           function(time, note) {
-            synth.triggerAttackRelease(note, "10hz", time)
+            keySynth.triggerAttackRelease(note, "10hz", time)
             var highlightedCircle = document.getElementById(notePositions[Note.pitchClass(note)])
             highlightedCircle.setAttribute('r', 29)
             setTimeout(() => {highlightedCircle.setAttribute('r', 23)}, 250)
@@ -474,7 +504,7 @@ function createScaleSVG(){
         binary: scaleDataBinary,
         number: scaleNumber,
       }, 
-        type: 'foreign'}
+        type: 'scaleLab'}
         e.dataTransfer.setData('text', JSON.stringify(obj));
     };
 
@@ -519,35 +549,7 @@ function createScaleSVG(){
       const handlePlayDropdown = (e, {value}) => {
         setPlayOptions(value)
       }
-      function scaleHandler(scale, options){
-        //options = sharps, flats, situational, classical
-        var returnArr = []
-          if (options === 'classical'){
-            return scale
-          }
-          for (var i = 0; i < scale.length; i++){
-            returnArr.push(Note.simplify(scale[i]))
-          }
-          if (options === undefined || options === 'situational'){
-            return returnArr
-          }
-          if (options ==='flats'){
-            for (var j = 0; j < returnArr.length; j++){
-              if (returnArr[j].includes('#')){
-                returnArr[j] = Note.enharmonic(returnArr[j])
-              }
-            }
-            return returnArr;
-          }
-          if (options ==='sharps'){
-            for (var k = 0; k < returnArr.length; k++){
-              if (returnArr[k].includes('b')){
-                returnArr[k] = Note.enharmonic(returnArr[k])
-              }
-            }
-            return returnArr;
-          }
-      }
+      
       function testScaleNotesHighlight(){
         var circle = document.getElementById('scale_' + 5)
         circle.setAttribute('r', 29);
@@ -566,6 +568,19 @@ function createScaleSVG(){
           setRootNote(Note.enharmonic(rootNote))
         }
       }
+
+      function mapMenuItems(){
+        return (
+            masterInstrumentArray.map((instrument, idx) => 
+            <Dropdown.Item
+            text={instrument}
+            key={'mappedInstr' + idx}
+            />
+            )
+        )
+}
+
+
 
     return (
         <>
@@ -642,6 +657,8 @@ function createScaleSVG(){
                 <Dropdown.Item active={randomOptions === 'all'} onClick={()=> setRandomOptions('all')}>true random</Dropdown.Item>
               </Dropdown.Menu>
             </Dropdown.Item>
+            <Dropdown.Item onClick={() => setInit()}>init
+            </Dropdown.Item>
           </Dropdown.Menu>
           </Dropdown>
       </Button.Group>
@@ -650,19 +667,17 @@ function createScaleSVG(){
       <Button basic > Mode </Button>
       <Button basic onClick={() => toggleModes('next', notes)}><Icon name='caret right'/></Button>
       </Button.Group>
-      <Menu.Item></Menu.Item>
-      <Dropdown
-          text = {'Display   '}
-          simple
-          item
-          className='button icon'
-          options={displayDropdownOptions}
-          onChange={handlePlayDropdown}
-        />
+      <Menu.Item>
+      <Dropdown simple text = 'Display   ' >
+          <Dropdown.Menu>
+             {mapMenuItems()}
+          </Dropdown.Menu>
+        </Dropdown>
+        </Menu.Item>
       <Menu.Item onClick={() => console.log(notes, 'notes')}>Export</Menu.Item>
       </Menu>
         <div>
-        <div draggable='true' onDragStart={dragStartHandler} style={{height: '25px', width: '200px', backgroundColor:'wheat'}}>{rootNote} {scaleName}</div>
+        <div draggable='true' onDragStart={dragStartHandler} style={{height: '25px', width: '200px', backgroundColor:'lightcoral'}}>{rootNote} {scaleName}</div>
         <p># {scaleNumber} </p>
         <p>{noteMapper(notes)}</p>
         </div>

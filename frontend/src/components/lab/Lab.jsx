@@ -4,13 +4,22 @@ import ChordLab from './ChordLab'
 import PatternLab from './PatternLab'
 import RhythmLab from './RhythmLab'
 import ScaleLab from './ScaleLab'
+import ModuleLab from './ModuleLab'
+import { useDispatch, useSelector} from 'react-redux';
+import { setLabData } from '../../store/actions/labDataActions';
 
-export default function Lab() {
-    const [activeLabIndices, setActiveLabIndices] = useState([3])
+
+export default function Lab({masterInstrumentArray}) {
+    const [activeLabIndices, setActiveLabIndices] = useState([2])
     const [importedScaleData, setImportedScaleData] = useState({})
     const [importedChordData, setImportedChordData] = useState({})
     const [importedPatternData, setImportedPatternData] = useState({})
     const [importedRhythmData, setImportedRhythmData] = useState({})
+
+    const dispatch = useDispatch()
+
+    const labData = useSelector(state => state.labData)
+    const {labInfo} = labData
 
     const handleClick = (e, titleProps) => {
         var temp = [...activeLabIndices]
@@ -29,28 +38,55 @@ export default function Lab() {
  //scale, chord, pattern, rhythm
   const dropHandler = e => {
     var data = JSON.parse(e.dataTransfer.getData("text"));
-        
-    if (data['className'] === 'scaleData'){
-      setActiveLabIndices([0])
-      setImportedScaleData(data['message'])
-    } else if (data['className'] === 'chordData'){
-      setActiveLabIndices([1])
-      setImportedChordData(data['message'])
-    } else if (data['className'] ==='patternData'){
-      setActiveLabIndices([2])
-      setImportedPatternData(data['message'])
-    } else if (data['className'] === 'rhythmData'){
-      setActiveLabIndices([3])
-      setImportedRhythmData(data['message'])
+    if (data['type'] === 'scaleLab'
+        || data['type'] === 'chordLab'
+        || data['type'] === 'chordLabExport'
+        || data['type'] === 'patternLab'
+        || data['type'] === 'patternLabExport'
+        || data['type'] === 'rhythmLab'
+        || data['type'] === 'rhythmLabExport'
+        || data['type'] === 'moduleLab'
+    ){
+      return
+    } else {
+      if (data['className'] === 'scaleData'){
+        setActiveLabIndices([0])
+        setImportedScaleData(data['message'])
+      } else if (data['className'] === 'chordData'){
+        setActiveLabIndices([1])
+        setImportedChordData(data['message'])
+      } else if (data['className'] ==='patternData'){
+        setActiveLabIndices([2])
+        setImportedPatternData(data['message'])
+      } else if (data['className'] === 'rhythmData'){
+        setActiveLabIndices([3])
+        setImportedRhythmData(data['message'])
+      } else if (data['className'] === 'moduleData'){
+        setActiveLabIndices([4])
+        setImportedScaleData(data['message']['data']['scaleData'])
+        setImportedChordData(data['message']['data']['chordData'])
+        setImportedPatternData(data['message']['data']['patternData'])
+        setImportedRhythmData(data['message']['data']['rhythmData'])
+        //Hard update labinfo because it just wont update normally
+        let newInfo = {...labInfo}
+        const scaleDataPrototype = {
+        name: data['message']['data']['scaleData']['scaleName'],
+        scaleName: data['message']['data']['scaleData']['scaleName'],
+        binary: data['message']['data']['scaleData']['binary'],
+        desc: '',
+        scale: data['message']['data']['scaleData']['scale'],
+        dataType: 'scale',
+        pool: '',
+    }
+    newInfo['scaleLab'] = scaleDataPrototype
+    dispatch(setLabData(newInfo))
+      }
     }
       e.stopPropagation();
       e.nativeEvent.stopImmediatePropagation();
       e.preventDefault();
       e.dataTransfer.clearData();
-        
-
   }
-  console.log(importedScaleData, importedChordData, importedPatternData, importedRhythmData)
 
     return (
         <>
@@ -65,7 +101,10 @@ export default function Lab() {
           Scale Lab
         </Accordion.Title>
         <Accordion.Content active={activeLabIndices.includes(0)}>
-            <ScaleLab importedScaleData={importedScaleData}/>
+            <ScaleLab 
+            importedScaleData={importedScaleData}
+            masterInstrumentArray = {masterInstrumentArray}
+            />
         </Accordion.Content>
 
         <Accordion.Title
@@ -102,6 +141,18 @@ export default function Lab() {
         </Accordion.Title>
         <Accordion.Content active={activeLabIndices.includes(3)}>
           <RhythmLab importedRhythmData={importedRhythmData}/>
+        </Accordion.Content>
+
+        <Accordion.Title
+          active={activeLabIndices.includes(4)}
+          index={4}
+          onClick={handleClick}
+        >
+          <Icon name='dropdown' />
+          Module Lab
+        </Accordion.Title>
+        <Accordion.Content active={activeLabIndices.includes(4)}>
+          <ModuleLab/>
         </Accordion.Content>
       </Accordion>
       </div>

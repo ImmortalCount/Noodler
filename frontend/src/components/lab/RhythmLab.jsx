@@ -1,16 +1,16 @@
 import {React, useState, useEffect, useRef} from 'react'
 import * as Tone from 'tone';
 import { Menu, Button, Input } from 'semantic-ui-react';
-import instrumentSamples from '../Instruments/Instruments.js'
-import './rhythmlab.css'
+import { useDispatch, useSelector} from 'react-redux';
+import { insertData } from '../../store/actions/dataPoolActions';
+import { setLabData } from '../../store/actions/labDataActions';
+import { drumKit } from './synths';
+import './lab.css'
 
 
 
 export default function RhythmLab({importedRhythmData}) {
-    const drumKit = new Tone.Sampler(instrumentSamples.drumkit_jazz).toDestination()
-    var initialNotes = [['O'], ['O'], ['O'], ['O']]
-    var testPattern = ['A4', 'B4', 'C4', 'D4', 'E4', 'F4', 'G4', 'A5', 'B5', 'C5', 'D5', 'E5', 'F5']
-    var [melodyNotes, setMelodyNotes] = useState(['A4', 'B4', 'C4', 'D4', 'A5', 'B4', 'G4'])
+    var initialNotes = [['O', 'O'], ['O', 'O'], ['O', 'O'], ['O', 'O']]
     var [name, setName] = useState('Rhythm 1')
     var [notes, setNotes] = useState(initialNotes)
     var [playNoteOrderByID, setPlayNoteOrderByID] = useState([])
@@ -18,19 +18,18 @@ export default function RhythmLab({importedRhythmData}) {
     var [metronomeNotes, setMetronomeNotes] = useState([['Db4'], ['Db4'], ['Db4'], ['Db4']])
     var [playConstant, setPlayConstant] = useState(1)
     var [loop, setLoop] = useState(false);
+    var [edit, setEdit] = useState(false);
+    var [stretchCompress, setStretchCompress] = useState(false)
+    var [noteSlots, setNoteSlots] = useState(8)
     Tone.Transport.bpm.value = 120
     var [moduleLengthDisplay, setModuleLengthDisplay] = useState(notes.length);
-//------Returns an array of objects in order of when they are going to be played, as well as their className by Level and their ID (idx)
-useEffect(() => {
-    setMappedNotes(mapNotes(notes))
-    setMetronomeNotes(setModuleLengthDisplay(notes.length))
-    generateMetronomeNotes()
-}, [notes])
+    const isMuted = false;
+    const dispatch = useDispatch()
 
-useEffect(() => {
-    generateMetronomeNotes()
-}, [moduleLengthDisplay])
+    const labData = useSelector(state => state.labData)
+    const {labInfo} = labData
 
+//update for imported data
 useEffect(() => {
     if (importedRhythmData['rhythm'] !== undefined){
         setNotes(importedRhythmData['rhythm'])
@@ -38,6 +37,30 @@ useEffect(() => {
     }
     
 }, [importedRhythmData])
+
+useEffect(() => {
+    setMappedNotes(mapNotes(notes))
+    setMetronomeNotes(setModuleLengthDisplay(notes.length))
+    generateMetronomeNotes()
+    returnNotes()
+    let newInfo = {...labInfo}
+        const rhythmDataPrototype = {
+            name: name,
+            rhythmName: name,
+            desc: '',
+            rhythm: JSON.parse(JSON.stringify(notes)),
+            length: moduleLengthDisplay,
+            notes: noteSlots,
+            speed: playConstant,
+            author: '',
+            authorId: '',
+            dataType: 'rhythm',
+            pool: '',
+        }
+        newInfo['rhythmLab'] = rhythmDataPrototype
+        dispatch(setLabData(newInfo))
+}, [notes, name, moduleLengthDisplay])
+
 
 function loopOn(){
     Tone.Transport.loopStart = 0;
@@ -62,12 +85,19 @@ function generateMetronomeNotes(){
     }
     setMetronomeNotes(returnArr)
 }
-var controls = useRef('Add')
-const [activeButton, setActiveButton] = useState('Add')
+var controls = useRef('add')
+const [activeButton, setActiveButton] = useState('add')
+var subdivision = useRef(2)
+var [subdivisionValue, setSubdivisionValue] = useState(2)
 
 function handleControls(type){
     controls.current = type;
     setActiveButton(type);
+}
+
+function handleSubdivision(value){
+    subdivision.current = value;
+    setSubdivisionValue(value)
 }
 
 function getAllParentElementsByID(id){
@@ -265,15 +295,15 @@ function addNoteAtPosition(endingID, notes){
           endingIDCoordinates.push(Number(ex1[i]))
         }
         if (endingIDCoordinates.length === 1){
-            clone.splice(endingIDCoordinates[0], 0, 'X')
+            return
         } else if (endingIDCoordinates.length === 2){
-             clone[endingIDCoordinates[0]].splice(endingIDCoordinates[1], 0, 'X')
+             clone[endingIDCoordinates[0]].splice(endingIDCoordinates[1] + 1, 0, 'O')
         } else if (endingIDCoordinates.length === 3){
-             clone[endingIDCoordinates[0]][endingIDCoordinates[1]].splice([endingIDCoordinates[2]], 0, 'X')
+             clone[endingIDCoordinates[0]][endingIDCoordinates[1]].splice([endingIDCoordinates[2]] + 1, 0, 'O')
         } else if (endingIDCoordinates.length === 4){
-             clone[endingIDCoordinates[0]][endingIDCoordinates[1]][endingIDCoordinates[2]].splice([endingIDCoordinates[3]], 0, 'X')
+             clone[endingIDCoordinates[0]][endingIDCoordinates[1]][endingIDCoordinates[2]].splice([endingIDCoordinates[3]] + 1, 0, 'O')
         } else if (endingIDCoordinates.length === 5){
-            clone[endingIDCoordinates[0]][endingIDCoordinates[1]][endingIDCoordinates[2]][endingIDCoordinates[3]].splice([endingIDCoordinates[4]], 0, 'X')
+            clone[endingIDCoordinates[0]][endingIDCoordinates[1]][endingIDCoordinates[2]][endingIDCoordinates[3]].splice([endingIDCoordinates[4]] + 1, 0, 'O')
         } else {
             return
         }
@@ -281,34 +311,63 @@ function addNoteAtPosition(endingID, notes){
     setMappedNotes(mapNotes(clone))
 }
 
+//FUNCTIONS 
 function removeNoteAtPosition(endingID, notes){
+    //check if its an actual playable note
+    if (getAllChildElementsById(endingID).length !== 0){
+        return
+    }
     var clone = [...notes]
     var ex1 = endingID.split('_')
-        var endingIDCoordinates = []
+    var parentId = document.getElementById(endingID).parentNode.id
+    var nOfSiblings = document.getElementById(endingID).parentNode.childNodes.length
+    var endingIDCoordinates = []
         for (var i = 2; i < ex1.length; i++){
           endingIDCoordinates.push(Number(ex1[i]))
         }
-        if (endingIDCoordinates.length === 1){
-            clone.splice(endingIDCoordinates[0], 1)
-        } else if (endingIDCoordinates.length === 2){
-             clone[endingIDCoordinates[0]].splice(endingIDCoordinates[1], 1)
+    console.log(endingIDCoordinates.length)
+    if (nOfSiblings === 1){
+        unDivideNotesAtPosition(parentId, notes)
+        
+    } else {
+        if (endingIDCoordinates.length === 2){
+            clone[endingIDCoordinates[0]].splice(endingIDCoordinates[1], 1)
         } else if (endingIDCoordinates.length === 3){
              clone[endingIDCoordinates[0]][endingIDCoordinates[1]].splice([endingIDCoordinates[2]], 1)
         } else if (endingIDCoordinates.length === 4){
              clone[endingIDCoordinates[0]][endingIDCoordinates[1]][endingIDCoordinates[2]].splice([endingIDCoordinates[3]], 1)
         } else if (endingIDCoordinates.length === 5){
             clone[endingIDCoordinates[0]][endingIDCoordinates[1]][endingIDCoordinates[2]][endingIDCoordinates[3]].splice([endingIDCoordinates[4]], 1)
+        } else if (endingIDCoordinates.length === 6) {
+            clone[endingIDCoordinates[0]][endingIDCoordinates[1]][endingIDCoordinates[2]][endingIDCoordinates[3]][endingIDCoordinates[4]].splice([endingIDCoordinates[5]], 1)
         } else {
             return
         }
+    }
+        
+        
     
     setNotes(clone)
     setMappedNotes(mapNotes(clone))
 }
 
-function replaceNoteAtPosition(endingID, value, notes){
-    var clone = [...notes]
-    var ex1 = endingID.split('_')
+function replaceNoteAtPosition(endingID, notes){
+    const clone = [...notes]
+    const ex1 = endingID.split('_')
+    let startValue;
+    let value;
+    if (document.getElementById(endingID).innerHTML.length > 1){
+        return
+    } else {
+        startValue = document.getElementById(endingID).innerHTML
+    }
+
+    if (startValue === 'X'){
+        value = 'O'
+    } else {
+        value ='X'
+    }
+
         var endingIDCoordinates = []
         for (var i = 2; i < ex1.length; i++){
           endingIDCoordinates.push(Number(ex1[i]))
@@ -336,21 +395,25 @@ function subDivideNotesAtPosition(endingID, value, notes){
     if (getAllChildElementsById(endingID).length !== 0){
         return
     }
+    let insertData = []
+
+    for (var i = 0; i < subdivision.current; i++){
+        insertData.push(value)
+    }
+
     var ex1 = endingID.split('_')
         var endingIDCoordinates = []
         for (var i = 2; i < ex1.length; i++){
           endingIDCoordinates.push(Number(ex1[i]))
         }
         if (endingIDCoordinates.length === 1){
-            clone.splice(endingIDCoordinates[0], 1, [value, value])
+            clone.splice(endingIDCoordinates[0], 1, insertData)
         } else if (endingIDCoordinates.length === 2){
-             clone[endingIDCoordinates[0]].splice(endingIDCoordinates[1], 1, [value, value])
+             clone[endingIDCoordinates[0]].splice(endingIDCoordinates[1], 1, insertData)
         } else if (endingIDCoordinates.length === 3){
-             clone[endingIDCoordinates[0]][endingIDCoordinates[1]].splice([endingIDCoordinates[2]], 1, [value, value])
+             clone[endingIDCoordinates[0]][endingIDCoordinates[1]].splice([endingIDCoordinates[2]], 1, insertData)
         } else if (endingIDCoordinates.length === 4){
-             clone[endingIDCoordinates[0]][endingIDCoordinates[1]][endingIDCoordinates[2]].splice([endingIDCoordinates[3]], 1, [value, value])
-        } else if (endingIDCoordinates.length === 5){
-            clone[endingIDCoordinates[0]][endingIDCoordinates[1]][endingIDCoordinates[2]][endingIDCoordinates[3]].splice([endingIDCoordinates[4]], 1, [value, value])
+             clone[endingIDCoordinates[0]][endingIDCoordinates[1]][endingIDCoordinates[2]].splice([endingIDCoordinates[3]], 1, insertData)
         } else {
             return
         }
@@ -365,6 +428,7 @@ function unDivideNotesAtPosition(endingID, notes){
     }
     var xfer;
     var ex1 = endingID.split('_')
+   
         var endingIDCoordinates = []
         for (var i = 2; i < ex1.length; i++){
           endingIDCoordinates.push(Number(ex1[i]))
@@ -401,9 +465,13 @@ function lengthenPattern(notes){
 
 function shortenPattern(){
     var clone = [...notes]
-    clone.pop()
-    setNotes(clone)
-    setMappedNotes(mapNotes(clone))
+    if (clone.length === 1){
+        return
+    } else {
+        clone.pop()
+        setNotes(clone)
+        setMappedNotes(mapNotes(clone))
+    }
 }
 
 function mapNotesToRhythm(rhythmNotes, patternNotes){
@@ -464,21 +532,40 @@ function flattenNotes(notes, returnArr){
                 }
             }
         return returnArr;
-    }     
+    }
+
+function returnNotes(){
+    var count = 0;
+    const flattenedNotes = flattenNotes(notes)
+    for (var i = 0; i < flattenedNotes.length;i++){
+        if (flattenedNotes[i] === 'O'){
+            count++
+        }
+    }
+    setNoteSlots(count)
+}
 //DRAG AND DROP FUNCTIONALITY
  //----------------------------------
  const dragStartHandler = e => {
-    var obj = {id: e.target.id, className: e.target.className, message: 'dragside', type: 'dragside'}
+    var obj = {id: e.target.id, className: e.target.className, message: 'dragside', type: 'rhythmLab'}
     e.dataTransfer.setData('text', JSON.stringify(obj));
     
 };
 
 const dragStartHandlerSpecial = e => {
     var obj = {id: 'special', className: 'rhythmData', message: {
+        name: name,
         rhythmName: name,
-        rhythm: notes,
-        length: [notes.length]
-    }, type: 'foreign'}
+        desc: '',
+        rhythm: JSON.parse(JSON.stringify(notes)),
+        length: moduleLengthDisplay,
+        notes: noteSlots,
+        speed: playConstant,
+        author: '',
+        authorId: '',
+        dataType: 'rhythm',
+        pool: '',
+    }, type: 'rhythmLabExport'}
     e.dataTransfer.setData('text', JSON.stringify(obj));
 }
 
@@ -497,8 +584,6 @@ const dragLeaveHandler = e => {
 
 //---------------------
 const dropHandler = e => {
-    // e.currentTarget.className = 'inactive'
-    //--HACKY SHIT BELOW!!
     e.stopPropagation();
     e.nativeEvent.stopImmediatePropagation();
     e.preventDefault();
@@ -506,9 +591,12 @@ const dropHandler = e => {
             for (var j = 0; j < elementsToBeActivated.length; j++){
                 elementsToBeActivated[j].className = 'inactive'
             }
-    console.log(e.target.id, 'dropped!!')
     var data = JSON.parse(e.dataTransfer.getData("text"));
-    changePositionsUsingIDs(data.id, e.target.id, notes)
+    if (data.type !== 'rhythmLab'){
+        return
+    } else {
+        changePositionsUsingIDs(data.id, e.target.id, notes)
+    }
     e.dataTransfer.clearData();
     
 }
@@ -516,13 +604,19 @@ const dropHandler = e => {
 const clickHandler = e => {
     e.stopPropagation();
     e.nativeEvent.stopImmediatePropagation();
-    console.log(e.target.id)
-    subDivideNotesAtPosition(e.target.id, e.target.innerText, notes)
-    // unDivideNotesAtPosition(e.target.id, notes)
-    // removeNoteAtPosition(e.target.id, notes)
-    // addNoteAtPosition(e.target.id, notes)
-    
-    // replaceNoteAtPosition(e.target.id, 'O', notes)
+    if (controls.current === 'subdivide'){
+        subDivideNotesAtPosition(e.target.id, e.target.innerText, notes)
+    } else if (controls.current === 'undivide'){
+        unDivideNotesAtPosition(e.target.id, notes)
+    } else if (controls.current === 'add'){
+        addNoteAtPosition(e.target.id, notes)
+    } else if (controls.current === 'remove'){
+        removeNoteAtPosition(e.target.id, notes)
+    } else if (controls.current === 'replace'){
+        replaceNoteAtPosition(e.target.id, notes)
+    }else {
+        return
+    }
 }
 
 //------------------------------------------
@@ -568,28 +662,28 @@ function mapNotes(notes){
                                             }
                                         }
                                         level3Return.push(
-                                            <div id={'rhythm_note_' + i + '_' + j + '_' + k + '_' + l + '_' + m} key={'rhythm_note_' + i + '_' + j + '_' + k + '_' + l + '_' + m} className='inactive rhythmNote' onClick={clickHandler}  draggable onDragStart = {dragStartHandler} onDrag = {dragHandler} onDragOver = {dragOverHandler} onDragLeave={dragLeaveHandler} onDrop = {dropHandler} style={{margin: '5px', display: 'flex', flexDirection: 'row', alignItems: 'center' , backgroundColor: 'purple'}}>{level4Return}</div>
+                                            <div id={'rhythm_note_' + i + '_' + j + '_' + k + '_' + l + '_' + m} key={'rhythm_note_' + i + '_' + j + '_' + k + '_' + l + '_' + m} className='inactive rhythmNote' onClick={clickHandler}  draggable onDragStart = {dragStartHandler} onDrag = {dragHandler} onDragOver = {dragOverHandler} onDragLeave={dragLeaveHandler} onDrop = {dropHandler} style={{margin: '5px', display: 'flex', flexDirection: 'row', alignItems: 'center' , backgroundColor: 'black'}}>{level4Return}</div>
                                         )
                                         }
                                     }
                                     level2Return.push(
-                                        <div id={'rhythm_note_' + i + '_' + j + '_' + k + '_' + l} key={'rhythm_note_' + i + '_' + j + '_' + k + '_' + l} className='inactive rhythmNote' onClick={clickHandler}  draggable onDragStart = {dragStartHandler} onDrag = {dragHandler} onDragOver = {dragOverHandler} onDragLeave={dragLeaveHandler} onDrop = {dropHandler} style={{margin: '5px', display: 'flex', flexDirection: 'row', alignItems: 'center', backgroundColor: 'orange'}}>{level3Return}</div>
+                                        <div id={'rhythm_note_' + i + '_' + j + '_' + k + '_' + l} key={'rhythm_note_' + i + '_' + j + '_' + k + '_' + l} className='inactive rhythmNote' onClick={clickHandler}  draggable onDragStart = {dragStartHandler} onDrag = {dragHandler} onDragOver = {dragOverHandler} onDragLeave={dragLeaveHandler} onDrop = {dropHandler} style={{margin: '5px', display: 'flex', flexDirection: 'row', alignItems: 'center', backgroundColor: 'lightgreen'}}>{level3Return}</div>
                                     )
                                 }
                                 
                             }
                             level1Return.push(
-                                <div id={'rhythm_note_' + i + '_' + j + '_' + k} key={'rhythm_note_' + i + '_' + j + '_' + k} className='inactive rhythmNote' onClick={clickHandler}  draggable onDragStart = {dragStartHandler} onDrag = {dragHandler} onDragOver = {dragOverHandler} onDragLeave={dragLeaveHandler} onDrop = {dropHandler} style={{margin: '5px', display: 'flex', flexDirection: 'row', alignItems: 'center', backgroundColor: 'green'}}>{level2Return}</div>
+                                <div id={'rhythm_note_' + i + '_' + j + '_' + k} key={'rhythm_note_' + i + '_' + j + '_' + k} className='inactive rhythmNote' onClick={clickHandler}  draggable onDragStart = {dragStartHandler} onDrag = {dragHandler} onDragOver = {dragOverHandler} onDragLeave={dragLeaveHandler} onDrop = {dropHandler} style={{margin: '5px', display: 'flex', flexDirection: 'row', alignItems: 'center', backgroundColor: 'lightblue'}}>{level2Return}</div>
                             )
                         } 
                     }
                     level0Return.push(
-                        <div id={'rhythm_note_' + i + '_' + j} key={'rhythm_note_' + i + '_' + j} className='inactive rhythmNote' onClick={clickHandler}  draggable onDragStart = {dragStartHandler} onDrag = {dragHandler} onDragOver = {dragOverHandler} onDragLeave={dragLeaveHandler} onDrop = {dropHandler} style={{margin: '5px', display: 'flex', flexDirection: 'row', alignItems: 'center', backgroundColor: 'blue'}}>{level1Return}</div>
+                        <div id={'rhythm_note_' + i + '_' + j} key={'rhythm_note_' + i + '_' + j} className='inactive rhythmNote' onClick={clickHandler}  draggable onDragStart = {dragStartHandler} onDrag = {dragHandler} onDragOver = {dragOverHandler} onDragLeave={dragLeaveHandler} onDrop = {dropHandler} style={{margin: '5px', display: 'flex', flexDirection: 'row', alignItems: 'center', backgroundColor: 'lightsalmon'}}>{level1Return}</div>
                         )
                 }
             }
             returnArr.push(
-                <div id={'rhythm_note_' + i} key={'rhythm_note_' + i} className='inactive rhytmNote' onClick={clickHandler}  draggable onDragStart = {dragStartHandler} onDrag = {dragHandler} onDragOver = {dragOverHandler} onDragLeave={dragLeaveHandler} onDrop = {dropHandler} style={{margin: '5px', display: 'flex', flexDirection: 'row', alignItems: 'center', backgroundColor: 'red' }}>{level0Return}</div>
+                <div id={'rhythm_note_' + i} key={'rhythm_note_' + i} className='inactive rhytmNote' onClick={clickHandler}  draggable onDragStart = {dragStartHandler} onDrag = {dragHandler} onDragOver = {dragOverHandler} onDragLeave={dragLeaveHandler} onDrop = {dropHandler} style={{margin: '5px', display: 'flex', flexDirection: 'row', alignItems: 'center', backgroundColor: 'lightcoral' }}>{level0Return}</div>
                 )
         }
         return returnArr    
@@ -661,7 +755,15 @@ function setEverythingToInactive(){
 }
 
 function playSynth(){
+    if (isMuted){
+        return
+    }
+    Tone.start()
+    Tone.Transport.cancel();
+    Tone.Transport.stop();
     Tone.Transport.start();
+    var tempNotes = [...notes]
+    tempNotes.push(['X'])
     var position = 0;
     var previouslyActivated = [];
         const synthPart = new Tone.Sequence(
@@ -686,13 +788,13 @@ function playSynth(){
                 previouslyActivated.push(elementsToBeActivated[j])
             }
 
-            if (position === flattenNotes(notes).length - 1){
+            if (position === flattenNotes(tempNotes).length - 1){
                 position = 0;
             } else {
                 position++;
             }
           },
-         notes,
+         tempNotes,
           (playConstant * Tone.Time('4n').toSeconds())
         );
         
@@ -727,60 +829,54 @@ const handleModuleLengthChange = e => {
 const onChangeModuleLength = e => {
     setModuleLengthDisplay(e.target.value)
 }
+
+function handleExport(){
+
+    const rhythmDataPrototype = {
+        //make amount notes reflect the amount of notes in the rhythm completely
+        rhythmName: name,
+        rhythm: notes,
+        length: moduleLengthDisplay,
+        speed: playConstant,
+        notes: noteSlots,
+        author: 'NoodleMan0',
+        authorId: 'Noodleman0_id',
+        pool: 'global',
+    }
+    dispatch(insertData(rhythmDataPrototype))
+}
     return (
         <>
         <Menu>
          <Menu.Item onClick={() => playSynth()}>Play</Menu.Item>  
-         <Menu.Item onClick={() => Tone.Transport.stop()}> Stop </Menu.Item> 
-         <Menu.Item onClick={() => loopOn(notes)}> Loop: {loop ? 'On' : 'Off'} </Menu.Item>   
          <Menu.Item onClick={()=> randomRhythmGenerator()}> Generate </Menu.Item>   
-         <Menu.Item onClick={()=> randomRhythmGenerator()}>  Import </Menu.Item>   
-         <Menu.Item onClick={()=> mapNotesToRhythm(notes, testPattern)}>  Map </Menu.Item>   
-         {/* <Menu.Item onClick={()=> shortenPattern(notes)}> Shorten </Menu.Item>  
-         <Menu.Item onClick={()=> lengthenPattern(notes)}> Lengthen </Menu.Item>   
-         <Menu.Item> Edit </Menu.Item>   
-         <Menu.Item> Options </Menu.Item>   
-         <Menu.Item onClick={()=> spliceCheck(notes)}> Splice Check</Menu.Item>   
-         <Menu.Item onClick={()=> mapNotesToRhythm(notes, testPattern)}> Map </Menu.Item>   
-         <Menu.Item onClick={()=> antiMapNotesToRhythm(notes)}> Clean </Menu.Item>   
-         <Menu.Item> Export </Menu.Item>   
-         <Menu.Item> Undo </Menu.Item>   
-         <Menu.Item> Redo </Menu.Item>   
-         <Menu.Item onClick={() => setEverythingToInactive()}> reset View Test </Menu.Item>   
-         <Menu.Item onClick={() =>console.log(notes)}> Notes </Menu.Item>   
-         <Menu.Item onClick={() =>console.log(squishTiming(13, 8))}> SquishTiming </Menu.Item>   
-         <Menu.Item onClick={() =>console.log(Tone.Time("4n").toSeconds()) * 5}> BPM? </Menu.Item>    */}
+         <Menu.Item onClick={()=> setEdit(!edit)}> Edit</Menu.Item>   
+         <Menu.Item onClick={()=> setStretchCompress(!stretchCompress)}>  Stretch/Compress </Menu.Item>      
+         <Menu.Item onClick={()=> handleExport()}>  Export </Menu.Item>   
         </Menu>
-        <Button.Group>
-            <Button active ={activeButton === 'X'}compact basic onClick ={() => handleControls('X')}>X</Button>
-            <Button active ={activeButton === 'O'} compact basic onClick ={() => handleControls('O')}>O</Button>
+        {edit && <Button.Group>
+            <Button active ={activeButton === 'replace'} compact basic onClick ={() =>handleControls('replace')}> X/O</Button>
             <Button active ={activeButton === 'add'} compact basic onClick ={() =>handleControls('add')}>Add</Button>
-            <Button active ={activeButton === 'add'} compact basic onClick ={() =>handleControls('replace')}>Replace</Button>
-            <Button active ={activeButton === 'remove'} compact basic onClick ={() => handleControls('remove')}>Notes</Button>
-            {/* <Button active ={activeButton === 'subdivide'} compact basic onClick ={() => handleControls('subdivide')}>Subdivide</Button>
-            <Button active ={activeButton === 'subdivide'} compact basic onClick ={() => handleControls('2')}>2</Button>
-            <Button active ={activeButton === 'subdivide'} compact basic onClick ={() => handleControls('3')}>3</Button>
+            <Button active ={activeButton === 'remove'} compact basic onClick ={() => handleControls('remove')}>Remove</Button>
+            <Button active ={activeButton === 'subdivide'} compact basic onClick ={() => handleControls('subdivide')}>Subdivide</Button>
+            {activeButton ==='subdivide' && <Button.Group>
+            <Button active ={subdivisionValue === 2} compact basic onClick ={() => handleSubdivision(2)}>2</Button>
+            <Button active ={subdivisionValue === 3} compact basic onClick ={() => handleSubdivision(3)}>3</Button>
+            <Button active ={subdivisionValue === 4} compact basic onClick ={() => handleSubdivision(4)}>4</Button>
+            </Button.Group>}
             <Button active ={activeButton === 'undivide'} compact basic onClick ={() => handleControls('undivide')}>Undivide</Button>
-            <Button active ={activeButton === 'lengthen'} compact basic onClick ={() => handleControls('lengthen')}>Lengthen</Button>
-            <Button active ={activeButton === 'shorten'} compact basic onClick ={() => handleControls('shorten')}>Shorten</Button>
-            <Button active ={activeButton === 'duplicate'} compact basic onClick ={() => handleControls('duplicate')}>Duplicate</Button> */}
-        </Button.Group>
-        {/* <div>
-            <h3>Melody Notes</h3>
-            <div style={{display: 'flex', flexDirection: 'row', width: '500px'}} >
-           {mapMelodyNotes(melodyNotes)}
-       </div>
-            <h3>Notes</h3>
-        </div> */}
-        <div>Length: {moduleLengthDisplay}</div>
-        <input type="range" min='1' max='16' step='1' defaultValue={moduleLengthDisplay} onMouseUp={handleModuleLengthChange} onChange={onChangeModuleLength}/>
-        
+            <Button compact basic onClick={()=> shortenPattern(notes)}>Notes--</Button>
+            <Button compact basic onClick ={() => lengthenPattern(notes)}>Notes++</Button>
+        </Button.Group>}
        <div style={{display: 'flex', flexDirection: 'row', width: '500px'}} >
            {mappedNotes}
        </div>
+       <div>{moduleLengthDisplay}{moduleLengthDisplay > 1 ? ' beats' : ' beat'} </div>
+       <div>{noteSlots}{noteSlots > 1 ? ' notes' : ' note'} </div>
+        {stretchCompress && <Input type="range" min='1' max='16' step='1' defaultValue={moduleLengthDisplay} onMouseUp={handleModuleLengthChange} onChange={onChangeModuleLength}/>}
        <div>
             <h3>Rhythm</h3>
-            <div draggable onDragStart={dragStartHandlerSpecial} style={{height: '25px', width: '125px', backgroundColor: 'wheat'}}>{name}</div>
+            <div draggable onDragStart={dragStartHandlerSpecial} style={{height: '25px', width: '125px', backgroundColor: 'lightseagreen'}}>{name}</div>
         </div>
         <div>
             <h3>Name</h3>
@@ -789,17 +885,6 @@ const onChangeModuleLength = e => {
             onInput={e => setName(e.target.value)}
             />
         </div>
-        {/* <div>
-            <h3>Pattern</h3>
-            <div draggable='true' style={{height: '25px', width: '125px', backgroundColor: 'wheat'}}>Pattern</div>
-        </div>
-        <div>
-            <h3>Name</h3>
-            <Input type='text'
-            value={name}
-            onInput={e => setName(e.target.value)}
-            />
-        </div> */}
         </>
     )
 }

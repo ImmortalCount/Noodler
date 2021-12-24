@@ -1,318 +1,109 @@
-import React, {useState} from 'react'
-import {Button, Select, Input, Icon, Grid, Segment, Header, Search, Menu} from 'semantic-ui-react'
+import React, {useState, useEffect} from 'react'
+import {List, Select, Input, Icon, Grid, Button, Menu} from 'semantic-ui-react'
+import { useDispatch, useSelector} from 'react-redux';
+import { getMusicData } from '../../store/actions/dataPoolActions';
+
 
 export default function Explorer() {
-    const [dropDownState, setDropdownState] = useState(['global', 'components', 'module'])
-    const [source, setSource] = useState([
-        {'title': 'rhythm-1',
-        'description': '4 on the floor',
-        'length': 4,
-        'notes': [['O'], ['O'],['O'],['O']]}]) 
+  const [scope, setScope] = useState('global')
+  const [data, setData] = useState('component')
+  const [subData, setSubData] = useState('pattern')
+  const [keyword, setKeyword] = useState('')
+
+  const dispatch = useDispatch();
+
+  const dataList  = useSelector(state => state.dataList)
+  const {loading, error, displayData} = dataList
+
+useEffect(() => {
+    let queryObject = {}
+    queryObject["pool"] = scope
+    queryObject["dataType"] = subData
+    queryObject["keyword"] = keyword
+    dispatch(getMusicData(queryObject))
+}, [scope, subData, keyword, dispatch])
+
     //========================================================
+
+const onDrag = (e) => {
+}
+
+const onDragStart = (e) => {
+    var obj = {
+        id: 'special', 
+        className: displayData.data[e.currentTarget.id.split('_')[0]].dataType + 'Data', 
+        message: displayData.data[e.currentTarget.id.split('_')[0]], 
+        type: 'foreign'
+    }
+        e.dataTransfer.setData('text', JSON.stringify(obj));
+        console.log(obj)
+}
     const scopeOptions = [
     { key: 'all', text: 'All', value: 'all' },
     { key: 'global', text: 'Global', value: 'global' },
     { key: 'local', text: 'Local', value: 'local' },
     ]
 
-    const dataType = [
-    { key: 'components', text: 'Components', value: 'components' },
-    { key: 'collections', text: 'Collections', value: 'collections' },
-    { key: 'songs', text: 'Songs', value: 'songs' },
+    const dataTypeOptions = [
+    { key: 'all', text: 'All', value: 'all' },
+    { key: 'component', text: 'Component', value: 'component' },
+    { key: 'collection', text: 'Collection', value: 'collection' },
+    { key: 'song', text: 'Songs', value: 'song' },
     ]
 
-    const dataSubType = [
-        {key: 'chords', text: 'Chords', value: 'chords'},
-        {key: 'rhythms', text: 'Rhythms', value: 'rhythms'},
-        {key: 'patterns', text: 'Patterns', value: 'patterns'},
-        {key: 'scales', text: 'Scales', value: 'scales'},
-        {key: 'modules', text: 'Modules', value: 'modules'},
+    const dataSubTypeOptions = [
+        { key: 'all', text: 'All', value: 'all' },
+        {key: 'chord', text: 'Chord', value: 'chord'},
+        {key: 'rhythm', text: 'Rhythm', value: 'rhythm'},
+        {key: 'pattern', text: 'Pattern', value: 'pattern'},
+        {key: 'scale', text: 'Scale', value: 'scale'},
+        {key: 'module', text: 'Module', value: 'module'},
     ]
 
-    function handleChangeSource(){
-            if (dropDownState[0] === 'global'){
-                if (dropDownState[1] === 'components'){
-                    if (dropDownState[2] === 'chords'){
-
-                    } else if (dropDownState[2] === 'rhythms'){
-
-                    } else if (dropDownState[2] === 'patterns'){
-                        
-                    } else if (dropDownState[2] === 'scales'){
-
-                    } else if (dropDownState[2] === 'modules'){
-
-                    } else {
-                        return
-                    }
-                } else if (dropDownState[1] === 'collections'){
-                    if (dropDownState[2] === 'chords'){
-
-                    } else if (dropDownState[2] === 'rhythms'){
-
-                    } else if (dropDownState[2] === 'patterns'){
-                        
-                    } else if (dropDownState[2] === 'scales'){
-
-                    } else if (dropDownState[2] === 'modules'){
-
-                    } else {
-                        return
-                    }
-                } else if (dropDownState[1] === 'songs'){
-                    if (dropDownState[2] === 'chords'){
-
-                    } else if (dropDownState[2] === 'rhythms'){
-
-                    } else if (dropDownState[2] === 'patterns'){
-                        
-                    } else if (dropDownState[2] === 'scales'){
-
-                    } else if (dropDownState[2] === 'modules'){
-
-                    } else {
-                        return
-                    }
-                }
-            } else if (dropDownState[0] === 'local'){
-                if (dropDownState[1] === 'components'){
-                    if (dropDownState[2] === 'chords'){
-
-                    } else if (dropDownState[2] === 'rhythms'){
-
-                    } else if (dropDownState[2] === 'patterns'){
-                        
-                    } else if (dropDownState[2] === 'scales'){
-
-                    } else if (dropDownState[2] === 'modules'){
-
-                    } else {
-                        return
-                    }
-
-                } else if (dropDownState[1] === 'collections'){
-                    if (dropDownState[2] === 'chords'){
-
-                    } else if (dropDownState[2] === 'rhythms'){
-
-                    } else if (dropDownState[2] === 'patterns'){
-                        
-                    } else if (dropDownState[2] === 'scales'){
-
-                    } else if (dropDownState[2] === 'modules'){
-
-                    } else {
-                        return
-                    }
-
-                } else if (dropDownState[1] === 'songs'){
-                    if (dropDownState[2] === 'chords'){
-
-                    } else if (dropDownState[2] === 'rhythms'){
-
-                    } else if (dropDownState[2] === 'patterns'){
-                        
-                    } else if (dropDownState[2] === 'scales'){
-
-                    } else if (dropDownState[2] === 'modules'){
-
-                    } else {
-                        return
-                    }
-                
-
-            } else if (dropDownState[0] === 'all'){
-                if (dropDownState[1] === 'components'){
-                    if (dropDownState[2] === 'chords'){
-
-                    } else if (dropDownState[2] === 'rhythms'){
-
-                    } else if (dropDownState[2] === 'patterns'){
-                        
-                    } else if (dropDownState[2] === 'scales'){
-
-                    } else if (dropDownState[2] === 'modules'){
-
-                    } else {
-                        return
-                    }
-
-                } else if (dropDownState[1] === 'collections'){
-                    if (dropDownState[2] === 'chords'){
-
-                    } else if (dropDownState[2] === 'rhythms'){
-
-                    } else if (dropDownState[2] === 'patterns'){
-                        
-                    } else if (dropDownState[2] === 'scales'){
-
-                    } else if (dropDownState[2] === 'modules'){
-
-                    } else {
-                        return
-                    }
-
-                } else if (dropDownState[1] === 'songs'){
-                    if (dropDownState[2] === 'chords'){
-
-                    } else if (dropDownState[2] === 'rhythms'){
-
-                    } else if (dropDownState[2] === 'patterns'){
-                        
-                    } else if (dropDownState[2] === 'scales'){
-
-                    } else if (dropDownState[2] === 'modules'){
-
-                    } else {
-                        return
-                    }
-                
-                } else {
-                    return
-                }
-            } else {
-                return
-            }
+    function returnColor(type){
+        let color;
+        if (type === 'pattern'){
+            color = 'lightblue'
+        } else if (type === 'chord'){
+            color = 'lightsalmon'
+        } else if (type === 'scale'){
+            color = 'lightcoral'
+        } else if (type === 'rhythm'){
+            color = 'lightseagreen'
+        } else if (type === 'module'){
+            color = 'wheat'
+        } else {
+            color = 'wheat'
         }
+        return color;
     }
-    //========================================================
-
-    const globalRhythms = [
-        {'title': 'rhythm-1 Globe',
-        'description': '4 on the floor',
-        'length': 4,
-        'notes': [['O'], ['O'],['O'],['O']]},
-        {'title': 'rhythm-2 Globe',
-        'description': '4 on the floor',
-        'length': 4,
-        'notes': [['O'], ['O'],['O'],['O']]},
-        {'title': 'rhythm-3 Globe',
-        'description': '4 on the floor',
-        'length': 4,
-        'notes': [['O'], ['O'],['O'],['O']]},
-    ]
-
-    const localRhythms = [
-        {'title': 'rhythm-1 Local',
-        'description': '4 on the floor',
-        'length': 4,
-        'notes': [['O'], ['O'],['O'],['O']]},
-        {'title': 'rhythm-2 Local',
-        'description': '4 on the floor',
-        'length': 4,
-        'notes': [['O'], ['O'],['O'],['O']]},
-        {'title': 'rhythm-3 Local',
-        'description': '4 on the floor',
-        'length': 4,
-        'notes': [['O'], ['O'],['O'],['O']]},
-    ]
-
-    const localRhythmCollections = [
-        {'title': 'collection 1',
-        'description': 'tropical riddims',
-        'info': [
-            {'title': 'rhythm-1 Local',
-            'description': '4 on the floor',
-            'length': 4,
-            'notes': [['O'], ['O'],['O'],['O']]},
-            {'title': 'rhythm-2 Local',
-            'description': '4 on the floor',
-            'length': 4,
-            'notes': [['O'], ['O'],['O'],['O']]},
-            {'title': 'rhythm-3 Local',
-            'description': '4 on the floor',
-            'length': 4,
-            'notes': [['O'], ['O'],['O'],['O']]},   
-        ]}
-    ]
-    //==============================================
-
-    const initialState = {
-        loading: false,
-        results: [],
-        value: '',
-      }
-    
-    
-      
-    function exampleReducer(state, action) {
-        switch (action.type) {
-          case 'CLEAN_QUERY':
-            return initialState
-          case 'START_SEARCH':
-            return { ...state, loading: true, value: action.query }
-          case 'FINISH_SEARCH':
-            return { ...state, loading: false, results: action.results }
-          case 'UPDATE_SELECTION':
-            return { ...state, value: action.selection }
-      
-          default:
-            throw new Error()
-        }
-      }
-
-      function escapeRegex(string) {
-        return string.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&');
-    }
-    
-      const [state, dispatch] = React.useReducer(exampleReducer, initialState)
-      const { loading, results, value } = state
-    
-      const timeoutRef = React.useRef()
-      const handleSearchChange = React.useCallback((e, data) => {
-        clearTimeout(timeoutRef.current)
-        dispatch({ type: 'START_SEARCH', query: data.value })
-    
-        timeoutRef.current = setTimeout(() => {
-          if (data.value.length === 0) {
-            dispatch({ type: 'CLEAN_QUERY' })
-            return
-          }
-    
-          const re = new RegExp(escapeRegex(data.value))
-          const isMatch = (result) => re.test(result.title)
-    
-          dispatch({
-            type: 'FINISH_SEARCH',
-            results: source.filter(isMatch)
-          })
-        }, 300)
-      }, [])
-      React.useEffect(() => {
-        return () => {
-          clearTimeout(timeoutRef.current)
-        }
-      }, [])
-    
 
     return (
         <div>
             <Menu>
-            <Search
-          loading={loading}
-          onResultSelect={(e, data) =>
-            dispatch({ type: 'UPDATE_SELECTION', selection: data.result.title })
-          }
-          onSearchChange={handleSearchChange}
-          results={results}
-          value={value}
-        />
-            <Select compact options={scopeOptions} defaultValue='global'/>
-            <Select compact options={dataType} defaultValue='components'/>
-            <Select compact options={dataSubType} defaultValue='modules'/>
+            <Input type='text' placeholder='Search...' icon='search' onChange={(e, {value}) => setKeyword(value)} />
+            <Select compact options={scopeOptions} onChange={(e, {value}) => setScope(value)} defaultValue='global'/>
+            <Select compact options={dataTypeOptions} onChange={(e, {value}) => setData(value)} defaultValue='component'/>
+            <Select compact options={dataSubTypeOptions} onChange={(e, {value}) => setSubData(value)}defaultValue='pattern'/>
             </Menu>
         <Grid>
             <Grid.Column width={10}>
-        <Segment>
-          <Header>State</Header>
-          <pre style={{ overflowX: 'auto' }}>
-            {JSON.stringify({ loading, results, value }, null, 2)}
+            <pre style={{ overflowX: 'auto' }}>
+            {loading && <h3>Loading</h3>}
+            {error && <h3>Error</h3>}
+            <List>
+                {displayData && displayData.data.map((displayData, idx) => (
+                <List.Item id={idx + '_explorer'} key={idx + '_explorer'} className={'explorer'} style={{backgroundColor: returnColor(displayData.dataType)}}draggable onDrag={onDrag} onDragStart ={onDragStart}>
+                <List.Content>
+                <List.Header > <Icon name='play' size='small'/>{displayData.name}</List.Header>
+                <List.Description >type: {displayData.dataType}</List.Description>
+                <List.Description >pool: {displayData.pool}</List.Description>
+                <List.Description >author: {displayData.author}</List.Description>
+                </List.Content>
+                </List.Item>
+                ))}
+            </List>
           </pre>
-          <Header>Options</Header>
-          <pre style={{ overflowX: 'auto' }}>
-            {JSON.stringify(source, null, 2)}
-          </pre>
-        </Segment>
       </Grid.Column>
             </Grid>
         </div>

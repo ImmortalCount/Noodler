@@ -20,7 +20,7 @@ DATA_POOL_UPDATE_FAIL,
 DATA_POOL_UPDATE_RESET, 
 } from '../constants/dataPoolConstants.js'
 
-export const insertData = (musicData, pool) => async (dispatch) => {
+export const insertData = (musicData) => async (dispatch) => {
     try {
         dispatch({
             type: DATA_POOL_INSERT_REQUEST
@@ -32,9 +32,9 @@ export const insertData = (musicData, pool) => async (dispatch) => {
             },
         }
 
-        const {data} = await http.post(
-            `/data/${pool}`,
-            {musicData},
+        const data = await http.post(
+            'data',
+            (musicData),
             config
         )
 
@@ -46,6 +46,31 @@ export const insertData = (musicData, pool) => async (dispatch) => {
     } catch (error) {
         dispatch({
             type: DATA_POOL_INSERT_FAIL,
+            payload: error.response && error.response.data.message 
+            ? error.response.data.message 
+            : error.message
+        })
+    }
+}
+
+export const getMusicData = (requestData) => async (dispatch) => {
+    try {
+        dispatch({type: DATA_POOL_LIST_REQUEST})
+
+        const dataType = requestData.dataType
+        const pool = requestData.pool
+        const keyword = requestData.keyword
+        const data = await http.get(
+            `data?dataType=${dataType}&pool=${pool}&keyword=${keyword}`
+        )
+
+        dispatch({
+            type: DATA_POOL_LIST_SUCCESS,
+            payload: data
+        })
+    } catch (error){
+        dispatch({
+            type: DATA_POOL_LIST_FAIL,
             payload: error.response && error.response.data.message 
             ? error.response.data.message 
             : error.message

@@ -5,22 +5,26 @@ import { Note, Scale, Chord} from '@tonaljs/tonal';
 import { useDispatch } from 'react-redux';
 import { bindActionCreators } from 'redux';
 import { actionCreators } from '../../store/index.js';
-import { initialData} from './dummyData';
-import { playerDataPrototype } from './dataPrototypes';
+import { initialData, initialDataType2} from './dummyData';
+import { DataPrototype } from './dataPrototypes';
+import * as Tone from 'tone';
 
-export default function Player({masterInstrumentArray}) {
-    const [sequence, setSequence] = useState(convertModuleDataIntoPlayableSequence(initialData))
+export default function Player ({masterInstrumentArray}) {
     const [instrumentFocus, setInstrumentFocus] = useState(0);
     const [mainModule, setMainModule] = useState(0)
-    const [playerData, setPlayerData] = useState([{mode: 'off', highlight: [], data: initialData, reserveData: []}])
+    const [data, setData] = useState([{mode: 'melody', highlight: [], data: initialDataType2}])
+    const [markers, setMarkers] = useState([])
+    var markerValue = useRef([])
+    const [currentlyPlaying, setCurrentlyPlaying] = useState([])
     var [activeButton, setActiveButton] = useState('swap')
     var controls = useRef('swap')
     const dispatch = useDispatch();
     const {sendModuleData, receiveModuleData} = bindActionCreators(actionCreators, dispatch);
 
     useEffect (()=>{
-        sendModuleData(JSON.stringify(convertModuleDataIntoPlayableSequence2(playerData))) 
-    }, [playerData]);
+        sendModuleData(JSON.stringify(convertModuleDataIntoPlayableSequence3(data))) 
+        setModuleMarkers()
+    }, [data]);
 
 
 function qualityOfChordNameParser(chordName){
@@ -179,7 +183,7 @@ function convertModuleDataIntoPlayableSequence(data){
         return [returnObject];
     }
 
-    function scaleIntoScaleDisplayNotes(scale, duration){
+function scaleIntoScaleDisplayNotes(scale, duration){
         if (duration === undefined){
             duration = 4;
         }
@@ -195,7 +199,7 @@ function convertModuleDataIntoPlayableSequence(data){
         return returnArr;
     }
 
-    function handleOffMode(duration){
+function handleOffMode(duration){
         if (duration === undefined){
             duration = 4;
         }
@@ -206,20 +210,20 @@ function convertModuleDataIntoPlayableSequence(data){
         return returnArr;
     }
 
-    function convertModuleDataIntoPlayableSequence2(playerData){
+function convertModuleDataIntoPlayableSequence2(musicData){
         var returnArr = [];
-        for (var h = 0; h < playerData.length; h++){
+        for (var h = 0; h < musicData.length; h++){
             var returnObject = 
             {displayOnly: true,
             highlight: [],
             data: []};
-            if (playerData[h]['mode'] === 'melody' || playerData[h]['mode'] === 'chord'){
+            if (musicData[h]['mode'] === 'melody' || musicData[h]['mode'] === 'chord'){
                 returnObject['displayOnly'] = false;
-                for (var i = 0; i < playerData[h]['data'].length; i++){
+                for (var i = 0; i < musicData[h]['data'].length; i++){
                     var innerObject = {speed:'', notes:[]}
-                    var rhythm = playerData[h]['data'][i]['rhythmData']['rhythm'];
-                    var pattern = playerData[h]['data'][i]['patternData']['pattern']
-                    var scale = playerData[h]['data'][i]['scaleData']['scale']
+                    var rhythm = musicData[h]['data'][i]['rhythmData']['rhythm'];
+                    var pattern = musicData[h]['data'][i]['patternData']['pattern']
+                    var scale = musicData[h]['data'][i]['scaleData']['scale']
                     var notes = patternAndScaleToNotes(pattern, scale)
                     var sequence = notesIntoRhythm(notes, rhythm)
                     innerObject['speed'] = '4n'
@@ -227,33 +231,91 @@ function convertModuleDataIntoPlayableSequence(data){
                     returnObject['data'].push(innerObject)
                     }
                 returnArr.push(returnObject)
-            } else if (playerData[h]['mode'] === 'off'){
+            } else if (musicData[h]['mode'] === 'off'){
                 returnObject['displayOnly'] = true;
-                for (var i = 0; i < playerData[h]['data'].length; i++){
+                for (var i = 0; i < musicData[h]['data'].length; i++){
                     var innerObject = {speed:'', notes:[]}
                     innerObject['speed'] = '4n'
                     innerObject['notes'] = handleOffMode();
                     returnObject['data'].push(innerObject)
                     }
                 returnArr.push(returnObject)
-            } else if (playerData[h]['mode'] === 'scale'){
+            } else if (musicData[h]['mode'] === 'scale'){
                 returnObject['displayOnly'] = true;
-                for (var i = 0; i < playerData[h]['data'].length; i++){
+                for (var i = 0; i < musicData[h]['data'].length; i++){
                     var innerObject = {speed:'', notes:[]}
-                    var scale = playerData[h]['data'][i]['scaleData']['scale']
+                    var scale = musicData[h]['data'][i]['scaleData']['scale']
                     var sequence = scaleIntoScaleDisplayNotes(scale)
                     innerObject['speed'] = '4n'
                     innerObject['notes'] = sequence
                     returnObject['data'].push(innerObject)
                     }
                 returnArr.push(returnObject)
-            } else if (playerData[h]['mode'] === 'chordTones'){
+            } else if (musicData[h]['mode'] === 'chordTones'){
                 returnObject['displayOnly'] = true;
-                for (var i = 0; i < playerData[h]['data'].length; i++){
+                for (var i = 0; i < musicData[h]['data'].length; i++){
                     var innerObject = {speed:'', notes:[]}
-                    var chord = playerData[h]['data'][i]['chordData']['chord']
+                    var chord = musicData[h]['data'][i]['chordData']['chord']
                     var sequence = scaleIntoScaleDisplayNotes(chord)
                     innerObject['speed'] = '4n'
+                    innerObject['notes'] = sequence
+                    returnObject['data'].push(innerObject)
+                    }
+                returnArr.push(returnObject)
+            }
+            
+        }
+        return returnArr;
+    }
+
+function convertModuleDataIntoPlayableSequence3(musicData){
+        var returnArr = [];
+        for (var h = 0; h < musicData.length; h++){
+            var returnObject = 
+            {displayOnly: true,
+            highlight: [],
+            data: []};
+            if (musicData[h]['mode'] === 'melody' || musicData[h]['mode'] === 'chord'){
+                returnObject['displayOnly'] = false;
+                for (var i = 0; i < musicData[h]['data'].length; i++){
+                    var innerObject = {speed:1, notes:[]}
+                    var rhythm = musicData[h]['data'][i]['data']['rhythmData']['rhythm'];
+                    var pattern = musicData[h]['data'][i]['data']['patternData']['pattern']
+                    var scale = musicData[h]['data'][i]['data']['scaleData']['scale']
+                    var notes = patternAndScaleToNotes(pattern, scale)
+                    var sequence = notesIntoRhythm(notes, rhythm)
+                    innerObject['speed'] = musicData[h]['data'][i]['data']['rhythmData']['speed']
+                    innerObject['notes'] = sequence
+                    returnObject['data'].push(innerObject)
+                    }
+                returnArr.push(returnObject)
+            } else if (musicData[h]['mode'] === 'off'){
+                returnObject['displayOnly'] = true;
+                for (var i = 0; i < musicData[h]['data'].length; i++){
+                    var innerObject = {speed:'', notes:[]}
+                    innerObject['speed'] = musicData[h]['data'][i]['data']['rhythmData']['speed']
+                    innerObject['notes'] = handleOffMode();
+                    returnObject['data'].push(innerObject)
+                    }
+                returnArr.push(returnObject)
+            } else if (musicData[h]['mode'] === 'scale'){
+                returnObject['displayOnly'] = true;
+                for (var i = 0; i < musicData[h]['data'].length; i++){
+                    var innerObject = {speed:'', notes:[]}
+                    var scale = musicData[h]['data'][i]['data']['scaleData']['scale']
+                    var sequence = scaleIntoScaleDisplayNotes(scale)
+                    innerObject['speed'] = musicData[h]['data'][i]['data']['rhythmData']['speed']
+                    innerObject['notes'] = sequence
+                    returnObject['data'].push(innerObject)
+                    }
+                returnArr.push(returnObject)
+            } else if (musicData[h]['mode'] === 'chordTones'){
+                returnObject['displayOnly'] = true;
+                for (var i = 0; i < musicData[h]['data'].length; i++){
+                    var innerObject = {speed:'', notes:[]}
+                    var chord = musicData[h]['data'][i]['data']['chordData']['chord']
+                    var sequence = scaleIntoScaleDisplayNotes(chord)
+                    innerObject['speed'] = musicData[h]['data'][i]['data']['rhythmData']['speed']
                     innerObject['notes'] = sequence
                     returnObject['data'].push(innerObject)
                     }
@@ -270,11 +332,24 @@ function handleControls(type){
         controls.current = type;
         setActiveButton(type);
     }
-    //----------------------------------
+//---------------------------------- DRAG AND DROP CONTROLS
 const dragStartHandler = e => {
-        var obj = {id: e.currentTarget.id, className: e.target.className, message: 'local', type: 'local'}
-        e.dataTransfer.setData('text', JSON.stringify(obj));
-        console.log(obj)
+        const thisID = e.currentTarget.id.split('_')
+        const instrumentID = thisID[2]
+        const cardID = thisID[1]
+        if (e.target.className === 'moduleData'){
+            var obj = {id: e.currentTarget.id, className: e.target.className, message: 
+                data[instrumentID]['data'][cardID], 
+                type: 'player'}
+            console.log(obj)
+            e.dataTransfer.setData('text', JSON.stringify(obj));
+        } else {
+            var obj = {id: e.currentTarget.id, className: e.target.className, message: 
+                data[instrumentID]['data'][cardID]['data'][e.target.className], 
+                type: 'player'}
+            e.dataTransfer.setData('text', JSON.stringify(obj));
+        }
+        
     };
 
 const dragHandler = e => {
@@ -287,60 +362,59 @@ const dragOverHandler = e => {
     //---------------------
 const dropHandler = e => {
         e.preventDefault();
-        var clone = JSON.parse(JSON.stringify(playerData))
-        var data = JSON.parse(e.dataTransfer.getData("text"));
+        var clone = JSON.parse(JSON.stringify(data))
+        var xferData = JSON.parse(e.dataTransfer.getData("text"));
         var ex2 = e.currentTarget.id.split('_')
         var endIndex = Number(ex2[1])
         var endInstrument = Number(ex2[2])
-        var message = data['message']
-        var type = data['type']
-        var className = data['className']
-        if (type === 'foreign'){
-            clone[endInstrument]['data'][endIndex][className] = message;
+        var message = xferData['message']
+        var type = xferData['type']
+        var className = xferData['className']
+        if (type !== 'player'){
+            clone[endInstrument]['data'][endIndex]['data'][className] = message;
         } else {
-            var ex1 = data['id'].split('_')
+        var ex1 = xferData['id'].split('_')
         var startIndex = Number(ex1[1])
         var startInstrument = Number(ex1[2])
-
         if (controls.current === 'replace'){
-            if (className === 'box'){
+            if (className === 'moduleData'){
                 clone[endInstrument]['data'][endIndex] = clone[startInstrument]['data'][startIndex] 
             } else {
-                clone[endInstrument]['data'][endIndex][className] = clone[startInstrument]['data'][startIndex][className] 
+                clone[endInstrument]['data'][endIndex]['data'][className] = clone[startInstrument]['data'][startIndex]['data'][className] 
             }
         } else if (controls.current === 'swap'){
             var placeholder;
-            if (className === 'box'){
+            if (className === 'moduleData'){
                 placeholder = clone[endInstrument]['data'][endIndex]
                 clone[endInstrument]['data'][endIndex] = clone[startInstrument]['data'][startIndex];
                 clone[startInstrument]['data'][startIndex] = placeholder
             } else {
-                placeholder = clone[endInstrument]['data'][endIndex][className]
-                clone[endInstrument]['data'][endIndex][className] = clone[startInstrument]['data'][startIndex][className];
-                clone[startInstrument]['data'][startIndex][className] = placeholder;
+                placeholder = clone[endInstrument]['data'][endIndex]['data'][className]
+                clone[endInstrument]['data'][endIndex]['data'][className] = clone[startInstrument]['data'][startIndex]['data'][className];
+                clone[startInstrument]['data'][startIndex]['data'][className] = placeholder;
             }
         } else if (controls.current === 'fill'){
-            if (className === 'box'){
+            if (className === 'moduleData'){
                 for (var i = endIndex; i < clone[endInstrument]['data'].length;i++){
                     clone[endInstrument]['data'][i] = clone[startInstrument]['data'][startIndex] 
                 }
             } else {
                 for (var j = endIndex; j < clone[endInstrument]['data'].length;j++){
-                    clone[endInstrument]['data'][j][className] = clone[startInstrument]['data'][startIndex][className]
+                    clone[endInstrument]['data'][j]['data'][className] = clone[startInstrument]['data'][startIndex]['data'][className]
                 }
             }
         } else if (controls.current === 'reverseFill'){
-            if (className === 'box'){
+            if (className === 'moduleData'){
                 for (var k = endIndex; k > -1; k--){
                     clone[endInstrument]['data'][k] = clone[startInstrument]['data'][startIndex] 
                 }
             } else {
                 for (var l = endIndex; l > -1; l--){
-                    clone[endInstrument]['data'][l][className] = clone[startInstrument]['data'][startIndex][className]
+                    clone[endInstrument]['data'][l]['data'][className] = clone[startInstrument]['data'][startIndex]['data'][className]
                 }
             }
         } else if (controls.current === 'reOrder'){
-            if (className === 'box'){
+            if (className === 'moduleData'){
             var xfer;
             xfer = clone[startInstrument]['data'][startIndex]
             clone[startInstrument]['data'].splice(startIndex, 1)
@@ -351,27 +425,65 @@ const dropHandler = e => {
         }
         }
         
-        setPlayerData(clone)
+        setData(clone)
         e.dataTransfer.clearData()
     }
 
+const cardClickHandler = e => {
+    if (controls.current === 'delete'){
+        var clone = JSON.parse(JSON.stringify(data))
+        var ex2 = e.currentTarget.id.split('_')
+        var endIndex = Number(ex2[1])
+        var endInstrument = Number(ex2[2])
+        if (clone[endInstrument]['data'].length === 1){
+            return
+        } else {
+            clone[endInstrument]['data'].splice(endIndex, 1)
+        setData(clone)
+        }
+    }
+}
+
+function moduleAdd(){
+    var clone = JSON.parse(JSON.stringify(data))
+    var lastModule = clone[instrumentFocus]['data'][clone[instrumentFocus]['data'].length - 1]
+    clone[instrumentFocus]['data'].push(lastModule)
+    setData(clone)
+}
+
+function moduleSubtract(){
+    var clone = JSON.parse(JSON.stringify(data))
+    if (clone[instrumentFocus]['data'].length !== 1){
+        clone[instrumentFocus]['data'].pop()
+        setData(clone)
+    } else {
+        return
+    }
+}
+
+    //----------------------------------MAP COMPONENTS
+
     function mapCards(cardData, instrument){
+        console.log('rerendered!!!')
         return (
             cardData.map((cardData, idx) => 
             <DragAndFillCard
+            onClick = {cardClickHandler}
             onDragStart = {dragStartHandler}
             onDrag = {dragHandler}
             dragOverHandler = {dragOverHandler}
             dropHandler = {dropHandler}
-            id={'playerCards_' + idx + '_' + instrument}
-            key={'playerCards_' + idx + '_' + instrument}
-            romanNumeralName={setRomanNumeralsByKey(cardData.chordData.chord, cardData.keyData.root)}
-            chordName={cardData.chordData.chordName}
-            rhythmName={cardData.rhythmData.rhythmName}
-            patternName={cardData.patternData.patternName}
-            scaleName={cardData.scaleData.scaleName}
-            countName={cardData.countData.countName}
-            keyName={cardData.keyData.keyName}
+            id={'Cards_' + idx + '_' + instrument}
+            key={'Cards_' + idx + '_' + instrument}
+            currentlyPlaying = {currentlyPlaying.includes(idx + '_' + instrument)}
+            moduleName={cardData.name}
+            romanNumeralName={setRomanNumeralsByKey(cardData.data.chordData.chord, cardData.data.keyData.root)}
+            chordName={cardData.data.chordData.chordName}
+            rhythmName={cardData.data.rhythmData.rhythmName}
+            patternName={cardData.data.patternData.patternName}
+            scaleName={cardData.data.scaleData.scaleName}
+            countName={cardData.data.rhythmData.length}
+            keyName={cardData.data.keyData.keyName}
             />
             )
         )
@@ -379,35 +491,14 @@ const dropHandler = e => {
 
     function superMapCards(){
         var returnArr = [];
-        for (var i = 0; i < playerData.length; i++){
+        for (var i = 0; i < data.length; i++){
             returnArr.push(
-                (instrumentFocus === i) && <div style={{display: 'flex', flexDirection: 'row'}}>
-                    {mapCards(playerData[i]['data'], i)}
+                (instrumentFocus === i) && <div style={{display: 'flex', flexDirection: 'row', gap: '10px'}}>
+                    {mapCards(data[i]['data'], i)}
                 </div>
                 )
         }
         return returnArr;
-    }
-
-    const modeOptions = [
-        {key: 'off', text: 'Mode: Off', value: 'off'},
-        {key: 'melody', text: 'Mode: Melody', value: 'melody'},
-        {key: 'chord', text: 'Mode: Chord', value: 'chord'},
-        {key: 'scale', text: 'Mode: Display Scale', value: 'scale'},
-        {key: 'chordTones', text: 'Mode: Display Chord Tones', value: 'chordTones'},
-    ]
-
-    const handleChangeMode = (e, {id, value}) => {
-        var clone = [...playerData]
-        var idx = Number(id.split("_")[1])
-        clone[idx]['mode'] = value;
-        if (value === 'melody'){
-            console.log('changed to melody!')
-        } else if (value === 'chord'){
-            console.log('changed to chord!')
-        }
-        console.log(playerData[idx]['mode'])
-        setPlayerData(clone)
     }
 
     function mapMenuItems(){
@@ -424,7 +515,7 @@ const dropHandler = e => {
                 selection
                 onChange={handleChangeMode}
                 options={modeOptions}
-                value = {playerData[idx]['mode']}
+                value = {data[idx]['mode']}
                 key={idx}
                 id = {'dropdown_' + idx}
                 />
@@ -433,28 +524,136 @@ const dropHandler = e => {
         )
         )
     }
+    //--------SET INTERVAL WHICH CHECKS TO SEE WHAT MODULE IS PLAYING
+
+
+
+    function setModuleMarkers(){
+        var markers = [];
+        const timeConstant = Tone.Time('4n').toSeconds()
+        for (var i = 0; i < data.length; i++){
+            var thisInstrumentMarkers = [0]
+            var count = 0;
+            for (var j = 0; j < data[i]['data'].length; j++){
+                const moduleDuration = timeConstant * data[i]['data'][j]['data']['rhythmData']['speed'] * data[i]['data'][j]['data']['rhythmData']['length']
+                thisInstrumentMarkers.push(moduleDuration + count)
+                count += moduleDuration
+            }
+            markers.push(thisInstrumentMarkers)
+        }
+        markerValue.current = markers
+        setMarkers(markers)
+    }
+
+    function checkCurrentTimeAndSetCurrentlyPlaying() {
+        let currentTime = Tone.Time(Tone.Transport.position).toSeconds()
+        let state = Tone.Transport.state
+        if (state === 'stopped' && currentlyPlaying.length !== 0){
+            setCurrentlyPlaying([])
+            return
+        } else if (state !== 'stopped'){
+            var playingArr = [];
+            for (var i = 0; i < markers.length; i++){
+                for (var j = 0; j < markers[i].length -1; j++){
+                    if (currentTime < markers[i][j + 1] && currentTime >= markers[i][j]){
+                        playingArr.push(j + '_' + i)
+                        continue
+                    }
+                }
+            }
+            if (JSON.stringify(currentlyPlaying) === JSON.stringify(playingArr)){
+                return
+            } else {
+                setCurrentlyPlaying(playingArr)
+            }
+        } else {
+            return
+        }
+    }
+    var currentlyPlayingValue = useRef([])
+
+    useEffect(() => {
+        const thisInterval = setInterval(function checkCurrentTimeAndSetCurrentlyPlaying() {
+            let state = Tone.Transport.state
+        if (state === 'stopped' && currentlyPlayingValue.current.length !== 0){
+            setCurrentlyPlaying([])
+            currentlyPlayingValue.current = []
+            return
+        } else if (state !== 'stopped'){
+            let currentTime = Tone.Time(Tone.Transport.position).toSeconds()
+            var playingArr = [];
+            for (var i = 0; i < markerValue.current.length; i++){
+                for (var j = 0; j < markerValue.current[i].length -1; j++){
+                    if (currentTime < markerValue.current[i][j + 1] && currentTime >= markerValue.current[i][j]){
+                        playingArr.push(j + '_' + i)
+                        continue
+                    }
+                }
+            }
+            if (JSON.stringify(currentlyPlayingValue.current) === JSON.stringify(playingArr)){
+                return
+            } else {
+                currentlyPlayingValue.current = playingArr
+                setCurrentlyPlaying(playingArr)
+            }
+        } else {
+            return
+        }
+    }, 100)
+        return () => {
+          clearInterval(thisInterval);
+        };
+      }, [])
+
+    
+
+
+    //-----------------------------------
+    const modeOptions = [
+        {key: 'off', text: 'Mode: Off', value: 'off'},
+        {key: 'melody', text: 'Mode: Melody', value: 'melody'},
+        {key: 'chord', text: 'Mode: Chord', value: 'chord'},
+        {key: 'scale', text: 'Mode: Display Scale', value: 'scale'},
+        {key: 'chordTones', text: 'Mode: Display Chord Tones', value: 'chordTones'},
+    ]
+
+    const handleChangeMode = (e, {id, value}) => {
+        var clone = [...data]
+        var idx = Number(id.split("_")[1])
+        clone[idx]['mode'] = value;
+        if (value === 'melody'){
+            console.log('changed to melody!')
+        } else if (value === 'chord'){
+            console.log('changed to chord!')
+        }
+        console.log(data[idx]['mode'])
+        setData(clone)
+    }
+
+
 
 useEffect(() => {
-    handlePlayerUpdate()
+    handleUpdate()
 }, [masterInstrumentArray])
 
-function handlePlayerUpdate(){
-    var clone = [...playerData]
-    var clonePrototype = {mode: 'off', data: playerData[mainModule]['data']}
+function handleUpdate(){
+    var clone = [...data]
+    var clonePrototype = {mode: 'off', data: data[mainModule]['data']}
     if (masterInstrumentArray.length === clone.length){
         return
     } else if (masterInstrumentArray.length > clone.length){
         clone.push(clonePrototype)
-        setPlayerData(clone)
+        setData(clone)
     } else if (masterInstrumentArray.length < clone.length){
         clone.pop()
-        setPlayerData(clone)
+        setData(clone)
         if (instrumentFocus > 0){
             setInstrumentFocus(instrumentFocus -1)
         }
         
     }
 }
+
     return (
         <>
         <Menu>
@@ -464,19 +663,18 @@ function handlePlayerUpdate(){
         {mapDropdowns()}
         </Menu>
         <Button.Group>
-            {/* <Button active ={activeButton === 'swap'}compact basic onClick ={() => console.log(convertModuleDataIntoPlayableSequence2(playerData))}>Test</Button> */}
+            {/* <Button active ={activeButton === 'swap'}compact basic onClick ={() => console.log(convertModuleDataIntoPlayableSequence2(Data))}>Test</Button> */}
             <Button active ={activeButton === 'swap'}compact basic onClick ={() => handleControls('swap')}>Swap</Button>
             <Button active ={activeButton === 'replace'} compact basic onClick ={() => handleControls('replace')}>Replace</Button>
             <Button active ={activeButton === 'reOrder'} compact basic onClick ={() => handleControls('reOrder')}>Reorder</Button>
             <Button active ={activeButton === 'reverseFill'} compact basic onClick ={() => handleControls('reverseFill')}><Icon name='angle left'/>Fill</Button>
             <Button active ={activeButton === 'fill'} compact basic onClick ={() =>handleControls('fill')}>Fill<Icon name='angle right'/></Button>
-            <Button active ={activeButton === 'clone'}compact basic onClick ={() => handleControls('clone')}>Clone</Button>
-            <Button active ={activeButton === 'delete'}compact basic onClick ={() => handleControls('delete')}>Delete</Button>
+            <Button active ={activeButton === 'delete'}compact basic onClick ={() => handleControls('delete')}>Delete</Button> 
+            <Button compact basic onClick ={() => moduleSubtract()}>Module--</Button>
+            <Button compact basic onClick ={() => moduleAdd()}>Module++</Button>
         </Button.Group>
-        <div id='instrumentDisplay' style={{display:'flex', flexDirection:'row'}}>
-        <div>
+        <div id='instrumentDisplay'>
             {superMapCards()}
-        </div>
         </div>
         </>
     )

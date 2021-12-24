@@ -1,25 +1,26 @@
 import * as Tone from 'tone';
+const timeConstant = Tone.Time('4n').toSeconds()
 
 //======TIME RELATED FUNCTIONS
 //====CREATES MODULE MARKERS FOR JUMPING BACK AND FORTH
 export function moduleMarkerCreator(data){
     var moduleMarkers = [0]
-    for (var i = 0; i < data[0]['data'].length -1; i++){
-        var time = (Tone.Time(data[0]['data'][i].speed).toSeconds() * data[0]['data'][i].notes.length + moduleMarkers[i])
-        time = +time.toFixed(2);
-        moduleMarkers.push(time)
-
+    var count = 0;
+    for (var i = 0; i < data[0]['data'].length; i++){
+        var moduleDuration = ((data[0]['data'][i].speed * timeConstant * data[0]['data'][i].notes.length))
+        moduleMarkers.push(moduleDuration + count)
+        count += moduleDuration;
     }
     return moduleMarkers;
 }
 //====Variant of the original function
 export function moduleMarkerCreatorCompact(data){
     var moduleMarkers = [0]
+    var count = 0
     for (var i = 0; i < data.length -1; i++){
-        var time = (Tone.Time(data[i].speed).toSeconds() * data[i].notes.length + moduleMarkers[i])
-        time = +time.toFixed(2);
-        moduleMarkers.push(time)
-
+        var moduleDuration = ((data[i].speed * timeConstant * data[i].notes.length))
+        moduleMarkers.push(moduleDuration + count)
+        count += moduleDuration;
     }
     return moduleMarkers;
 }
@@ -28,7 +29,7 @@ export function moduleMarkerCreatorCompact(data){
 export function loopLengthCreator(data){
     var loopLength = 0;
     for (var i = 0; i < data[0]['data'].length; i++){
-        loopLength = loopLength + (Tone.Time(data[0]['data'][i].speed).toSeconds() * data[0]['data'][i].notes.length)
+        loopLength = loopLength + (data[0]['data'][i].speed * Tone.Time('4n').toSeconds() * data[0]['data'][i].notes.length)
     }
     loopLength = +loopLength.toFixed(2)
     return loopLength;
@@ -70,8 +71,8 @@ export function findBetween(number, list){
 }
 
 //===========Change Tone Transport Position
-
-
+// timeNow = Tone.Time(Tone.Transport.position).toSeconds()
+// Tone.Transport.state
 
 
 

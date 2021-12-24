@@ -1,0 +1,39 @@
+/* .inactive.rhythmNote {
+    background-color: black;
+} */
+
+.inactive.chord {
+    background-color: orange;
+}
+
+.active.chord {
+    background-color: salmon !important
+}
+
+.inactive.note{
+    background-color: orange;
+}
+
+.active.note {
+    background-color: lightblue !important
+}
+
+.inactive.rhythmNote{
+    background-color: wheat;
+}
+
+.active.rhythmNote {
+    background-color: lightseagreen !important
+}
+
+.inactive{
+    background-color: wheat;
+}
+
+.active {
+    background-color:white !important
+}
+
+.red{
+    background-color: white
+}
