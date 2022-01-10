@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useLayoutEffect, useRef} from 'react'
 import * as Tone from 'tone';
 import { allSynths } from './allSynths';
-import { useSelector } from 'react-redux';
+import { useSelector, useDispatch} from 'react-redux';
 import { Dropdown, Button, Icon, Segment } from 'semantic-ui-react';
 import {moduleMarkerCreator, moduleMarkerCreatorCompact, loopLengthCreator, findBetween} from './timeFunctions'
 import { shadeHexColor, showAll } from './guitarDisplayFunctions';
@@ -9,6 +9,7 @@ import {noteValues, romanNumerals} from './guitarSVGConstants';
 import { guitarPrototype, bassPrototype } from './instrumentPrototypes';
 import { data1, data2 } from './dummyData';
 import { Note } from '@tonaljs/tonal';
+import { setSongData } from '../../store/actions/songDataActions';
 
 
 export default function GuitarSVG({masterInstrumentArray, activelyDisplayedInstruments}) {
@@ -46,6 +47,10 @@ export default function GuitarSVG({masterInstrumentArray, activelyDisplayedInstr
     const [loopEnd, setLoopEnd] = useState(1)
     const [moduleMarkers, setModuleMarkers] = useState(moduleMarkerCreator(data))
     
+    const dispatch = useDispatch()
+
+    const songImportData = useSelector(state => state.songImport)
+    const {songImport} = songImportData
     //=====Consts
     const guitarInstruments = [
         "acoustic_guitar_nylon",
@@ -78,9 +83,18 @@ export default function GuitarSVG({masterInstrumentArray, activelyDisplayedInstr
 
     useEffect (()=>{
         createGuitarSVG();
+        dispatch(setSongData(instruments))
     }, [instruments]);
     //====================================
     //=====Update instruments
+
+    useEffect(() => {
+        if (songImport){
+            setInstruments(songImport['instruments'])
+        } else {
+            return
+        }
+    }, [songImport])
 
 
 function findIndex(name){

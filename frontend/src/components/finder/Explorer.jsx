@@ -33,7 +33,7 @@ const onDragStart = (e) => {
         id: 'special', 
         className: displayData.data[e.currentTarget.id.split('_')[0]].dataType + 'Data', 
         message: displayData.data[e.currentTarget.id.split('_')[0]], 
-        type: 'foreign'
+        type: displayData.data[e.currentTarget.id.split('_')[0]].dataType + 'ExplorerExport'
     }
         e.dataTransfer.setData('text', JSON.stringify(obj));
         console.log(obj)
@@ -48,7 +48,6 @@ const onDragStart = (e) => {
     { key: 'all', text: 'All', value: 'all' },
     { key: 'component', text: 'Component', value: 'component' },
     { key: 'collection', text: 'Collection', value: 'collection' },
-    { key: 'song', text: 'Songs', value: 'song' },
     ]
 
     const dataSubTypeOptions = [
@@ -58,6 +57,7 @@ const onDragStart = (e) => {
         {key: 'pattern', text: 'Pattern', value: 'pattern'},
         {key: 'scale', text: 'Scale', value: 'scale'},
         {key: 'module', text: 'Module', value: 'module'},
+        {key: 'song', text: 'Song', value: 'song' },
     ]
 
     function returnColor(type){
@@ -72,6 +72,8 @@ const onDragStart = (e) => {
             color = 'lightseagreen'
         } else if (type === 'module'){
             color = 'wheat'
+        } else if (type === 'song') {
+            color = 'lightgreen'
         } else {
             color = 'wheat'
         }

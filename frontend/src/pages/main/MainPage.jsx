@@ -1,4 +1,4 @@
-import React,{useState} from 'react'
+import React,{useState, useEffect} from 'react'
 import Player from '../../components/DragAndDrop/Player'
 import Lab from '../../components/lab/Lab'
 import Navbar from '../../components/navbar/Navbar'
@@ -6,11 +6,28 @@ import Palette from '../../components/palette/Palette'
 import {Menu, Icon} from 'semantic-ui-react';
 import GuitarSVG from '../../components/guitar/GuitarSVG'
 import Explorer from '../../components/finder/Explorer'
+import { useSelector } from 'react-redux'
 
 export default function MainPage() {
     const [activeTabs, setActiveTabs] = useState(['explorer', 'player' ])
     const [masterInstrumentArray, setMasterInstrumentArray] = useState(['instr 1'])
     const [activelyDisplayedInstruments, setActivelyDisplayedInstruments] = useState([0, 1])
+
+    const songImportData = useSelector(state => state.songImport)
+    const {songImport} = songImportData
+
+    useEffect(() => {
+        if (songImport){
+            var newArr = []
+            const num = songImport['instruments'].length
+            for (var i = 0; i < num; i++){
+                newArr.push('instr ' + (i + 1))
+            }
+            setMasterInstrumentArray(newArr)
+        } else {
+            return
+        }
+    }, [songImport])
 
     const onClickHandler = (e, titleProps) => {
         var temp = [...activeTabs]

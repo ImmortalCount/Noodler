@@ -2,12 +2,14 @@ import React, { useState, useEffect, useRef} from 'react'
 import DragAndFillCard from './DragAndFillCard'
 import {Button, Dropdown, Menu, Icon} from 'semantic-ui-react';
 import { Note, Scale, Chord} from '@tonaljs/tonal';
-import { useDispatch } from 'react-redux';
+import { useDispatch, useSelector } from 'react-redux';
 import { bindActionCreators } from 'redux';
 import { actionCreators } from '../../store/index.js';
 import { initialData, initialDataType2} from './dummyData';
 import { DataPrototype } from './dataPrototypes';
 import * as Tone from 'tone';
+import { insertData } from '../../store/actions/dataPoolActions';
+import { setSongImportData } from '../../store/actions/songImportDataActions';
 
 export default function Player ({masterInstrumentArray}) {
     const [instrumentFocus, setInstrumentFocus] = useState(0);
@@ -17,14 +19,31 @@ export default function Player ({masterInstrumentArray}) {
     var markerValue = useRef([])
     const [currentlyPlaying, setCurrentlyPlaying] = useState([])
     var [activeButton, setActiveButton] = useState('swap')
+    const [name, setName] = useState('Song Name: Demo 1')
     var controls = useRef('swap')
     const dispatch = useDispatch();
+
+    const songData = useSelector(state => state.songData)
+    const {songInfo} = songData
+
+    const songImportData = useSelector(state => state.songImport)
+    const {songImport} = songImportData
+
     const {sendModuleData, receiveModuleData} = bindActionCreators(actionCreators, dispatch);
 
     useEffect (()=>{
         sendModuleData(JSON.stringify(convertModuleDataIntoPlayableSequence3(data))) 
         setModuleMarkers()
     }, [data]);
+
+    useEffect(() => {
+        if (songImport){
+            setData(songImport['data'])
+        } else {
+            return
+        }
+    }, [songImport])
+
 
 
 function qualityOfChordNameParser(chordName){
@@ -362,6 +381,7 @@ const dragOverHandler = e => {
     //---------------------
 const dropHandler = e => {
         e.preventDefault();
+
         var clone = JSON.parse(JSON.stringify(data))
         var xferData = JSON.parse(e.dataTransfer.getData("text"));
         var ex2 = e.currentTarget.id.split('_')
@@ -370,9 +390,10 @@ const dropHandler = e => {
         var message = xferData['message']
         var type = xferData['type']
         var className = xferData['className']
-        if (type !== 'player'){
-            clone[endInstrument]['data'][endIndex]['data'][className] = message;
-        } else {
+        //moduleExplorerExport or moduleLab
+        if (type === 'moduleLab' || type === 'moduleExplorerExport'){
+           clone[endInstrument]['data'][endIndex] = message
+        } else if (type === 'player') {
         var ex1 = xferData['id'].split('_')
         var startIndex = Number(ex1[1])
         var startInstrument = Number(ex1[2])
@@ -423,11 +444,31 @@ const dropHandler = e => {
                 return
             }
         }
+        } else {
+            clone[endInstrument]['data'][endIndex]['data'][className] = message;
         }
         
         setData(clone)
         e.dataTransfer.clearData()
     }
+
+const dropHandlerBackground = e => {
+    e.preventDefault();
+    var clone = JSON.parse(JSON.stringify(data))
+    var xferData = JSON.parse(e.dataTransfer.getData("text"));
+    var ex2 = e.currentTarget.id.split('_')
+    var endIndex = Number(ex2[1])
+    var endInstrument = Number(ex2[2])
+    var message = xferData['message']
+    var type = xferData['type']
+    var className = xferData['className']
+
+    if (type === 'songExplorerExport'){
+        dispatch(setSongImportData(message))
+    } else {
+        return
+    }
+}
 
 const cardClickHandler = e => {
     if (controls.current === 'delete'){
@@ -654,14 +695,32 @@ function handleUpdate(){
     }
 }
 
+function handleExport(){
+    const songDataPrototype = {
+        name: 'songExport: Test all Dm',
+        desc: 'All Dm chords',
+        author: 'Noodleman0',
+        authorId: 'Noodleman0_Id',
+        dataType: 'song',
+        pool: 'global',
+        instruments: songInfo,
+        data: data,
+    }
+    dispatch(insertData(songDataPrototype))
+}
+
     return (
         <>
+        <div onDrop={dropHandlerBackground}>
         <Menu>
         <Button.Group>
         {mapMenuItems()}
         </Button.Group>
         {mapDropdowns()}
+        <Button basic onClick={() => handleExport()}>Export</Button>
+        <Button basic onClick={() => console.log(songInfo, 'checked')}>Check Songdata</Button>
         </Menu>
+        <h3>Song Name: Demo 1</h3>
         <Button.Group>
             {/* <Button active ={activeButton === 'swap'}compact basic onClick ={() => console.log(convertModuleDataIntoPlayableSequence2(Data))}>Test</Button> */}
             <Button active ={activeButton === 'swap'}compact basic onClick ={() => handleControls('swap')}>Swap</Button>
@@ -676,6 +735,8 @@ function handleUpdate(){
         <div id='instrumentDisplay'>
             {superMapCards()}
         </div>
+        </div>
+        
         </>
     )
 }

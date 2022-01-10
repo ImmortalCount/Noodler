@@ -1,8 +1,9 @@
 import React, {useState, useRef} from 'react'
-import { Scale, Note } from '@tonaljs/tonal';
+import { Scale, Note, Chord } from '@tonaljs/tonal';
 import DragAndFillCard from '../DragAndDrop/DragAndFillCard'
 import { Menu , Input, Dropdown} from 'semantic-ui-react';
-import { useSelector } from 'react-redux';
+import { useSelector, useDispatch } from 'react-redux';
+import { insertData } from '../../store/actions/dataPoolActions';
 import { scaleHandler } from './utils';
 import * as Tone from 'tone';
 import { keySynth, polySynth } from './synths';
@@ -13,6 +14,8 @@ export default function ModuleLab() {
     const [key, setKey] = useState('C')
     const [options, setOptions] = useState('sharps')
     var sequence = useRef('')
+
+    const dispatch = useDispatch()
 
     const initState = {
         lab: {activeLabIndices: [0]},
@@ -27,7 +30,7 @@ export default function ModuleLab() {
     },
         chordLab: {
             name: 'CM',
-            patternName: 'CM',
+            chordName: 'CM',
             desc: '',
             chord: ['C3', 'E3', 'G3'],
             position: [],
@@ -122,6 +125,7 @@ export default function ModuleLab() {
     var pattern = labInfo && labInfo['patternLab'] && labInfo['patternLab']['pattern'] ? labInfo['patternLab']['pattern'] : initState['patternLab']['pattern']
     var rhythm = labInfo && labInfo['rhythmLab'] && labInfo['rhythmLab']['rhythm'] ? labInfo['rhythmLab']['rhythm'] : initState['rhythmLab']['rhythm']
     var playConstant = labInfo && labInfo['rhythmLab'] && labInfo['rhythmLab']['speed'] ? labInfo['rhythmLab']['speed'] : initState['rhythmLab']['speed']
+    var chord = labInfo && labInfo['chordLab'] && labInfo['chordLab']['chord'] ? labInfo['chordLab']['chord'] : initState['chordLab']['chord']
 
 for (var o = 0; o < 10; o++){
     for (var p = 0; p < chromaticNotes.length; p++){
@@ -218,9 +222,33 @@ for (var o = 0; o < 10; o++){
     
     //====draganddrop functionality
     const dragStartHandler = e => {
-        var obj = {id: e.currentTarget.id, className: e.target.className, message: '', type: 'moduleLab'}
+        var obj = {id: e.currentTarget.id, className: e.target.className, message:
+            {
+                name: name,
+                moduleName: name,
+                desc: '',
+                author: 'noodleMan00',
+                authorId: 'noodleManID',
+                dataType: 'module',
+                pool: 'global',
+                data: {
+                chordData: labInfo && labInfo['chordLab'] ? labInfo['chordLab'] : initState['chordLab'],
+                rhythmData: labInfo && labInfo['rhythmLab'] ? labInfo['rhythmLab'] : initState['rhythmLab'],
+                patternData: labInfo && labInfo['patternLab'] ? labInfo['patternLab'] : initState['patternLab'],
+                scaleData: labInfo && labInfo['scaleLab'] ? labInfo['scaleLab'] : initState['scaleLab'],
+                keyData: {
+                    keyName: keyName,
+                    root: key,
+                },
+                countData: {
+                    countName: '4',
+                    count: 4
+                }
+              }
+              }, 
+        type: 'moduleLab'}
         e.dataTransfer.setData('text', JSON.stringify(obj));
-        console.log(obj)
+        console.log(obj['message']['data'])
     };
 
     const dragHandler = e => {
@@ -228,15 +256,94 @@ for (var o = 0; o < 10; o++){
 
     const onChangeDropdown = (e, {value}) => {
         setKey(value)
+        setKeyName('Key: ' + value)
       }
+
+    //---Export the module
+
+    function handleExport(){
+        const moduleDataPrototype = {
+            name: name,
+            moduleName: name,
+            desc: '',
+            author: 'noodleMan00',
+            authorId: 'noodleManID',
+            dataType: 'module',
+            pool: 'global',
+            data: {
+            chordData: labInfo && labInfo['chordLab'] ? labInfo['chordLab'] : initState['chordLab'],
+            rhythmData: labInfo && labInfo['rhythmLab'] ? labInfo['rhythmLab'] : initState['rhythmLab'],
+            patternData: labInfo && labInfo['patternLab'] ? labInfo['patternLab'] : initState['patternLab'],
+            scaleData: labInfo && labInfo['scaleLab'] ? labInfo['scaleLab'] : initState['scaleLab'],
+            keyData: {
+                keyName: keyName,
+                root: key,
+            },
+            countData: {
+                countName: '4',
+                count: 4
+            }
+          }
+          }
+
+        dispatch(insertData(moduleDataPrototype))
+    }
+
+    function qualityOfChordNameParser(chordName){
+        if (chordName === undefined || chordName === null || chordName.length === 0){
+            return
+        }
+        var chordNameArr = chordName.split("");
+        var returnArr = [];
+       for (var i = 1; i < chordNameArr.length;i++){
+           if (chordNameArr[i] !== 'b' && chordNameArr[i] !== '#'){
+                returnArr.push(chordNameArr[i])
+           }
+       }
+       return returnArr.join("");
+    }
+
+    function setRomanNumeralsByKey(chord, root){
+        var valuesToKey;
+            valuesToKey = {
+                0: 'I',
+                1: 'bII',
+                2: 'II',
+                3: 'bIII',
+                4: 'III',
+                5: 'IV',
+                6: '#IV',
+                7: 'V',
+                8: 'bVI',
+                9: 'VI',
+                10: 'bVII',
+                11: 'VII'
+            }   
+        var rootChromatic = Scale.get(root + ' chromatic').notes
+        var chordRoot = Note.pitchClass(chord[0])
+        var simpleChromatic = [];
+        for (var i = 0; i < rootChromatic.length; i++){
+            simpleChromatic.push(Note.simplify(rootChromatic[i]))
+        }
+        var index = simpleChromatic.indexOf(chordRoot)
+        if (index === -1){
+            index = simpleChromatic.indexOf(Note.enharmonic(chordRoot))
+        }
+        var returnChord = qualityOfChordNameParser(Chord.detect(chord)[0])
+        if (returnChord === undefined){
+            returnChord = ''
+        }
+        var returnValue = valuesToKey[index];
+    
+        return returnValue + returnChord;
+    }
 
     return (
         <>
         <Menu>
          <Menu.Item onClick={() => playModule()} >Play</Menu.Item>  
          <Dropdown onChange={onChangeDropdown} options={options === 'sharps' ? dropdownOptionsKeySharp : dropdownOptionsKeyFlat} text = {`Key: ${key}`} simple item/>
-         <Menu.Item > Export </Menu.Item>   
-         <Menu.Item onClick={() => console.log(labInfo)}> Test</Menu.Item>   
+         <Menu.Item onClick={() => handleExport()} > Export </Menu.Item>   
         </Menu>
         <div>
             {name}
@@ -245,7 +352,7 @@ for (var o = 0; o < 10; o++){
             onDragStart = {dragStartHandler}
             onDrag = {dragHandler}
             id={'moduleCard'}
-            romanNumeralName={'I'}
+            romanNumeralName={setRomanNumeralsByKey(chord, key)}
             chordName={labInfo && labInfo['chordLab'] && labInfo['chordLab']['name'] ? labInfo['chordLab']['name']: initState['chordLab']['name']}
             rhythmName={labInfo && labInfo['rhythmLab'] && labInfo['rhythmLab']['name'] ? labInfo['rhythmLab']['name']: initState['rhythmLab']['name']}
             patternName={labInfo && labInfo['patternLab'] && labInfo['patternLab']['name'] ? labInfo['patternLab']['name']: initState['patternLab']['name']}

@@ -97,15 +97,19 @@ const moduleDataPrototype = {
 }
 }
 
+
 //Pool values are global, the user's Id, or other
 
-
     const songDataPrototype = {
-      songName: String,
+      name: String,
       author: String,
       authorId: String,
+      desc: String,
+      dataType: String,
       songData: Array,
       pool: String,
+      instruments: String,
+      songData: Array,
     }
 
     const collectionDataProtype = {

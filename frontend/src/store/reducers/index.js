@@ -4,6 +4,8 @@ import moduleDataReducer from './moduleDataReducer.js';
 import scaleDataReducer from './scaleDataReducer.js';
 import { userLoginReducer, userRegisterReducer } from "./userReducers.js";
 import { labDataReducer } from "./labDataReducer.js";
+import { songDataReducer } from "./songDataReducer.js";
+import { songImportDataReducer } from "./songImportDataReducer.js";
 
 const reducers = combineReducers({
     module: moduleDataReducer,
@@ -11,7 +13,9 @@ const reducers = combineReducers({
     userRegister: userRegisterReducer,
     userLogin: userLoginReducer,
     dataList: dataListReducer,
-    labData: labDataReducer
+    labData: labDataReducer,
+    songData: songDataReducer,
+    songImport: songImportDataReducer,
 })
 
 export default reducers

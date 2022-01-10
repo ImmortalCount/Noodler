@@ -834,6 +834,7 @@ function handleExport(){
 
     const rhythmDataPrototype = {
         //make amount notes reflect the amount of notes in the rhythm completely
+        name: name,
         rhythmName: name,
         rhythm: notes,
         length: moduleLengthDisplay,
@@ -842,6 +843,7 @@ function handleExport(){
         author: 'NoodleMan0',
         authorId: 'Noodleman0_id',
         pool: 'global',
+        dataType: 'rhythm'
     }
     dispatch(insertData(rhythmDataPrototype))
 }

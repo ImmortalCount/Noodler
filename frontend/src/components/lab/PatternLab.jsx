@@ -741,9 +741,11 @@ if (keyType === 'minor'){
 
 function handleExport(){
     const patternDataPrototype = {
+        name: name,
         patternName: name,
         type: 'normal',
         length: notes.length,
+        dataType: 'pattern',
         pattern: pattern,
         position: [],
         author: 'NoodleMan0',
