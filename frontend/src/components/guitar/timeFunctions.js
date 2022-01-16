@@ -1,13 +1,14 @@
 import * as Tone from 'tone';
-const timeConstant = Tone.Time('4n').toSeconds()
+
 
 //======TIME RELATED FUNCTIONS
 //====CREATES MODULE MARKERS FOR JUMPING BACK AND FORTH
 export function moduleMarkerCreator(data){
+    const timeConstant = Tone.Time('4n').toSeconds()
     var moduleMarkers = [0]
     var count = 0;
     for (var i = 0; i < data[0]['data'].length; i++){
-        var moduleDuration = ((data[0]['data'][i].speed * timeConstant * data[0]['data'][i].notes.length))
+        var moduleDuration = ((1/(data[0]['data'][i].speed) * timeConstant * data[0]['data'][i].notes.length))
         moduleMarkers.push(moduleDuration + count)
         count += moduleDuration;
     }
@@ -15,10 +16,11 @@ export function moduleMarkerCreator(data){
 }
 //====Variant of the original function
 export function moduleMarkerCreatorCompact(data){
+    const timeConstant = Tone.Time('4n').toSeconds()
     var moduleMarkers = [0]
     var count = 0
     for (var i = 0; i < data.length -1; i++){
-        var moduleDuration = ((data[i].speed * timeConstant * data[i].notes.length))
+        var moduleDuration = (((1/data[i].speed) * timeConstant * data[i].notes.length))
         moduleMarkers.push(moduleDuration + count)
         count += moduleDuration;
     }
@@ -29,7 +31,7 @@ export function moduleMarkerCreatorCompact(data){
 export function loopLengthCreator(data){
     var loopLength = 0;
     for (var i = 0; i < data[0]['data'].length; i++){
-        loopLength = loopLength + (data[0]['data'][i].speed * Tone.Time('4n').toSeconds() * data[0]['data'][i].notes.length)
+        loopLength = loopLength + ((1/data[0]['data'][i].speed) * Tone.Time('4n').toSeconds() * data[0]['data'][i].notes.length)
     }
     loopLength = +loopLength.toFixed(2)
     return loopLength;

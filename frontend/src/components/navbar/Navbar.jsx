@@ -1,5 +1,5 @@
 import React, {useState} from 'react'
-import { Menu, Select } from 'semantic-ui-react'
+import { Dropdown, Menu, Select } from 'semantic-ui-react'
 import { Link } from 'react-router-dom';
 import { useSelector, useDispatch } from 'react-redux';
 import {logout} from '../../store/actions/userActions.js'
@@ -25,63 +25,68 @@ export default function Navbar() {
 
 
     return (
+        <>  
         <Menu>
              <Menu.Item
+            header
+            name='NOODLER'
+            />
+             {/* <Menu.Item
             name='options'
             active={activeItem === 'options'}
             onClick={OnClickHandler}
-            />
-            <Menu.Item
+            /> */}
+            
+            {/* <Menu.Item
             name='collections'
             active={activeItem === 'collections'}
             onClick={OnClickHandler}
-            />
-            <Menu.Item
+            /> */}
+            {/* <Menu.Item
             name='pools'
             active={activeItem === 'pools'}
             onClick={OnClickHandler}
-            />
-            <Menu.Item
+            /> */}
+            {/* <Menu.Item
             name='lab'
             active={activeItem === 'lab'}
             onClick={OnClickHandler}
-            />
-            <Menu.Item
+            /> */}
+            {/* <Menu.Item
             name='player'
             active={activeItem === 'player'}
             onClick={OnClickHandler}
-            />
-            <Menu.Item
+            /> */}
+            {/* <Menu.Item
             name='test'
             onClick={() => console.log(userInfo)}
-            />
+            /> */}
             <Menu.Menu position='right'>
-            {(userInfo) &&
-                <Menu.Item
-                name={userInfo.name}
-                active={activeItem === 'account'}
-                onClick={OnClickHandler}
-                />
+            {(userInfo) && 
+                <Dropdown item text={userInfo.name}>
+                    <Dropdown.Menu>
+                        <Dropdown.Item onClick={logoutHandler}> Logout</Dropdown.Item>
+                    </Dropdown.Menu>
+                </Dropdown>
             }
             {!(userInfo) && 
+            <>
             <Menu.Item as={Link}
             to='/login'
             name='login'
             active={activeItem === 'login'}
             />
-            }
-            {(userInfo) &&
-            <Menu.Item
-            name='logout'
-            active={activeItem === 'logout'}
-            onClick={logoutHandler}
+            <Menu.Item as={Link}
+            to='/register'
+            name='register'
+            active={activeItem === 'register'}
             />
-            }
+            </>
             
-
+            }
             {/* <Select compact options={accountOptions} defaultValue='login'/> */}
             </Menu.Menu>
-
-        </Menu>
+            </Menu>
+        </>
     )
 }

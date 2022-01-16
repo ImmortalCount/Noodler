@@ -15,6 +15,7 @@ export default function Lab({masterInstrumentArray}) {
     const [importedChordData, setImportedChordData] = useState({})
     const [importedPatternData, setImportedPatternData] = useState({})
     const [importedRhythmData, setImportedRhythmData] = useState({})
+    const [importedModuleData, setImportedModuleData] = useState({})
 
     const dispatch = useDispatch()
 
@@ -67,6 +68,14 @@ export default function Lab({masterInstrumentArray}) {
         setImportedChordData(data['message']['data']['chordData'])
         setImportedPatternData(data['message']['data']['patternData'])
         setImportedRhythmData(data['message']['data']['rhythmData'])
+        const importedModuleDataPacket = {
+          author: data['message']['author'],
+          authorId: data['message']['authorId'],
+          moduleName: data['message']['moduleName'],
+          name: data['message']['name'],
+          desc: data['message']['desc']
+        }
+        setImportedModuleData(importedModuleDataPacket)
         //Hard update labinfo because it just wont update normally
         let newInfo = {...labInfo}
         const scaleDataPrototype = {
@@ -152,7 +161,7 @@ export default function Lab({masterInstrumentArray}) {
           Module Lab
         </Accordion.Title>
         <Accordion.Content active={activeLabIndices.includes(4)}>
-          <ModuleLab/>
+          <ModuleLab importedModuleData={importedModuleData}/>
         </Accordion.Content>
       </Accordion>
       </div>

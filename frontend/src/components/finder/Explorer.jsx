@@ -9,6 +9,7 @@ export default function Explorer() {
   const [data, setData] = useState('component')
   const [subData, setSubData] = useState('pattern')
   const [keyword, setKeyword] = useState('')
+  const [local, setLocal] = useState(false)
 
   const dispatch = useDispatch();
 
@@ -39,9 +40,13 @@ const onDragStart = (e) => {
         console.log(obj)
 }
     const scopeOptions = [
-    { key: 'all', text: 'All', value: 'all' },
+    // { key: 'all', text: 'All', value: 'all' },
     { key: 'global', text: 'Global', value: 'global' },
     { key: 'local', text: 'Local', value: 'local' },
+    ]
+
+    const restrictedScopeOptions = [
+        { key: 'global', text: 'Global', value: 'global' }
     ]
 
     const dataTypeOptions = [
@@ -51,7 +56,7 @@ const onDragStart = (e) => {
     ]
 
     const dataSubTypeOptions = [
-        { key: 'all', text: 'All', value: 'all' },
+        // { key: 'all', text: 'All', value: 'all' },
         {key: 'chord', text: 'Chord', value: 'chord'},
         {key: 'rhythm', text: 'Rhythm', value: 'rhythm'},
         {key: 'pattern', text: 'Pattern', value: 'pattern'},
@@ -80,13 +85,24 @@ const onDragStart = (e) => {
         return color;
     }
 
+    const handleScopeOptions = (e, {value}) => {
+        setLocal(false)
+        if (value === 'local'){
+            const user = JSON.parse(localStorage.getItem('userInfo'))
+            setScope(user['_id'])
+            setLocal(true)
+        } else {
+            setScope(value)
+        }
+    }
+
     return (
         <div>
             <Menu>
             <Input type='text' placeholder='Search...' icon='search' onChange={(e, {value}) => setKeyword(value)} />
-            <Select compact options={scopeOptions} onChange={(e, {value}) => setScope(value)} defaultValue='global'/>
-            <Select compact options={dataTypeOptions} onChange={(e, {value}) => setData(value)} defaultValue='component'/>
-            <Select compact options={dataSubTypeOptions} onChange={(e, {value}) => setSubData(value)}defaultValue='pattern'/>
+            {localStorage.getItem('userInfo') !== null  && <Select compact options={scopeOptions} onChange={handleScopeOptions} defaultValue='global'/>}
+            {localStorage.getItem('userInfo') === null && <Select compact options={restrictedScopeOptions} onChange={(e, {value}) => setSubData(value)} defaultValue='pattern'/>}
+            <Select compact options={dataSubTypeOptions} onChange={(e, {value}) => setSubData(value)} defaultValue='pattern'/>
             </Menu>
         <Grid>
             <Grid.Column width={10}>
@@ -99,7 +115,7 @@ const onDragStart = (e) => {
                 <List.Content>
                 <List.Header > <Icon name='play' size='small'/>{displayData.name}</List.Header>
                 <List.Description >type: {displayData.dataType}</List.Description>
-                <List.Description >pool: {displayData.pool}</List.Description>
+                <List.Description >pool: {local ? 'local' : displayData.pool}</List.Description>
                 <List.Description >author: {displayData.author}</List.Description>
                 </List.Content>
                 </List.Item>

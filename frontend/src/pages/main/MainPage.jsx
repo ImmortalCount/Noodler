@@ -10,12 +10,14 @@ import { useSelector } from 'react-redux'
 
 export default function MainPage() {
     const [activeTabs, setActiveTabs] = useState(['explorer', 'player' ])
-    const [masterInstrumentArray, setMasterInstrumentArray] = useState(['instr 1'])
-    const [activelyDisplayedInstruments, setActivelyDisplayedInstruments] = useState([0, 1])
+    const [masterInstrumentArray, setMasterInstrumentArray] = useState(['Instr 1'])
+    const [activelyDisplayedInstruments, setActivelyDisplayedInstruments] = useState([0])
 
     const songImportData = useSelector(state => state.songImport)
     const {songImport} = songImportData
-
+    const instrumentNames = useSelector(state => state.instrumentNames)
+ 
+    //For song import
     useEffect(() => {
         if (songImport){
             var newArr = []
@@ -29,6 +31,12 @@ export default function MainPage() {
         }
     }, [songImport])
 
+    useEffect(() => {
+       
+            setMasterInstrumentArray(instrumentNames['nameInfo'])
+        
+    }, [instrumentNames['nameInfo']])
+
     const onClickHandler = (e, titleProps) => {
         var temp = [...activeTabs]
        if (activeTabs.includes(titleProps.name) === false){
@@ -41,8 +49,11 @@ export default function MainPage() {
 
     function guitarAddHandler(){
         var clone = [...masterInstrumentArray]
-        clone.push('instr ' + (clone.length + 1))
+        var clone2 = [...activelyDisplayedInstruments]
+        clone.push('Instr ' + (clone.length + 1))
+        clone2.push(clone.length -1)
         setMasterInstrumentArray(clone)
+        setActivelyDisplayedInstruments(clone2)
     }
 
     function guitarSubtractHandler(){
@@ -50,32 +61,55 @@ export default function MainPage() {
             return
         } else {
             var clone = [...masterInstrumentArray]
+            var clone2 = [...activelyDisplayedInstruments]
             clone.pop()
+            clone2.pop()
             setMasterInstrumentArray(clone)
+            setActivelyDisplayedInstruments(clone2)
         }
         
     }
+
+    const onClickHandlerInstr = (e, titleProps) => {
+        const instrumentNumber = Number(titleProps['id'].split('_')[1])
+        var temp = [...activelyDisplayedInstruments]
+       if (activelyDisplayedInstruments.includes(instrumentNumber) === false){
+           temp.push(instrumentNumber)
+       } else {
+           temp = temp.filter(x => x !== instrumentNumber);
+       }
+       setActivelyDisplayedInstruments(temp)
+    }
+
+    
     function mapMenuItems(){
             return (
                 masterInstrumentArray.map((instrument, idx) => 
                 <Menu.Item
                 name={instrument}
                 active={activeTabs.includes(instrument)}
-                onClick={onClickHandler}
-                key={'mappedInstr' + idx}
+                onClick={onClickHandlerInstr}
+                key={'mappedInstr_' + idx}
+                id={'mappedInstr_' + idx}
                 />
                 )
             )
     }
 
+    function testChangeInstrumentNames(){
+       const clone = [...masterInstrumentArray]
+       console.log(instrumentNames, 'XXX')
+       setMasterInstrumentArray(instrumentNames['nameInfo'])
+    }
+
 function Midbar() {
         return (
             <Menu>
-                <Menu.Item
+                {/* <Menu.Item
                 name='options'
                 active={activeTabs.includes('options')}
                 onClick={onClickHandler}
-                />
+                /> */}
                 {/* <Menu.Item
                 name='test'
                 active
@@ -124,6 +158,11 @@ function Midbar() {
                 onClick={() => guitarSubtractHandler()}
                 >
                 <Icon name='minus'/>
+                </Menu.Item>
+                <Menu.Item
+                name='test'
+                onClick={() => testChangeInstrumentNames()}
+                >
                 </Menu.Item>
                 </Menu.Menu>
     

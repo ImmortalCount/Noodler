@@ -5,7 +5,7 @@ import { useDispatch, useSelector} from 'react-redux';
 import { insertData } from '../../store/actions/dataPoolActions';
 import { toMidi, midiToNoteName } from '@tonaljs/midi';
 import { Note, Scale, Chord} from '@tonaljs/tonal';
-import { Menu, Button, Input, Icon, Dropdown} from 'semantic-ui-react';
+import { Menu, Button, Input, Icon, Dropdown, Form, TextArea} from 'semantic-ui-react';
 import { keySynth } from './synths';
 import { setLabData } from '../../store/actions/labDataActions';
 import { scaleHandler } from './utils';
@@ -30,6 +30,10 @@ const [manipulate, setManipulate] = useState(false)
 const [playNoteOnClick, setPlayNoteOnClick] = useState(true)
 const [startOnScaleDegree, setStartOnScaleDegree] = useState(true)
 const [generateScaleDegree, setGenerateScaleDegree] = useState(1)
+const [exportPool, setExportPool] = useState('global')
+const [inputFocus, setInputFocus] = useState(false)
+const [description, setDescription] = useState('')
+const [showDescription, setShowDescription] = useState(false)
 const isMuted = false;
 
 const dispatch = useDispatch()
@@ -459,6 +463,11 @@ const handleDeleteAll = () => {
 
 const handlePlayThis = (e) => {
     if (playNoteOnClick){
+        var elementClicked = e.target.id
+        var r = elementClicked.split('_')[0]
+        if (r === 'clickup' || r === 'clickdown' || r === 'delete'){
+            return
+        }
         var parentID = e.currentTarget.id;
         var x = parentID.split('_')[1]
         keySynth.triggerAttackRelease(notes[x], '8n');
@@ -476,9 +485,9 @@ function mapNotes(notes){
         <div id={'pattern_' + idx} onClick={handlePlayThis} key={'pattern_' + idx} draggable onDragStart = {dragStartHandler} onDrag = {dragHandler} onDragOver = {dragOverHandler} onDragLeave={dragLeaveHandler} onDrop = {dropHandler}  className='inactive note' style={{display: 'flex', flexDirection: 'row', height: '50px', width: '50px', backgroundColor: 'wheat', margin: '1px'}}>
                         {note}
                         {(edit === 'on' && noteOptions !== 'delete') && <div style={{display: 'flex', flexDirection: (noteOptions === 'insert') ? 'row' : 'column'}}>
-                        <Icon onClick={handleClickUp} name={(noteOptions === 'insert') ? "caret square left" : "caret square up"}/><Icon onClick={handleClickDown}name={(noteOptions === 'insert') ? "caret square right" : "caret square down"}/>
+                        <Icon id={'clickup_' + idx} onClick={handleClickUp} name={(noteOptions === 'insert') ? "caret square left" : "caret square up"}/><Icon onClick={handleClickDown} id={'clickdown_' + idx} name={(noteOptions === 'insert') ? "caret square right" : "caret square down"}/>
                         </div>}
-                        {(edit === 'on' && noteOptions === 'delete') &&<Icon onClick={handleDeleteNote} name= 'trash alternate outline' />}
+                        {(edit === 'on' && noteOptions === 'delete') &&<Icon id={'delete_' + idx} onClick={handleDeleteNote} name= 'trash alternate outline' />}
                     </div>
         )
     )
@@ -738,19 +747,21 @@ if (keyType === 'minor'){
     console.log(chordRoot + " " + chordDegreeAndTypeToScale[chordIndex][chordType]) 
 }
 }
-
+//====
 function handleExport(){
+    const user = JSON.parse(localStorage.getItem('userInfo'))
     const patternDataPrototype = {
         name: name,
         patternName: name,
+        desc: '',
         type: 'normal',
         length: notes.length,
         dataType: 'pattern',
         pattern: pattern,
         position: [],
-        author: 'NoodleMan0',
-        authorId: 'Noodleman0_id',
-        pool: 'global',
+        author: user['name'],
+        authorId: user['_id'],
+        pool: exportPool,
     }
     dispatch(insertData(patternDataPrototype))
 }
@@ -770,6 +781,25 @@ const handleManipulateOptions = () => {
     setEdit('off')
     setManipulate(!manipulate)
 }
+
+const exportDropdownOptions = [
+    { key: 'global', text: 'global', value: 'global'},
+    { key: 'local', text: 'local', value: 'local'},
+]
+
+const handleExportDropdown = (e, {value}) => {
+    const user = JSON.parse(localStorage.getItem('userInfo'))
+    if (value === 'local'){
+        const user = JSON.parse(localStorage.getItem('userInfo'))
+        setExportPool(user['_id'])
+    } else {
+        setExportPool(value)
+    }
+  }
+
+  const handleDescriptionChange = e => {
+    setDescription(e.target.value)
+  }
 
     return (
         <>
@@ -794,21 +824,6 @@ const handleManipulateOptions = () => {
                 value={generatePatternLength}
                 />
                 </Dropdown.Item>
-                {/* <Dropdown.Item onClick={() => setStartOnScaleDegree(!startOnScaleDegree)}>
-                start on scale degree: {startOnScaleDegree ? 'on' : 'off'}
-                </Dropdown.Item>
-                {startOnScaleDegree && <Dropdown.Item>
-                scale degree to start on
-                <Input type='number' 
-                onKeyDown={(e) => {e.preventDefault()}}
-                onChange={(e, {value}) => setGenerateScaleDegree(value)}
-                id='generateChordIntervalRange'
-                min='1'
-                max='99'
-                style={{cursor: 'none'}}
-                value={generateScaleDegree}
-                />
-                </Dropdown.Item>} */}
             </Dropdown.Menu> 
         </Dropdown>   
          <Menu.Item onClick={handleEditOptions}> Edit: {edit} </Menu.Item>      
@@ -832,8 +847,20 @@ const handleManipulateOptions = () => {
             Play Note on Click:{playNoteOnClick ? 'on': 'off'} 
             </Dropdown.Item>
         </Dropdown.Menu>
-        </Dropdown>       
-         <Menu.Item onClick={() => handleExport()}>Export </Menu.Item>
+        </Dropdown>
+        <Menu.Item onClick={() => setShowDescription(!showDescription)}> Desc </Menu.Item>
+        <Button.Group>
+        <Button basic disabled={localStorage.getItem('userInfo') === null} onClick={()=> handleExport()}>Export</Button>
+        <Dropdown
+          simple
+          item
+          disabled={localStorage.getItem('userInfo') === null}
+          className='button icon'
+          options={exportDropdownOptions}
+          onChange={handleExportDropdown}
+          trigger={<></>}
+        />
+        </Button.Group>
         </Menu>
         {edit === 'on' && 
         <Button.Group>
@@ -871,16 +898,19 @@ const handleManipulateOptions = () => {
         </div>}
         <div>{notes.length} {notes.length > 1 ? 'notes' : 'note'}</div>
         <div>
-            <h3>Export</h3>
-            <div draggable onDragStart={dragStartHandlerSpecial} style={{height: '25px', width: '125px', backgroundColor: 'lightblue'}}>{name}</div>
-        </div>
-        <div>
-            <h3>Name</h3>
+            <div draggable onClick={() => setInputFocus(!inputFocus)} onDragStart={dragStartHandlerSpecial} style={{height: '25px', width: '125px', backgroundColor: 'lightblue', display: !inputFocus ? '': 'none' }}>{name}</div>
             <Input type='text'
             value={name}
+            id={'input_patternLab'}
+            ref={input => input && input.focus()}
+            onBlur={() => setInputFocus(false)}
             onInput={e => setName(e.target.value)}
+            style={{display: inputFocus ? '': 'none' }}
             />
         </div>
+        {showDescription && <Form>
+        <TextArea onInput={handleDescriptionChange} id={'desc_chordLab'} ref={input => input && input.focus()} placeholder='Description...' value={description} />
+        </Form>}
         </>
     )
 }

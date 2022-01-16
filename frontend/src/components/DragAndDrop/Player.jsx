@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef} from 'react'
 import DragAndFillCard from './DragAndFillCard'
-import {Button, Dropdown, Menu, Icon} from 'semantic-ui-react';
+import {Button, Dropdown, Menu, Icon, Input, Form, TextArea} from 'semantic-ui-react';
 import { Note, Scale, Chord} from '@tonaljs/tonal';
 import { useDispatch, useSelector } from 'react-redux';
 import { bindActionCreators } from 'redux';
@@ -19,7 +19,14 @@ export default function Player ({masterInstrumentArray}) {
     var markerValue = useRef([])
     const [currentlyPlaying, setCurrentlyPlaying] = useState([])
     var [activeButton, setActiveButton] = useState('swap')
-    const [name, setName] = useState('Song Name: Demo 1')
+    const [name, setName] = useState('Song 1')
+    const [exportPool, setExportPool] = useState('global')
+    const [edit, setEdit] = useState(false)
+    const [songOptions, setSongOptions] = useState(false)
+    const [bpm, setBpm] = useState(120)
+    const [description, setDescription] = useState('')
+    const [showDescription, setShowDescription] = useState(false)
+    const [inputFocus, setInputFocus] = useState(false)
     var controls = useRef('swap')
     const dispatch = useDispatch();
 
@@ -31,18 +38,24 @@ export default function Player ({masterInstrumentArray}) {
 
     const {sendModuleData, receiveModuleData} = bindActionCreators(actionCreators, dispatch);
 
-    useEffect (()=>{
-        sendModuleData(JSON.stringify(convertModuleDataIntoPlayableSequence3(data))) 
-        setModuleMarkers()
-    }, [data]);
-
     useEffect(() => {
         if (songImport){
             setData(songImport['data'])
+            setName(songImport['name'])
+            setDescription(songImport['desc'])
+            setBpm(songImport['bpm'])
+            console.log(songImport['bpm'], 'SONG IMPORT BPM')
+            console.log(songImport['desc'], 'SONG IMPORT DESCRIPTION')
         } else {
             return
         }
     }, [songImport])
+
+    useEffect (()=>{
+        setModuleMarkers()
+        const sentData = convertModuleDataIntoPlayableSequence3(data)
+        sendModuleData(JSON.stringify({markers: markers, data: sentData})) 
+    }, [data, bpm]);
 
 
 
@@ -180,6 +193,15 @@ function notesIntoRhythm(notes, rhythm){
         return cloneRhythm;
     }
 
+function chordIntoRhythm(chord, rhythm, numberOfNotes){
+    var chordPattern = [];
+    var chordString = chord.join(' ');
+    for (var i = 0; i < numberOfNotes; i++){
+        chordPattern.push(chordString)
+    }
+    return notesIntoRhythm(chordPattern, rhythm)
+}
+
 function convertModuleDataIntoPlayableSequence(data){
         var returnObject = 
         {displayOnly: false,
@@ -294,7 +316,7 @@ function convertModuleDataIntoPlayableSequence3(musicData){
             {displayOnly: true,
             highlight: [],
             data: []};
-            if (musicData[h]['mode'] === 'melody' || musicData[h]['mode'] === 'chord'){
+            if (musicData[h]['mode'] === 'melody'){
                 returnObject['displayOnly'] = false;
                 for (var i = 0; i < musicData[h]['data'].length; i++){
                     var innerObject = {speed:1, notes:[]}
@@ -303,6 +325,21 @@ function convertModuleDataIntoPlayableSequence3(musicData){
                     var scale = musicData[h]['data'][i]['data']['scaleData']['scale']
                     var notes = patternAndScaleToNotes(pattern, scale)
                     var sequence = notesIntoRhythm(notes, rhythm)
+                    innerObject['speed'] = musicData[h]['data'][i]['data']['rhythmData']['speed']
+                    innerObject['notes'] = sequence
+                    returnObject['data'].push(innerObject)
+                    }
+                returnArr.push(returnObject)
+            } else if (musicData[h]['mode'] === 'chord'){
+                returnObject['displayOnly'] = false;
+                for (var i = 0; i < musicData[h]['data'].length; i++){
+                    
+                    var innerObject = {speed:1, notes:[]}
+                    var rhythm = musicData[h]['data'][i]['data']['rhythmData']['rhythm'];
+                    var numberOfNotes = musicData[h]['data'][i]['data']['rhythmData']['notes']
+                    var scale = musicData[h]['data'][i]['data']['scaleData']['scale']
+                    var thisChord = musicData[h]['data'][i]['data']['chordData']['chord']
+                    var sequence = chordIntoRhythm(thisChord, rhythm, numberOfNotes )
                     innerObject['speed'] = musicData[h]['data'][i]['data']['rhythmData']['speed']
                     innerObject['notes'] = sequence
                     returnObject['data'].push(innerObject)
@@ -391,7 +428,7 @@ const dropHandler = e => {
         var type = xferData['type']
         var className = xferData['className']
         //moduleExplorerExport or moduleLab
-        if (type === 'moduleLab' || type === 'moduleExplorerExport'){
+        if (type === 'moduleLab' || type === 'moduleExplorerExport' || type === 'modulePaletteExport'){
            clone[endInstrument]['data'][endIndex] = message
         } else if (type === 'player') {
         var ex1 = xferData['id'].split('_')
@@ -534,7 +571,7 @@ function moduleSubtract(){
         var returnArr = [];
         for (var i = 0; i < data.length; i++){
             returnArr.push(
-                (instrumentFocus === i) && <div style={{display: 'flex', flexDirection: 'row', gap: '10px'}}>
+                (instrumentFocus === i) && <div style={{display: 'flex', flexDirection: 'row', gap: '10px', flexWrap: 'wrap'}}>
                     {mapCards(data[i]['data'], i)}
                 </div>
                 )
@@ -576,7 +613,7 @@ function moduleSubtract(){
             var thisInstrumentMarkers = [0]
             var count = 0;
             for (var j = 0; j < data[i]['data'].length; j++){
-                const moduleDuration = timeConstant * data[i]['data'][j]['data']['rhythmData']['speed'] * data[i]['data'][j]['data']['rhythmData']['length']
+                const moduleDuration = timeConstant * data[i]['data'][j]['data']['rhythmData']['length']
                 thisInstrumentMarkers.push(moduleDuration + count)
                 count += moduleDuration
             }
@@ -696,17 +733,50 @@ function handleUpdate(){
 }
 
 function handleExport(){
+    const user = JSON.parse(localStorage.getItem('userInfo'))
     const songDataPrototype = {
-        name: 'songExport: Test all Dm',
-        desc: 'All Dm chords',
-        author: 'Noodleman0',
-        authorId: 'Noodleman0_Id',
+        name: name,
+        desc: description,
+        bpm: bpm,
+        author: user['name'],
+        authorId: user['_id'],
         dataType: 'song',
-        pool: 'global',
+        pool: exportPool,
         instruments: songInfo,
         data: data,
     }
     dispatch(insertData(songDataPrototype))
+}
+
+const exportDropdownOptions = [
+    { key: 'global', text: 'global', value: 'global'},
+    { key: 'local', text: 'local', value: 'local'},
+]
+
+const handleExportDropdown = (e, {value}) => {
+    const user = JSON.parse(localStorage.getItem('userInfo'))
+    if (value === 'local'){
+        const user = JSON.parse(localStorage.getItem('userInfo'))
+        setExportPool(user['_id'])
+    } else {
+        setExportPool(value)
+    }
+  }
+
+
+  //BPM
+const handleBPMChange = e => {
+    setBpm(e.target.value)
+    Tone.Transport.bpm.value = Math.round(e.target.value);
+    // setModuleMarkers(moduleMarkerCreator(data))
+}
+
+const onChangeBPM = e => {
+    setBpm(e.target.value)
+}
+
+const handleDescriptionChange = e => {
+    setDescription(e.target.value)
 }
 
     return (
@@ -717,12 +787,44 @@ function handleExport(){
         {mapMenuItems()}
         </Button.Group>
         {mapDropdowns()}
-        <Button basic onClick={() => handleExport()}>Export</Button>
-        <Button basic onClick={() => console.log(songInfo, 'checked')}>Check Songdata</Button>
-        </Menu>
-        <h3>Song Name: Demo 1</h3>
+        <Menu.Item basic active={edit} onClick={()=> setEdit(!edit)}>Edit</Menu.Item>
+        <Menu.Item basic active={songOptions} onClick={()=> setSongOptions(!songOptions)}>Bpm </Menu.Item>
+        <Menu.Item basic active={showDescription} onClick={() => setShowDescription(!showDescription)}> Desc</Menu.Item>
         <Button.Group>
-            {/* <Button active ={activeButton === 'swap'}compact basic onClick ={() => console.log(convertModuleDataIntoPlayableSequence2(Data))}>Test</Button> */}
+        <Button basic disabled={localStorage.getItem('userInfo') === null} onClick={()=> handleExport()}>Export</Button>
+        <Dropdown
+          simple
+          item
+          disabled={localStorage.getItem('userInfo') === null}
+          className='button icon'
+          options={exportDropdownOptions}
+          onChange={handleExportDropdown}
+          trigger={<></>}
+        />
+        </Button.Group>
+        </Menu>
+        <div>
+        <h3 onClick={() => setInputFocus(!inputFocus)} style={{display: !inputFocus ? '': 'none' }} >{name}</h3>
+        <Input type='text'
+            value={name}
+            id={'input_moduleLab'}
+            ref={input => input && input.focus()}
+            onInput={e => setName(e.target.value)}
+            onBlur={() => setInputFocus(false)}
+            style={{display: inputFocus ? '': 'none' }}
+            />
+        {showDescription && <Form>
+        <TextArea onInput={handleDescriptionChange} id={'desc_scaleLab'} ref={input => input && input.focus()} placeholder='Description...' value={description} />
+        </Form>}
+        </div>
+        
+
+        {songOptions &&
+        <>
+         <div>Bpm: {bpm}</div>
+        <input type="range" min='1' max='500' step='1' defaultValue={bpm} onChange={handleBPMChange}/>
+        </>}
+        {edit && <Button.Group>
             <Button active ={activeButton === 'swap'}compact basic onClick ={() => handleControls('swap')}>Swap</Button>
             <Button active ={activeButton === 'replace'} compact basic onClick ={() => handleControls('replace')}>Replace</Button>
             <Button active ={activeButton === 'reOrder'} compact basic onClick ={() => handleControls('reOrder')}>Reorder</Button>
@@ -731,7 +833,7 @@ function handleExport(){
             <Button active ={activeButton === 'delete'}compact basic onClick ={() => handleControls('delete')}>Delete</Button> 
             <Button compact basic onClick ={() => moduleSubtract()}>Module--</Button>
             <Button compact basic onClick ={() => moduleAdd()}>Module++</Button>
-        </Button.Group>
+        </Button.Group>}
         <div id='instrumentDisplay'>
             {superMapCards()}
         </div>

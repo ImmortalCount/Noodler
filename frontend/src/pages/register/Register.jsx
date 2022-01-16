@@ -9,7 +9,8 @@ export default function Register({history, location}) {
     const [email, setEmail] = useState('')
     const [password, setPassword] = useState('')
     const [confirmPassword, setConfirmPassword] = useState('')
-    const [message, setMessage] = useState(null)
+    const [message, setMessage] = useState('Register')
+    const [success, setSuccess] = useState(false)
 
     const dispatch = useDispatch()
 
@@ -23,6 +24,7 @@ export default function Register({history, location}) {
         } else {
             setMessage('Success!')
             dispatch(register(name, email, password))
+            setSuccess(true)
         }
     }
 
@@ -35,9 +37,8 @@ export default function Register({history, location}) {
     return (
         <Grid textAlign='center' style={{ height: '100vh' }} verticalAlign='middle'>
         <Grid.Column style={{ maxWidth: 450 }}>
-           {message && <h3>{message}</h3>} 
           <Header as='h2' color='teal' textAlign='center'>
-            Register
+            {message}
           </Header>
           <Form size='large'>
             <Segment stacked>
@@ -75,14 +76,17 @@ export default function Register({history, location}) {
                 value={confirmPassword}
                 onChange={(e) => setConfirmPassword(e.target.value)}
               />
-              <Button onClick={submitHandler} color='teal' fluid size='large'>
+              { !success && <Button onClick={submitHandler} color='teal' fluid size='large'>
                 Register
-              </Button>
+              </Button>}
+              { success && <Button as={Link} to= '/login' color='teal' fluid size='large'>
+                Sign in
+              </Button>}
             </Segment>
           </Form>
           <Message>
             Already Have An Account? 
-            <Link to= {'/login'}>
+            <Link to= '/login'>
               Sign in
             </Link>
           </Message>

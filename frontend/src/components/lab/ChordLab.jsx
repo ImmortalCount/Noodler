@@ -4,16 +4,21 @@ import {Scale, Chord, Note} from '@tonaljs/tonal';
 import { useDispatch, useSelector} from 'react-redux';
 import { insertData } from '../../store/actions/dataPoolActions';
 import { setLabData } from '../../store/actions/labDataActions';
-import { Icon, Menu, Dropdown, Button, Input } from 'semantic-ui-react';
+import { Icon, Menu, Dropdown, Button, Input, Form, TextArea } from 'semantic-ui-react';
 import { polySynth } from './synths';
 import { scaleHandler } from './utils';
 
 export default function ChordLab({importedChordData, masterInstrumentArray}) {
     const [chords, setChords] = useState([['C3', 'E3', 'G3']])
+    const [exportNames, setExportNames] = useState(['CM'])
     const [noteOptions, setNoteOptions] = useState("octave")
     const [generateChordOptions, setGenerateChordOptions] = useState({intervals: 3, number: 3})
+    const [inputFocus, setInputFocus] = useState(false)
+    const [description, setDescription] = useState('')
+    const [showDescription, setShowDescription] = useState(false)
     const [octave, setOctave] = useState(3)
-    var [options, setOptions] = useState('sharps')
+    const [options, setOptions] = useState('sharps')
+    const [exportPool, setExportPool] = useState('global')
     const [edit, setEdit] = useState(false)
     const isMuted = false;
 
@@ -88,6 +93,7 @@ export default function ChordLab({importedChordData, masterInstrumentArray}) {
 
     function generateChordStack(){
         var chordStack = [];
+        var nullStack = [];
             var interval = generateChordOptions['intervals'];
             var stackHeight = generateChordOptions['number'];
             var root = scaleNotes[0] + '3';
@@ -99,13 +105,17 @@ export default function ChordLab({importedChordData, masterInstrumentArray}) {
             }
             chordStack.push(oneChord)
         }
+
+        for (var k = 0; k < chordStack.length; k++){
+            nullStack.push(null)
+        }
+        setExportNames(nullStack)
         setChords(chordStack)
     }
 
 
 
 
-    //Might need this
     function chordSequenceToNoteString(chords){
         var returnArr = [];
         for (var i = 0; i < chords.length; i++){
@@ -159,7 +169,6 @@ export default function ChordLab({importedChordData, masterInstrumentArray}) {
           synthPart.loop = 1;
       }
 
-//fix this thing in the morning, should make fifths
     function organizeChords(interval){
         var cloneChords = [...chords];
         if (interval === undefined){
@@ -189,7 +198,9 @@ export default function ChordLab({importedChordData, masterInstrumentArray}) {
         var positionObj = JSON.parse(e.currentTarget.parentNode.parentNode.id);
         var x = positionObj['chord'];
         var y = positionObj['position'];
-
+        var cloneNames = [...exportNames]
+        cloneNames[x] = null
+        setExportNames(cloneNames)
         if (noteOptions === 'scaler'){
             if (allScaleNotes.indexOf(chords[x][y]) === -1){
                 var chromaIndex = allChromaticNotes.indexOf(chords[x][y]);
@@ -236,6 +247,9 @@ export default function ChordLab({importedChordData, masterInstrumentArray}) {
         var positionObj = JSON.parse(e.currentTarget.parentNode.parentNode.id);
         var x = positionObj['chord'];
         var y = positionObj['position'];
+        var cloneNames = [...exportNames]
+        cloneNames[x] = null
+        setExportNames(cloneNames)
 
         if (noteOptions === 'scaler'){
             if (allScaleNotes.indexOf(chords[x][y]) === -1){
@@ -282,6 +296,9 @@ export default function ChordLab({importedChordData, masterInstrumentArray}) {
         var clone = [...chords]
         var parentID = e.currentTarget.parentNode.parentNode.parentNode.id;
         var x = parentID.split('_')[1]
+        var cloneNames = [...exportNames]
+        cloneNames[x] = null
+        setExportNames(cloneNames)
 
         if (noteOptions === 'scaler'){
             for (var y = 0; y < chords[x].length; y++){
@@ -335,6 +352,9 @@ export default function ChordLab({importedChordData, masterInstrumentArray}) {
         var clone = [...chords]
         var parentID = e.currentTarget.parentNode.parentNode.parentNode.id;
         var x = parentID.split('_')[1]
+        var cloneNames = [...exportNames]
+        cloneNames[x] = null
+        setExportNames(cloneNames)
 
         if (noteOptions === 'scaler'){
             for (var y = 0; y < chords[x].length; y++){
@@ -389,6 +409,11 @@ export default function ChordLab({importedChordData, masterInstrumentArray}) {
         var positionObj = JSON.parse(e.currentTarget.parentNode.id);
         var x = positionObj['chord'];
         var y = positionObj['position'];
+
+        var cloneNames = [...exportNames]
+        cloneNames[x] = null
+        setExportNames(cloneNames)
+
         clone[x].splice(y, 1)
         setChords(clone)
     }
@@ -397,6 +422,11 @@ export default function ChordLab({importedChordData, masterInstrumentArray}) {
         var clone = [...chords]
         var parentID = e.currentTarget.parentNode.parentNode.id;
         var x = parentID.split('_')[1]
+
+        var cloneNames = [...exportNames]
+        cloneNames[x] = null
+        setExportNames(cloneNames)
+
         clone.splice(x, 1)
         setChords(clone);
     }
@@ -414,7 +444,9 @@ export default function ChordLab({importedChordData, masterInstrumentArray}) {
     //==========
     function changePositionsUsingIDs(startingID, endingID){
     var xfer;
+    var xfer2;
     var clone = [...chords]
+    var cloneNames = [...exportNames]
     var ex1 = startingID.split('_')
     var ex2 = endingID.split('_')
     if(ex1 === undefined || ex2 === undefined){
@@ -426,8 +458,13 @@ export default function ChordLab({importedChordData, masterInstrumentArray}) {
     xfer = clone[startingPosition]
     clone.splice(startingPosition, 1)
     clone.splice(endingPosition, 0, xfer)
-    setChords(clone)
+
+    xfer2 = cloneNames[startingPosition]
+    cloneNames.splice(startingPosition, 1)
+    cloneNames.splice(endingPosition, 0, xfer2)
     
+    setChords(clone)
+    setExportNames(cloneNames)
 }
 
     //=================================
@@ -449,9 +486,16 @@ export default function ChordLab({importedChordData, masterInstrumentArray}) {
     //=======Drag and drop functionality
     const dragStartHandler = e => {
         var idx = Number(e.target.id.split('_')[1])
+        let exportName;
+        if (exportNames[idx]){
+            exportName = exportNames[idx]
+        } else {
+            exportName = handleChordName(chords[idx])
+        }
+        var exportChord = chords[idx]
         var obj = {id: e.target.id, className: 'chordData', message: {
-            chordName: Chord.detect(chords[idx])[0],
-            chord: chords[idx],
+            chordName: exportName,
+            chord: exportChord,
             position: []
         }, type: 'chordLab'}
         e.dataTransfer.setData('text', JSON.stringify(obj));
@@ -459,13 +503,20 @@ export default function ChordLab({importedChordData, masterInstrumentArray}) {
     };
 
     const dragStartHandlerSpecial = e => {
-        var idx = 0
+        let exportName;
+        if (exportNames[0]){
+            exportName = exportNames[0]
+        } else {
+            exportName = handleChordName(chords[0])
+        }
+        var exportChord = chords[0]
         var obj = {id: 'special', className: 'chordData', message: {
-            chordName: Chord.detect(chords[idx])[0],
-            chord: chords[idx],
+            chordName: exportName,
+            chord: exportChord,
             position: []
         }, type: 'chordLabExport'}
         e.dataTransfer.setData('text', JSON.stringify(obj));
+        console.log(obj)
     }
     
     const dragHandler = e => {
@@ -512,6 +563,13 @@ export default function ChordLab({importedChordData, masterInstrumentArray}) {
     }
 
     //==========================================
+    function handleChordName(pitchClasses){
+        if (Chord.detect(pitchClasses)[0] === undefined){
+            return pitchClasses[0] + ' ???'
+        } else {
+            return Chord.detect(pitchClasses)[0]
+        }
+    }
 
     function mapChords(){
         var returnArr = [];
@@ -530,6 +588,7 @@ export default function ChordLab({importedChordData, masterInstrumentArray}) {
                     </div>
                 )
             }
+
             returnArr.push(
                 <div  id={'chord_' + i} onClick={clickHandler} draggable onDragStart = {dragStartHandler} onDrag = {dragHandler} onDragOver = {dragOverHandler} onDragLeave={dragLeaveHandler} onDrop = {dropHandler}className='inactive chord' style={{display: 'flex', flexDirection: 'column-reverse', margin: '5px'}}>
                 <div  style={{display: 'flex', flexDirection: 'row'}}>
@@ -541,34 +600,11 @@ export default function ChordLab({importedChordData, masterInstrumentArray}) {
                 </div>
                 
                 {returnChord} 
-                {Chord.detect(pitchClasses)[0]}</div>
+                {exportNames[i] ? exportNames[i] : handleChordName(pitchClasses)}</div>
             )
         }
         return returnArr;
     }
-
-    
-    
-    //---Generate Options:
-    //---*Stack Selection
-    //---*Generate From Scale (Modal Popup)
-    //---*Generate From Pattern (Modal Popup)
-    //----Options Play on change
-
-    //---Export Options:
-    //---*Map Chords to Player
-    //------All
-    //------Choose
-    //---*Export Chords to Palette
-    //---*Export Chords as Chord Groups
-    //---*Choose chords to Export
-    //---*Export Locally or Globally
-    //----Options
-    //----*Show Controls
-    //----*Show Controls
-    //----*Show Controls
-    //----Map
-    //----MAKE DRAG AND DROPPING MOVING DEFAULT!!!
 
     const handleGenerateChordDropdownOptions = (e, {value}) => {
         var clone = JSON.parse(JSON.stringify(generateChordOptions))
@@ -583,21 +619,46 @@ export default function ChordLab({importedChordData, masterInstrumentArray}) {
     }
 
     function handleExport(){
-
+        const user = JSON.parse(localStorage.getItem('userInfo'))
         const chordDataPrototype = {
             name: Chord.detect(chords[0])[0],
             chordName: Chord.detect(chords[0])[0],
             desc: '',
             chord: chords[0],
             position: [],
-            author: '',
-            authorId: '',
+            author: user['name'],
+            authorId: user['_id'],
             dataType: 'chord',
-            pool: '',
+            pool: exportPool,
         }
         dispatch(insertData(chordDataPrototype))
     }
 
+    const exportDropdownOptions = [
+        { key: 'global', text: 'global', value: 'global'},
+        { key: 'local', text: 'local', value: 'local'},
+    ]
+    
+    const handleExportDropdown = (e, {value}) => {
+        const user = JSON.parse(localStorage.getItem('userInfo'))
+        if (value === 'local'){
+            const user = JSON.parse(localStorage.getItem('userInfo'))
+            setExportPool(user['_id'])
+        } else {
+            setExportPool(value)
+        }
+      }
+    
+      const handleChangeName = e => {
+        const cloneNames = [...exportNames]
+        cloneNames[0] = e.target.value
+        setExportNames(cloneNames)
+      }
+
+      const handleDescriptionChange = e => {
+        setDescription(e.target.value)
+      }
+      //====
     return (
         <>
         <Menu>
@@ -648,9 +709,19 @@ export default function ChordLab({importedChordData, masterInstrumentArray}) {
               </Dropdown.Menu>
           </Dropdown>
          <Menu.Item onClick={() => setEdit(!edit)}> Edit </Menu.Item>    
-         <Menu.Item> Display </Menu.Item>   
-         {/* <Menu.Item> Map </Menu.Item>    */}
-         <Menu.Item onClick={() => handleExport()}> Export </Menu.Item>   
+         <Menu.Item onClick={() => setShowDescription(!showDescription)}> Desc </Menu.Item>   
+         <Button.Group>
+        <Button basic disabled={localStorage.getItem('userInfo') === null} onClick={()=> handleExport()}>Export</Button>
+        <Dropdown
+          simple
+          item
+          disabled={localStorage.getItem('userInfo') === null}
+          className='button icon'
+          options={exportDropdownOptions}
+          onChange={handleExportDropdown}
+          trigger={<></>}
+        />
+        </Button.Group>  
         </Menu>
         {edit && <Button.Group>
             <Button basic active={noteOptions === 'octave'} onClick={() => setNoteOptions('octave')}>Octave</Button>
@@ -663,36 +734,18 @@ export default function ChordLab({importedChordData, masterInstrumentArray}) {
             {mapChords()}
         </div>
         <div>
-            <h3>Export</h3>
-            <div draggable onDragStart={dragStartHandlerSpecial} style={{height: '25px', width: '125px', backgroundColor: 'lightsalmon'}}>{Chord.detect(chords[0])[0]}</div>
+            <div draggable onClick={() => setInputFocus(!inputFocus)} onDragStart={dragStartHandlerSpecial} style={{height: '25px', width: '125px', backgroundColor: 'lightsalmon', display: !inputFocus ? '': 'none' }}>{exportNames[0] ? exportNames[0] : handleChordName(chords[0])}</div>
+            <Input type='text'
+            id={'input_patternLab'}
+            ref={input => input && input.focus()}
+            onBlur={() => setInputFocus(false)}
+            onInput={handleChangeName}
+            style={{display: inputFocus ? '': 'none' }}
+            />
         </div>
-        {/* <button onClick={()=> organizeChords()}>Organize Chords</button>
-        <button onClick={()=> playChords(chords)}>Play</button>
-        <button onClick={()=> console.log(Chord.detect(['D', 'F', 'A']))}>Detect 'em</button>
-        <button onClick={()=> generateChordStack(2,3)}>Generate Chord Stack</button>
-        <button> Edit on </button>
-        <button> Edit off</button>
-        <button>map chords to song</button>
-        <button> mutate chords to fit scale</button>
-        <div>
-            <h3>Note Editing Controls</h3>
-            <button onClick={() => setNoteOptions('octave')}>Change by Octave</button>
-            <button onClick={() => setNoteOptions('scaler')}>Change by Scale Tone</button>
-            <button onClick={() => setNoteOptions('chromatic')}>Change by Chromatic Tone</button>
-            <button onClick={() => setNoteOptions('insert')}>Insert</button>
-            <button onClick={() => setNoteOptions('delete')}>Delete</button>
-        </div>
-        <div>
-            <h3>Chord Editing Controls</h3>
-            <button>Insert Chord</button>
-            <button>Arrange Chords</button>
-        </div>
-        <div>
-            <h3>Export</h3>
-            <button>Map Chords to Progression</button>
-            <button>Save Chords as Chord Bundle</button>
-            <button>Save Chord as Chord Module</button>
-        </div> */}
+        {showDescription && <Form>
+        <TextArea onInput={handleDescriptionChange} id={'desc_chordLab'} ref={input => input && input.focus()} placeholder='Description...' value={description} />
+        </Form>}
         </>
     ) 
 }

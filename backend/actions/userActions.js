@@ -19,7 +19,6 @@ export default class userActions {
   static async authUser(userObject){
     const userEmail = userObject.email
     const userPassword = userObject.password
-    console.log(userObject)
     try {
       const dbUser = await users.findOne({"email": userEmail})
       const isPassword = await bcrypt.compare(userPassword, dbUser.password)

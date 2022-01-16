@@ -6,7 +6,7 @@ export default function Palette() {
     const activeTabStates = [
         "Components",
         // "Collections",
-        "Songs",
+        // "Songs",
     ]
 
     const activeSubTabStates = [
@@ -135,9 +135,17 @@ export default function Palette() {
     const dragStartHandler = e => {
         var ex = e.target.id.split('_');
         var pos = Number(ex[2])
+        var exportType;
+        if (e.target.className === 'moduleData'){
+            exportType = 'modulePaletteExport'
+        } else {
+            exportType = 'palette'
+        }
         var obj = {id: 'special', className: e.target.className, message: 
         storage[activeTabStates[activeTab]][activeSubTabStates[activeSubTab]][pos],
-         type: 'palette'}
+         type: exportType}
+
+        console.log(obj, 'EXPORTED FROM PALLETTE!')
         e.dataTransfer.setData('text', JSON.stringify(obj));
     };
 
@@ -159,7 +167,7 @@ export default function Palette() {
     const dropHandler = e => {
         var cloneStorage = JSON.parse(JSON.stringify(storage))
         var data = JSON.parse(e.dataTransfer.getData("text"));
-        if (data['type'] !== 'palette'){
+        if (data['type'] !== 'palette' && data['type'] !== 'modulePaletteExport'){
            if (data['className'] === 'chordData'){
             cloneStorage['Components']['Chords'].push(data['message'])
             setActiveTab(0)
@@ -176,6 +184,10 @@ export default function Palette() {
             cloneStorage['Components']['Scales'].push(data['message'])
             setActiveTab(0)
             setActiveSubTab(1)
+           } else if (data['className'] === 'moduleData'){
+            cloneStorage['Components']['Modules'].push(data['message'])
+            setActiveTab(0)
+            setActiveSubTab(0)
            } else {
                return
            }
@@ -196,13 +208,13 @@ export default function Palette() {
         <div onDrop={dropHandler} onDragOver={dragOverHandler}>
          <List relaxed divided size='large' className='fixed-width'>
         <div style={{display:'flex', flexDirection:'column'}}>
-        <Button.Group className='no-padding'>
+        {/* <Button.Group className='no-padding'>
             <Button compact basic onClick={() => onClickHandler('left', 'tab')}> <Icon name ='left arrow'/></Button>
             <Segment>
             {activeTabStates[activeTab]}
             </Segment>
             <Button compact basic onClick={() => onClickHandler('right', 'tab')}> <Icon name ='right arrow'/></Button>
-        </Button.Group>
+        </Button.Group> */}
         {activeTab !== 1 && 
         <Button.Group className='no-padding'>
             <Button compact basic onClick={() => onClickHandler('left', 'subTab')}> <Icon name ='left arrow'/></Button>
@@ -215,16 +227,16 @@ export default function Palette() {
         <List.Item className='Item'>
             {/* <List.Icon name='clock' size='large' verticalAlign='middle' /> */}
             <List.Content>
-                <List.Header> {activeTab !== 1 ? activeSubTabStates[activeSubTab] : 'Songs'}</List.Header>
+                {/* <List.Header> {activeTab !== 1 ? activeSubTabStates[activeSubTab] : 'Songs'}</List.Header> */}
                 <List.Description>
                     {activeTab !== 1 &&
                     <div >
                     {mapRegularComponents(storage[activeTabStates[activeTab]][activeSubTabStates[activeSubTab]], activeSubTabStates[activeSubTab])}
                     </div>}
-                    {activeTab === 1 &&
+                    {/* {activeTab === 1 &&
                     <div>
                         {mapSongs()}
-                    </div>}
+                    </div>} */}
                 </List.Description>
             </List.Content>
         </List.Item>

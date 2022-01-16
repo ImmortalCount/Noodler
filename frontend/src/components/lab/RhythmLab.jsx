@@ -1,6 +1,6 @@
 import {React, useState, useEffect, useRef} from 'react'
 import * as Tone from 'tone';
-import { Menu, Button, Input } from 'semantic-ui-react';
+import { Menu, Button, Input, Dropdown, Form, TextArea } from 'semantic-ui-react';
 import { useDispatch, useSelector} from 'react-redux';
 import { insertData } from '../../store/actions/dataPoolActions';
 import { setLabData } from '../../store/actions/labDataActions';
@@ -10,19 +10,21 @@ import './lab.css'
 
 
 export default function RhythmLab({importedRhythmData}) {
-    var initialNotes = [['O', 'O'], ['O', 'O'], ['O', 'O'], ['O', 'O']]
-    var [name, setName] = useState('Rhythm 1')
-    var [notes, setNotes] = useState(initialNotes)
-    var [playNoteOrderByID, setPlayNoteOrderByID] = useState([])
-    var [mappedNotes, setMappedNotes] = useState([])
-    var [metronomeNotes, setMetronomeNotes] = useState([['Db4'], ['Db4'], ['Db4'], ['Db4']])
-    var [playConstant, setPlayConstant] = useState(1)
-    var [loop, setLoop] = useState(false);
-    var [edit, setEdit] = useState(false);
-    var [stretchCompress, setStretchCompress] = useState(false)
-    var [noteSlots, setNoteSlots] = useState(8)
-    Tone.Transport.bpm.value = 120
-    var [moduleLengthDisplay, setModuleLengthDisplay] = useState(notes.length);
+    const initialNotes = [['O', 'O'], ['O', 'O'], ['O', 'O'], ['O', 'O']]
+    const [name, setName] = useState('Rhythm 1')
+    const [notes, setNotes] = useState(initialNotes)
+    const [playNoteOrderByID, setPlayNoteOrderByID] = useState([])
+    const [mappedNotes, setMappedNotes] = useState([])
+    const [metronomeNotes, setMetronomeNotes] = useState([['Db4'], ['Db4'], ['Db4'], ['Db4']])
+    const [playConstant, setPlayConstant] = useState(1)
+    const [edit, setEdit] = useState(false);
+    const [stretchCompress, setStretchCompress] = useState(false)
+    const [noteSlots, setNoteSlots] = useState(8)
+    const [moduleLengthDisplay, setModuleLengthDisplay] = useState(notes.length);
+    const [exportPool, setExportPool] = useState('global')
+    const [inputFocus, setInputFocus] = useState(false)
+    const [description, setDescription] = useState('')
+    const [showDescription, setShowDescription] = useState(false)
     const isMuted = false;
     const dispatch = useDispatch()
 
@@ -34,13 +36,20 @@ useEffect(() => {
     if (importedRhythmData['rhythm'] !== undefined){
         setNotes(importedRhythmData['rhythm'])
         setName(importedRhythmData['rhythmName'])
+        setPlayConstant(importedRhythmData['speed'])
     }
     
 }, [importedRhythmData])
 
 useEffect(() => {
+    var lengthDisplay = notes.length * (1/playConstant)
+    var roundedDisplay = Math.round((lengthDisplay + Number.EPSILON) * 100) / 100
+    setModuleLengthDisplay(roundedDisplay)
+}, [notes])
+
+useEffect(() => {
     setMappedNotes(mapNotes(notes))
-    setMetronomeNotes(setModuleLengthDisplay(notes.length))
+    setMetronomeNotes(moduleLengthDisplay)
     generateMetronomeNotes()
     returnNotes()
     let newInfo = {...labInfo}
@@ -62,21 +71,21 @@ useEffect(() => {
 }, [notes, name, moduleLengthDisplay])
 
 
-function loopOn(){
-    Tone.Transport.loopStart = 0;
-    Tone.Transport.loopEnd = 2;
+// function loopOn(){
+//     Tone.Transport.loopStart = 0;
+//     Tone.Transport.loopEnd = 2;
 
-    // console.log(Tone.Transport.loopEnd)
-    if (Tone.Transport.loop !== true){
-        Tone.Transport.loop = true;
-        setLoop(true)
-    } else {
-        Tone.Transport.loop = false;
-        setLoop(false)
-    }
+//     // console.log(Tone.Transport.loopEnd)
+//     if (Tone.Transport.loop !== true){
+//         Tone.Transport.loop = true;
+//         setLoop(true)
+//     } else {
+//         Tone.Transport.loop = false;
+//         setLoop(false)
+//     }
     
     
-}
+// }
 
 function generateMetronomeNotes(){
     var returnArr = [];
@@ -132,27 +141,27 @@ function getAllChildElementsById(id){
 }
 
 
-function getPositionInNestedArrayByID(id, notes){
-        var ex = id.split('_')
-        var returnArr = []
-        for (var i = 2; i < ex.length; i++){
-          returnArr.push(ex[i])
-        } 
-        if (returnArr.length === 1){
-            return JSON.stringify(notes[returnArr[0]])
-        } else if (returnArr.length === 2){
-            return JSON.stringify(notes[returnArr[0]][returnArr[1]])
-        } else if (returnArr.length === 3){
-            return JSON.stringify(notes[returnArr[0]][returnArr[1]][returnArr[2]])
-        } else if (returnArr.length === 4){
-            return JSON.stringify(notes[returnArr[0]][returnArr[1]][returnArr[2]][returnArr[3]])
-        } else if (returnArr.length === 5){
-            return JSON.stringify(notes[returnArr[0]][returnArr[1]][returnArr[2]][returnArr[3]][returnArr[4]])
-        } else {
-            return undefined;
-        }
+// function getPositionInNestedArrayByID(id, notes){
+//         var ex = id.split('_')
+//         var returnArr = []
+//         for (var i = 2; i < ex.length; i++){
+//           returnArr.push(ex[i])
+//         } 
+//         if (returnArr.length === 1){
+//             return JSON.stringify(notes[returnArr[0]])
+//         } else if (returnArr.length === 2){
+//             return JSON.stringify(notes[returnArr[0]][returnArr[1]])
+//         } else if (returnArr.length === 3){
+//             return JSON.stringify(notes[returnArr[0]][returnArr[1]][returnArr[2]])
+//         } else if (returnArr.length === 4){
+//             return JSON.stringify(notes[returnArr[0]][returnArr[1]][returnArr[2]][returnArr[3]])
+//         } else if (returnArr.length === 5){
+//             return JSON.stringify(notes[returnArr[0]][returnArr[1]][returnArr[2]][returnArr[3]][returnArr[4]])
+//         } else {
+//             return undefined;
+//         }
         
-    }
+//     }
 
 //---Interactive Functionality
 function changePositionsUsingIDs(startingID, endingID, notes){
@@ -161,6 +170,7 @@ function changePositionsUsingIDs(startingID, endingID, notes){
     var clone = [...notes]
     var dataDeleteInsert = true;
     var childrenIDs = getAllChildElementsById(startingID)
+    var nOfSiblings = document.getElementById(startingID).parentNode.childNodes.length
     var ex1 = startingID.split('_')
         var startingIDCoordinates = []
         for (var i = 2; i < ex1.length; i++){
@@ -171,6 +181,7 @@ function changePositionsUsingIDs(startingID, endingID, notes){
         for (var j = 2; j < ex2.length; j++){
           endingIDCoordinates.push(Number(ex2[j]))
         }
+    
     if (childrenIDs.includes(endingID)){
         return
     }
@@ -189,12 +200,14 @@ function changePositionsUsingIDs(startingID, endingID, notes){
             dataDeleteInsert = false;
         }
     }
-        
         //------
         //Get Data
         if (startingIDCoordinates.length === 1){
-            xfer = clone[startingIDCoordinates[0]]
+                xfer = clone[startingIDCoordinates[0]]
         } else if (startingIDCoordinates.length === 2){
+            if (nOfSiblings === 1){
+                return
+            }
             xfer = clone[startingIDCoordinates[0]][startingIDCoordinates[1]]
         } else if (startingIDCoordinates.length === 3){
             xfer= clone[startingIDCoordinates[0]][startingIDCoordinates[1]][startingIDCoordinates[2]]
@@ -280,12 +293,12 @@ function changePositionsUsingIDs(startingID, endingID, notes){
         setMappedNotes(mapNotes(clone))
 }
 
-function spliceCheck(notes){
-    var clone = [...notes]
-    clone[1].splice(1, 1, 'X')
-    setNotes(clone)
-    setMappedNotes(mapNotes(clone))
-}
+// function spliceCheck(notes){
+//     var clone = [...notes]
+//     clone[1].splice(1, 1, 'X')
+//     setNotes(clone)
+//     setMappedNotes(mapNotes(clone))
+// }
 
 function addNoteAtPosition(endingID, notes){
     var clone = [...notes]
@@ -321,11 +334,11 @@ function removeNoteAtPosition(endingID, notes){
     var ex1 = endingID.split('_')
     var parentId = document.getElementById(endingID).parentNode.id
     var nOfSiblings = document.getElementById(endingID).parentNode.childNodes.length
+
     var endingIDCoordinates = []
         for (var i = 2; i < ex1.length; i++){
           endingIDCoordinates.push(Number(ex1[i]))
         }
-    console.log(endingIDCoordinates.length)
     if (nOfSiblings === 1){
         unDivideNotesAtPosition(parentId, notes)
         
@@ -566,6 +579,7 @@ const dragStartHandlerSpecial = e => {
         dataType: 'rhythm',
         pool: '',
     }, type: 'rhythmLabExport'}
+    console.log(obj)
     e.dataTransfer.setData('text', JSON.stringify(obj));
 }
 
@@ -795,7 +809,7 @@ function playSynth(){
             }
           },
          tempNotes,
-          (playConstant * Tone.Time('4n').toSeconds())
+          ((1/playConstant) * Tone.Time('4n').toSeconds())
         );
         
         const metronome = new Tone.Sequence(
@@ -814,39 +828,55 @@ function playSynth(){
 }
 
 function squishTiming(notesLength, barLength){
-    const ratioConst = (barLength/notesLength)
+    const ratioConst = (1/(barLength/notesLength))
     var num = ratioConst
     num = num.toFixed(3);
-    return num
-}
-
-const handleModuleLengthChange = e => {
-    setModuleLengthDisplay(e.target.value)
-    Tone.Transport.bpm.value = Math.round(e.target.value);
-    setPlayConstant(squishTiming(notes.length, e.target.value))
+    return Number(num)
 }
 
 const onChangeModuleLength = e => {
     setModuleLengthDisplay(e.target.value)
+    setPlayConstant(squishTiming(notes.length, e.target.value))
 }
 
 function handleExport(){
-
+    const user = JSON.parse(localStorage.getItem('userInfo'))
     const rhythmDataPrototype = {
-        //make amount notes reflect the amount of notes in the rhythm completely
         name: name,
         rhythmName: name,
+        desc: '',
         rhythm: notes,
         length: moduleLengthDisplay,
         speed: playConstant,
         notes: noteSlots,
-        author: 'NoodleMan0',
-        authorId: 'Noodleman0_id',
-        pool: 'global',
-        dataType: 'rhythm'
+        dataType: 'rhythm',
+        author: user['name'],
+        authorId: user['_id'],
+        pool: exportPool,
+       
     }
     dispatch(insertData(rhythmDataPrototype))
 }
+
+const exportDropdownOptions = [
+    { key: 'global', text: 'global', value: 'global'},
+    { key: 'local', text: 'local', value: 'local'},
+]
+
+const handleExportDropdown = (e, {value}) => {
+    const user = JSON.parse(localStorage.getItem('userInfo'))
+    if (value === 'local'){
+        const user = JSON.parse(localStorage.getItem('userInfo'))
+        setExportPool(user['_id'])
+    } else {
+        setExportPool(value)
+    }
+  }
+
+const handleDescriptionChange = e => {
+    setDescription(e.target.value)
+  }
+
     return (
         <>
         <Menu>
@@ -854,7 +884,19 @@ function handleExport(){
          <Menu.Item onClick={()=> randomRhythmGenerator()}> Generate </Menu.Item>   
          <Menu.Item onClick={()=> setEdit(!edit)}> Edit</Menu.Item>   
          <Menu.Item onClick={()=> setStretchCompress(!stretchCompress)}>  Stretch/Compress </Menu.Item>      
-         <Menu.Item onClick={()=> handleExport()}>  Export </Menu.Item>   
+         <Menu.Item onClick={() => setShowDescription(!showDescription)}> Desc </Menu.Item>
+         <Button.Group>
+        <Button basic disabled={localStorage.getItem('userInfo') === null} onClick={()=> handleExport()}>Export</Button>
+        <Dropdown
+          simple
+          item
+          disabled={localStorage.getItem('userInfo') === null}
+          className='button icon'
+          options={exportDropdownOptions}
+          onChange={handleExportDropdown}
+          trigger={<></>}
+        />
+        </Button.Group>
         </Menu>
         {edit && <Button.Group>
             <Button active ={activeButton === 'replace'} compact basic onClick ={() =>handleControls('replace')}> X/O</Button>
@@ -873,20 +915,24 @@ function handleExport(){
        <div style={{display: 'flex', flexDirection: 'row', width: '500px'}} >
            {mappedNotes}
        </div>
+       { stretchCompress && <div>{playConstant}x speed </div>}
        <div>{moduleLengthDisplay}{moduleLengthDisplay > 1 ? ' beats' : ' beat'} </div>
        <div>{noteSlots}{noteSlots > 1 ? ' notes' : ' note'} </div>
-        {stretchCompress && <Input type="range" min='1' max='16' step='1' defaultValue={moduleLengthDisplay} onMouseUp={handleModuleLengthChange} onChange={onChangeModuleLength}/>}
+        {stretchCompress && <Input type="range" min='1' max='16' step='1' value={moduleLengthDisplay} onChange={onChangeModuleLength}/>}
        <div>
-            <h3>Rhythm</h3>
-            <div draggable onDragStart={dragStartHandlerSpecial} style={{height: '25px', width: '125px', backgroundColor: 'lightseagreen'}}>{name}</div>
-        </div>
-        <div>
-            <h3>Name</h3>
+            <div draggable onClick={() => setInputFocus(!inputFocus)} onDragStart={dragStartHandlerSpecial} style={{height: '25px', width: '125px', backgroundColor: 'lightseagreen', display: !inputFocus ? '': 'none' }}>{name}</div>
             <Input type='text'
             value={name}
+            id={'input_rhythmLab'}
+            ref={input => input && input.focus()}
+            onBlur={() => setInputFocus(false)}
             onInput={e => setName(e.target.value)}
+            style={{display: inputFocus ? '': 'none' }}
             />
         </div>
+        {showDescription && <Form>
+        <TextArea onInput={handleDescriptionChange} id={'desc_chordLab'} ref={input => input && input.focus()} placeholder='Description...' value={description} />
+        </Form>}
         </>
     )
 }

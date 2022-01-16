@@ -1,5 +1,5 @@
 import {React, useState, useEffect} from 'react'
-import { Form, Checkbox , Icon, Dropdown, Menu, Button, Message, Input} from 'semantic-ui-react'
+import { Form, Checkbox , Icon, Dropdown, Menu, Button, TextArea, Input} from 'semantic-ui-react'
 import {Scale, ScaleType, Note} from '@tonaljs/tonal';
 import * as Tone from 'tone';
 import { useDispatch, useSelector } from 'react-redux';
@@ -8,17 +8,23 @@ import { scaleHandler } from './utils';
 
 import '../../../public/Do_Mayor_armadura.svg'
 import { keySynth } from './synths';
+import { insertData } from '../../store/actions/dataPoolActions';
 
 export default function ScaleLab({importedScaleData, masterInstrumentArray}) {
-    var [scaleDataBinary, setScaleDataBinary] = useState([1,0,1,0,1,1,0,1,0,1,0,1])
-    var [scaleName, setScaleName] = useState('major');
-    var [notes, setNotes] = useState(["C", "D", "E", "F", "G", "A", "B"]);
-    var [scaleNumber, setScaleNumber] = useState(2773);
-    var [randomRange, setRandomRange] = useState({only: 7, min: 7, max: 7})
-    var [display, setDisplay] = useState('off')
-    var [options, setOptions] = useState('sharps')
-    var [playOptions, setPlayOptions] = useState('forward')
-    var [randomOptions, setRandomOptions] = useState('all')
+    const [scaleDataBinary, setScaleDataBinary] = useState([1,0,1,0,1,1,0,1,0,1,0,1])
+    const [scaleName, setScaleName] = useState('major');
+    const [notes, setNotes] = useState(["C", "D", "E", "F", "G", "A", "B"]);
+    const [scaleNumber, setScaleNumber] = useState(2773);
+    const [randomRange, setRandomRange] = useState({only: 7, min: 7, max: 7})
+    const [display, setDisplay] = useState('off')
+    const [description, setDescription] = useState('')
+    const [showDescription, setShowDescription] = useState(false)
+    const [options, setOptions] = useState('sharps')
+    const [playOptions, setPlayOptions] = useState('forward')
+    const [randomOptions, setRandomOptions] = useState('all')
+    const [exportPool, setExportPool] = useState('global')
+    const [inputFocus, setInputFocus] = useState(false)
+    const [displayName, setDisplayName] = useState('C major')
     const isMuted = false;
 
     function setInit(){
@@ -115,23 +121,31 @@ function createScaleSVG(){
       var newBinary = importedScaleData['binary']
       var newName = importedScaleData['scaleName']
       var newNumber = importedScaleData['number']
+      var newDesc = importedScaleData['desc']
       setNotes(newNotes)
       setScaleName(newName.split(' ').slice(1).join(' '))
+      setDisplayName(newName)
       setScaleNumber(newNumber)
       setScaleDataBinary(newBinary)
       setRootNote(newNotes[0])
+      setDescription(newDesc)
       createScaleSVG()
     }
   }, [importedScaleData])
+
+  useEffect(() => {
+    setDisplayName(rootNote + ' ' + scaleName)
+  }, [rootNote, scaleName])
 
   useEffect (()=>{
     createScaleSVG()
     let newInfo = {...labInfo}
     const scaleDataPrototype = {
-        name: rootNote + ' ' + scaleName,
-        scaleName: rootNote + ' ' + scaleName,
+        name: displayName,
+        scaleName: displayName,
         binary: scaleDataBinary,
-        desc: '',
+        number: scaleNumber,
+        desc: description,
         scale: notes,
         dataType: 'scale',
         pool: '',
@@ -140,6 +154,8 @@ function createScaleSVG(){
     dispatch(setLabData(newInfo))
     // sendScaleData(notes)
 }, [notes]);
+
+
 
   function getNotePositions(){
     var acceptableNotes = [
@@ -499,10 +515,11 @@ function createScaleSVG(){
   
       const dragStartHandler = e => {
         var obj = {id: 'special', className: 'scaleData', message: 
-        {scaleName: rootNote + ' ' + scaleName, 
+        {scaleName: displayName, 
         scale: notes, 
         binary: scaleDataBinary,
         number: scaleNumber,
+        desc: description,
       }, 
         type: 'scaleLab'}
         e.dataTransfer.setData('text', JSON.stringify(obj));
@@ -580,7 +597,48 @@ function createScaleSVG(){
         )
 }
 
+function handleExport(){
+  const user = JSON.parse(localStorage.getItem('userInfo'))
 
+  const scaleDataPrototype = {
+      name: rootNote + ' ' + scaleName,
+      scaleName: rootNote + ' ' + scaleName,
+      binary: scaleDataBinary,
+      desc: '',
+      number: scaleNumber,
+      scale: notes,
+      type: 'normal',
+      length: notes.length,
+      dataType: 'scale',
+      author: user['name'],
+      authorId: user['_id'],
+      pool: exportPool,
+  }
+  dispatch(insertData(scaleDataPrototype))
+}
+
+const exportDropdownOptions = [
+  { key: 'global', text: 'global', value: 'global'},
+  { key: 'local', text: 'local', value: 'local'},
+]
+
+const handleExportDropdown = (e, {value}) => {
+  const user = JSON.parse(localStorage.getItem('userInfo'))
+  if (value === 'local'){
+      const user = JSON.parse(localStorage.getItem('userInfo'))
+      setExportPool(user['_id'])
+  } else {
+      setExportPool(value)
+  }
+}
+
+const handleScaleNameChange = e => {
+  setScaleName(e.target.value)
+}
+
+const handleScaleDescriptionChange = e => {
+  setDescription(e.target.value)
+}
 
     return (
         <>
@@ -667,18 +725,36 @@ function createScaleSVG(){
       <Button basic > Mode </Button>
       <Button basic onClick={() => toggleModes('next', notes)}><Icon name='caret right'/></Button>
       </Button.Group>
-      <Menu.Item>
+      <Menu.Item onClick={() => setShowDescription(!showDescription)}>
+        Desc
+      </Menu.Item>
+      {/* <Menu.Item>
       <Dropdown simple text = 'Display   ' >
           <Dropdown.Menu>
              {mapMenuItems()}
           </Dropdown.Menu>
         </Dropdown>
-        </Menu.Item>
-      <Menu.Item onClick={() => console.log(notes, 'notes')}>Export</Menu.Item>
+        </Menu.Item> */}
+        <Button.Group>
+        <Button basic disabled={localStorage.getItem('userInfo') === null} onClick={()=> handleExport()}>Export</Button>
+        <Dropdown
+          simple
+          item
+          disabled={localStorage.getItem('userInfo') === null}
+          className='button icon'
+          options={exportDropdownOptions}
+          onChange={handleExportDropdown}
+          trigger={<></>}
+        />
+        </Button.Group>
       </Menu>
         <div>
-        <div draggable='true' onDragStart={dragStartHandler} style={{height: '25px', width: '200px', backgroundColor:'lightcoral'}}>{rootNote} {scaleName}</div>
+        <div draggable='true' onClick={() => setInputFocus(true)} onDragStart={dragStartHandler} style={{display: !inputFocus ? '': 'none' , height: '25px', width: '200px', backgroundColor:'lightcoral'}}>{displayName}</div>
+        <Input type='text' id={'input_scaleLab'} value={scaleName} ref={input => input && input.focus()} onInput={handleScaleNameChange} onBlur={() => setInputFocus(false)} style={{display: inputFocus ? '': 'none' }}/>
         <p># {scaleNumber} </p>
+        {showDescription && <Form>
+        <TextArea onInput={handleScaleDescriptionChange} id={'desc_scaleLab'} ref={input => input && input.focus()} placeholder='Description...' value={description} />
+        </Form>}
         <p>{noteMapper(notes)}</p>
         </div>
         <div id="divScaleInteractive"></div>

@@ -2,7 +2,7 @@ import React, { useState, useEffect, useLayoutEffect, useRef} from 'react'
 import * as Tone from 'tone';
 import { allSynths } from './allSynths';
 import { useSelector, useDispatch} from 'react-redux';
-import { Dropdown, Button, Icon, Segment } from 'semantic-ui-react';
+import { Dropdown, Button, Icon, Segment, Input } from 'semantic-ui-react';
 import {moduleMarkerCreator, moduleMarkerCreatorCompact, loopLengthCreator, findBetween} from './timeFunctions'
 import { shadeHexColor, showAll } from './guitarDisplayFunctions';
 import {noteValues, romanNumerals} from './guitarSVGConstants';
@@ -10,13 +10,15 @@ import { guitarPrototype, bassPrototype } from './instrumentPrototypes';
 import { data1, data2 } from './dummyData';
 import { Note } from '@tonaljs/tonal';
 import { setSongData } from '../../store/actions/songDataActions';
+import { setInstrumentNames } from '../../store/actions/instrumentNameActions';
 
 
 export default function GuitarSVG({masterInstrumentArray, activelyDisplayedInstruments}) {
     const state = useSelector((state) => state.module)
     //Change it so that noteColors is global?
-    const [instruments, setInstruments] = useState([{instrument:'acoustic_guitar_nylon', noteColors: '', scale:[], tuning:['E4','B3','G3','D3','A2','E2'],stringNumber:6,fretNumber: 24}])
+    const [instruments, setInstruments] = useState([{name: 'Instr 1', instrument:'acoustic_guitar_nylon', type: 'guitar', noteColors: '', scale:[], tuning:['E4','B3','G3','D3','A2','E2'],stringNumber:6,fretNumber: 24}])
     const [module, setModule] = useState(0);
+    const [inputFocus, setInputFocus] = useState(null)
     const [noteColors, setNoteColors] = useState('')
     const globalPosition = useRef(0); 
     const [data, setData] = useState([
@@ -45,6 +47,7 @@ export default function GuitarSVG({masterInstrumentArray, activelyDisplayedInstr
     const [focus, setFocus] = useState(0)
     const [loop, setLoop] = useState(false)
     const [loopEnd, setLoopEnd] = useState(1)
+    const [activeEdits, setActiveEdits] = useState([])
     const [moduleMarkers, setModuleMarkers] = useState(moduleMarkerCreator(data))
     
     const dispatch = useDispatch()
@@ -73,8 +76,9 @@ export default function GuitarSVG({masterInstrumentArray, activelyDisplayedInstr
 
     useEffect(() => {
         if (state !== "Initial Module Data"){
-            setData(JSON.parse(state))
-            setModuleMarkers(moduleMarkerCreator(JSON.parse(state)))
+            const dataPackage = JSON.parse(state)
+            setData(dataPackage['data'])
+            setModuleMarkers(moduleMarkerCreator(dataPackage['data']))
         } else {
             return
         }
@@ -84,6 +88,11 @@ export default function GuitarSVG({masterInstrumentArray, activelyDisplayedInstr
     useEffect (()=>{
         createGuitarSVG();
         dispatch(setSongData(instruments))
+        const instrumentNames = []
+        for (var i = 0; i < instruments.length; i++){
+            instrumentNames.push(instruments[i]['name'])
+        }
+        dispatch(setInstrumentNames(instrumentNames))
     }, [instruments]);
     //====================================
     //=====Update instruments
@@ -624,10 +633,11 @@ function noteStringHandler(notes){
 function handleInstrumentUpdate(){
     var clone = [...instruments]
     var cloneData =[...data]
-    var clonePrototype = guitarPrototype
+    var clonePrototype = JSON.parse(JSON.stringify(guitarPrototype))
     if (masterInstrumentArray.length === instruments.length){
         return
     } else if (masterInstrumentArray.length > instruments.length){
+        clonePrototype['name'] = 'Instr ' + masterInstrumentArray.length
         clone.push(clonePrototype)
         setInstruments(clone)
     } else if (masterInstrumentArray.length < instruments.length){
@@ -749,7 +759,7 @@ function loadNoteSequenceAndVisualDataOntoTimeline(data){
         }
                 },
                data[i]['notes'],
-                (data[i]['speed'] * Tone.Time('4n').toSeconds()) 
+                ((1/data[i]['speed']) * Tone.Time('4n').toSeconds()) 
               )
               
                 .start(moduleMarkers[i])
@@ -778,10 +788,31 @@ const tuningOptions = [
     {key: 'Standard 8', text: 'F#BEADGBE', value: ['E4', 'B3', 'G3', 'D3', 'A2', 'E2', 'B1', 'F#1']},
     {key: 'Standard 9', text: 'C#F#BEADGBE', value: ['E4', 'B3', 'G3', 'D3', 'A2', 'E2', 'B1', 'F#1', 'C#1']},
     {key: 'Standard 10', text: 'G#C#F#BEADGBE', value: ['E4', 'B3', 'G3', 'D3', 'A2', 'E2', 'B1', 'F#1', 'C#1', 'G#0']},
-    {key: 'Bass', text: 'Bass: EADG', value: ['G2', 'D2', 'A1', 'E1']},
     {key: 'DADGAD', text: 'DADGAD', value: ['D4', 'A3', 'G3', 'D3', 'A2', 'D2']},
     {key: 'P4', text: 'P4', value: ['F4', 'C4', 'G3', 'D3', 'A2', 'E2']},
     {key: 'DropD', text: 'DropD', value: ['E4', 'B4', 'G3', 'D3', 'A2', 'D2']},
+]
+
+const tuningOptionsGuitar = [
+    {key: 'Standard 1', text: 'E', value: ['E4']},
+    {key: 'Standard 2', text: 'BE', value: ['E4', 'B3']},
+    {key: 'Standard 3', text: 'GBE', value: ['E4', 'B3', 'G3']},
+    {key: 'Standard 4', text: 'DGBE', value: ['E4', 'B3', 'G3', 'D3']},
+    {key: 'Standard 5', text: 'ADGBE', value: ['E4', 'B3', 'G3', 'D3', 'A2']},
+    {key: 'Standard 6', text: 'EADGBE', value: ['E4', 'B3', 'G3', 'D3', 'A2', 'E2']},
+    {key: 'Standard 7', text: 'BEADGBE', value: ['E4', 'B3', 'G3', 'D3', 'A2', 'E2', 'B1']},
+    {key: 'Standard 8', text: 'F#BEADGBE', value: ['E4', 'B3', 'G3', 'D3', 'A2', 'E2', 'B1', 'F#1']},
+    {key: 'Standard 9', text: 'C#F#BEADGBE', value: ['E4', 'B3', 'G3', 'D3', 'A2', 'E2', 'B1', 'F#1', 'C#1']},
+    {key: 'Standard 10', text: 'G#C#F#BEADGBE', value: ['E4', 'B3', 'G3', 'D3', 'A2', 'E2', 'B1', 'F#1', 'C#1', 'G#0']},
+]
+
+const tuningOptionsBass = [
+    {key: 'Standard Bass 4', text: 'Bass: EADG', value: ['G2', 'D2', 'A1', 'E1']},
+    {key: 'Drop D Bass', text: 'Bass: Drop D', value: ['G2', 'D2', 'A1', 'D1']},
+    {key: 'Standard Bass 5', text: 'Bass: BEADG', value: ['G2', 'D2', 'A1', 'E1', 'B0']},
+    {key: 'Standard Bass 6', text: 'Bass: F#BEADG', value: ['G2', 'D2', 'A1', 'E1', 'B0', 'F#0']},
+    {key: 'Standard Bass 4', text: 'Bass: EADG', value: ['G2', 'D2', 'A1', 'E1']},
+    {key: 'Standard Bass 4', text: 'Bass: EADG', value: ['G2', 'D2', 'A1', 'E1']},
 ]
 
 const instrumentOptions = [
@@ -827,7 +858,7 @@ function handlePreviousNextModulePlay(direction){
 function handleStringChange(direction, instrumentNumber){
     var clone = [...instruments]
     var tuning = clone[instrumentNumber]["tuning"]
-    var stringNumber = clone[instrumentNumber]["stringNumber"]
+    var stringNumber = clone[instrumentNumber]["tuning"].length
     if (direction === 'down'){
         if (stringNumber !== 1){
             tuning.pop()
@@ -872,16 +903,21 @@ const onChangeInstrument = (e, {id, value}) => {
    
     var clone = [...instruments]
     var idx = Number(id.split("_")[1])
+    const name = instruments[idx]['name']
 
    if (guitarInstruments.includes(value)){
        clone[idx] = JSON.parse(JSON.stringify(guitarPrototype))
        clone[idx]['instrument'] = value;
+       clone[idx]['name'] = name;
+       clone[idx]['type'] = 'guitar'
     setInstruments(clone)
        
    }
    if (bassInstruments.includes(value)){
     clone[idx] = JSON.parse(JSON.stringify(bassPrototype))
     clone[idx]['instrument'] = value;
+    clone[idx]['name'] = name;
+    clone[idx]['type'] = 'bass'
     setInstruments(clone)
     }
   }
@@ -897,19 +933,46 @@ function addRemoveGuitars(action){
     }
 }
 
+const handleInstrumentNameChange = e => {
+    var clone = [...instruments]
+    const idx = Number(e.target.id.split('_')[1])
+    clone[idx]['name'] = e.target.value
+    setInstruments(clone)
+    
+}
+
+function handleActiveEdits(idx){
+    var clone = [...activeEdits]
+    if (clone.includes(idx)){
+        clone = clone.filter(x => x !== idx)
+    } else {
+        clone.push(idx)
+    }
+    setActiveEdits(clone)
+}
+
 function mapGuitarSVGContainers(instruments){
     var clone = [...instruments]
     return(
        instruments.map((instruments, idx) =>
-            <div id={'SVGContainer' + idx} key={'SVGContainer' + idx}>
+        <div id={'SVGContainer' + idx} key={'SVGContainer' + idx} style={{display: activelyDisplayedInstruments.includes(idx) ? '' : 'none'}}>
+            <Input type='text' id={'input_' + idx} value={instruments[idx]} ref={input => input && input.focus()} placeholder={'Instr ' + (idx + 1)} onInput={handleInstrumentNameChange} onBlur={() => setInputFocus(null)} style={{display: inputFocus === idx ? '': 'none' }}/>
+            
         <Button.Group>
+            <Button compact basic onClick={() => handleActiveEdits(idx)}><Icon name='cog'/></Button>
+            <Button compact basic onClick={() => setInputFocus(idx)} style={{display: inputFocus !== idx ? '': 'none' }}>{clone[idx]['name']} </Button>
+        {activeEdits.includes(idx) && 
+            <>
             <Button compact basic onClick={()=> handleStringChange('down', idx)}> <Icon name ='left arrow'/></Button>
             <Segment>
             Strings: {clone[idx]['tuning'].length}
             </Segment>
-            <Button compact basic onClick={()=> handleStringChange('up', idx)}> <Icon name ='right arrow'/></Button>
+            <Button compact basic onClick={()=> handleStringChange('up', idx)}> <Icon name ='right arrow'/></Button> 
+            </>}
         </Button.Group>
-        <Dropdown
+        {activeEdits.includes(idx) &&
+        <>
+         <Dropdown
         search
         selection
         id={`instrument_${idx}`}
@@ -917,15 +980,24 @@ function mapGuitarSVGContainers(instruments){
         onChange={onChangeInstrument}
         value={clone[idx]['instrument']}
         />
-        <Dropdown
+        {clone[idx]['type'] === 'guitar' && <Dropdown
         placeholder={instruments['tuning']}
         search
         selection
         id={`tuning_${idx}`}
         onChange={onChangeTuning}
-        options={tuningOptions}
+        options={tuningOptionsGuitar}
         value={instruments['tuning']}
-        />
+        />}
+        {clone[idx]['type'] === 'bass' && <Dropdown
+        placeholder={instruments['tuning']}
+        search
+        selection
+        id={`tuning_${idx}`}
+        onChange={onChangeTuning}
+        options={tuningOptionsBass}
+        value={instruments['tuning']}
+        />}
         <Button.Group>
             <Button compact basic onClick={()=> handleFretChange('down', idx)}> <Icon name ='left arrow'/></Button>
             <Segment>
@@ -933,6 +1005,7 @@ function mapGuitarSVGContainers(instruments){
             </Segment>
             <Button compact basic onClick={()=> handleFretChange('up', idx)} > <Icon name ='right arrow'/></Button>
         </Button.Group>
+        </>}
         <div id={`divGuitar${idx}`}></div>
         </div>
         )
@@ -959,12 +1032,28 @@ function displayByPitchClass(notes, highlights, board){
     
 }
 
+function handleSeeAllPositions(){
+    if (globalPosition.current !== -1){
+        globalPosition.current = -1
+    } else if (globalPosition.current === -1) {
+        globalPosition.current = 0
+    }
+}
 
-//Notes for Arrow forward, etc, Make seperate functions for 'nudge'. If in General Mode, nudge moves you 1 quarter note, if in Focus, nudge moves you to the next note!
+function globalPositionChange(direction){
+    if (direction === 'up'){
+        globalPosition.current++
+    } else if (direction === 'down'){
+        if (globalPosition.current === 0){
+            return
+        } else {
+            globalPosition.current--
+        }
+    }
+}
     return (
         <>
         {mapGuitarSVGContainers(instruments)}
-        <Button compact basic onClick={() => console.log(moduleMarkers)}>test</Button>
         <Button compact basic onClick={() => Tone.Transport.stop()}><Icon name='stop'/></Button>
         <Button compact basic onClick={() => Tone.Transport.pause()}><Icon name='pause'/></Button>
         <Button compact basic onClick={() => playHandler()}><Icon name='play'/> </Button>
@@ -972,14 +1061,9 @@ function displayByPitchClass(notes, highlights, board){
         <Button compact basic onClick={() => handlePreviousNextModulePlay('previous')} ><Icon name='fast backward'/></Button>
         <Button compact basic onClick={() => handlePreviousNextModulePlay('current')} ><Icon name='eject'/></Button>
         <Button compact basic onClick={() => handlePreviousNextModulePlay('next')}><Icon name='fast forward'/></Button>
-        <Button compact basic onClick={() => globalPosition.current--}><Icon name='arrow down'/></Button>
-        <Button compact basic onClick={() => globalPosition.current++}><Icon name='arrow up'/></Button>
-        <Button compact basic onClick={() => globalPosition.current = -1}><Icon name='arrows alternate vertical'/></Button>
-        {/* <Button compact basic onClick={()=>console.log('backstep')}><Icon name='step backward'/></Button>
-        <Button compact basic onClick={()=>console.log('forwardstep')}><Icon name='step forward'/></Button> */}
-        {/* <Button compact basic onClick={() => addRemoveGuitars('add')} >Add Guitar</Button> */}
-        {/* <Button compact basic onClick={() => addRemoveGuitars('remove')} >Remove Guitar</Button> */}
-        {/* <Button compact basic onClick={() => showAll()} >Show All</Button> */}
+        <Button compact basic onClick={() => globalPositionChange('down')}><Icon name='arrow down'/></Button>
+        <Button compact basic onClick={() => globalPositionChange('up')}><Icon name='arrow up'/></Button>
+        <Button compact basic onClick={() => handleSeeAllPositions()}><Icon name='arrows alternate vertical'/></Button>
         </>
     )
 }

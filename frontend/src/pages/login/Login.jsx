@@ -44,14 +44,11 @@ export default function Login({location, history}) {
             onChange={(e) => setPassword(e.target.value)}
           />
 
-          <Button onClick={loginHandler} color='teal' fluid size='large' loading={loading}>
+          {!userInfo && <Button onClick={loginHandler} color='teal' fluid size='large' loading={loading}>
             Login
-          </Button>
-          <Button as={Link} to='/' color='teal' fluid size='large' loading={loading}>
-            Start Noodling
-          </Button>
-          {userInfo && <Button  color='teal'>
-            Success {userInfo.name}
+          </Button>}
+          {userInfo && <Button as={Link} to='/' color='teal' fluid size='large' loading={loading}>
+            Start Noodling {userInfo.name}
           </Button>}
         </Segment>
       </Form>

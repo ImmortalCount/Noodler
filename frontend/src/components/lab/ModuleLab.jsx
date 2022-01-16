@@ -1,18 +1,22 @@
-import React, {useState, useRef} from 'react'
+import React, {useState, useRef, useEffect} from 'react'
 import { Scale, Note, Chord } from '@tonaljs/tonal';
 import DragAndFillCard from '../DragAndDrop/DragAndFillCard'
-import { Menu , Input, Dropdown} from 'semantic-ui-react';
+import { Menu , Input, Dropdown, Button, Form, TextArea} from 'semantic-ui-react';
 import { useSelector, useDispatch } from 'react-redux';
 import { insertData } from '../../store/actions/dataPoolActions';
 import { scaleHandler } from './utils';
 import * as Tone from 'tone';
 import { keySynth, polySynth } from './synths';
 
-export default function ModuleLab() {
+export default function ModuleLab({importedModuleData}) {
     const [name, setName] = useState('Module 1')
     const [keyName, setKeyName] = useState('Key: C')
     const [key, setKey] = useState('C')
     const [options, setOptions] = useState('sharps')
+    const [exportPool, setExportPool] = useState('global')
+    const [inputFocus, setInputFocus] = useState(false)
+    const [description, setDescription] = useState('')
+    const [showDescription, setShowDescription] = useState(false)
     var sequence = useRef('')
 
     const dispatch = useDispatch()
@@ -107,6 +111,13 @@ export default function ModuleLab() {
         { key: 12, text: 'B', value: 'B'}
     ]
 
+    useEffect(() => {
+        if (importedModuleData['name'] !== undefined){
+            setName(importedModuleData['name'])
+            setDescription(importedModuleData['desc'])
+        }
+    
+    }, [importedModuleData])
     //========functions for player
 
     function noteStringHandler(notes){
@@ -222,33 +233,59 @@ for (var o = 0; o < 10; o++){
     
     //====draganddrop functionality
     const dragStartHandler = e => {
-        var obj = {id: e.currentTarget.id, className: e.target.className, message:
-            {
-                name: name,
-                moduleName: name,
-                desc: '',
-                author: 'noodleMan00',
-                authorId: 'noodleManID',
-                dataType: 'module',
-                pool: 'global',
-                data: {
-                chordData: labInfo && labInfo['chordLab'] ? labInfo['chordLab'] : initState['chordLab'],
-                rhythmData: labInfo && labInfo['rhythmLab'] ? labInfo['rhythmLab'] : initState['rhythmLab'],
-                patternData: labInfo && labInfo['patternLab'] ? labInfo['patternLab'] : initState['patternLab'],
-                scaleData: labInfo && labInfo['scaleLab'] ? labInfo['scaleLab'] : initState['scaleLab'],
-                keyData: {
+        let obj;
+        if (e.target.className === 'moduleData'){
+            obj = {id: e.currentTarget.id, className: e.target.className, message:
+                {
+                    name: name,
+                    moduleName: name,
+                    desc: description,
+                    author: '',
+                    authorId: '',
+                    dataType: 'module',
+                    pool: '',
+                    data: {
+                    chordData: labInfo && labInfo['chordLab'] ? labInfo['chordLab'] : initState['chordLab'],
+                    rhythmData: labInfo && labInfo['rhythmLab'] ? labInfo['rhythmLab'] : initState['rhythmLab'],
+                    patternData: labInfo && labInfo['patternLab'] ? labInfo['patternLab'] : initState['patternLab'],
+                    scaleData: labInfo && labInfo['scaleLab'] ? labInfo['scaleLab'] : initState['scaleLab'],
+                    keyData: {
+                        keyName: keyName,
+                        root: key,
+                    },
+                    countData: {
+                        countName: '4',
+                        count: 4
+                    }
+                  }
+                  }, 
+            type: 'moduleLab'}
+        } else if (e.target.className === 'chordData') {
+            obj = {id: e.currentTarget.id, className: e.target.className,
+                message: labInfo && labInfo['chordLab'] ? labInfo['chordLab'] : initState['chordLab'],
+                 type: 'chordLabExport'}
+        } else if (e.target.className === 'scaleData') {
+            obj = {id: e.currentTarget.id, className: e.target.className,
+                message: labInfo && labInfo['scaleLab'] ? labInfo['scaleLab'] : initState['scaleLab'],
+                 type: 'scaleLabExport'}
+        } else if (e.target.className === 'patternData') {
+            obj = {id: e.currentTarget.id, className: e.target.className,
+                message: labInfo && labInfo['patternLab'] ? labInfo['patternLab'] : initState['patternLab'],
+                 type: 'patternLabExport'}
+        } else if (e.target.className === 'rhythmData') {
+            obj = {id: e.currentTarget.id, className: e.target.className,
+                message: labInfo && labInfo['rhythmLab'] ? labInfo['rhythmLab'] : initState['rhythmLab'],
+                 type: 'rhythmLabExport'}
+        } else if (e.target.className === 'keyData') {
+            obj = {id: e.currentTarget.id, className: e.target.className,
+                message: {
                     keyName: keyName,
                     root: key,
                 },
-                countData: {
-                    countName: '4',
-                    count: 4
-                }
-              }
-              }, 
-        type: 'moduleLab'}
+                 type: 'KeyLabExport'}
+        } 
+        
         e.dataTransfer.setData('text', JSON.stringify(obj));
-        console.log(obj['message']['data'])
     };
 
     const dragHandler = e => {
@@ -259,35 +296,7 @@ for (var o = 0; o < 10; o++){
         setKeyName('Key: ' + value)
       }
 
-    //---Export the module
 
-    function handleExport(){
-        const moduleDataPrototype = {
-            name: name,
-            moduleName: name,
-            desc: '',
-            author: 'noodleMan00',
-            authorId: 'noodleManID',
-            dataType: 'module',
-            pool: 'global',
-            data: {
-            chordData: labInfo && labInfo['chordLab'] ? labInfo['chordLab'] : initState['chordLab'],
-            rhythmData: labInfo && labInfo['rhythmLab'] ? labInfo['rhythmLab'] : initState['rhythmLab'],
-            patternData: labInfo && labInfo['patternLab'] ? labInfo['patternLab'] : initState['patternLab'],
-            scaleData: labInfo && labInfo['scaleLab'] ? labInfo['scaleLab'] : initState['scaleLab'],
-            keyData: {
-                keyName: keyName,
-                root: key,
-            },
-            countData: {
-                countName: '4',
-                count: 4
-            }
-          }
-          }
-
-        dispatch(insertData(moduleDataPrototype))
-    }
 
     function qualityOfChordNameParser(chordName){
         if (chordName === undefined || chordName === null || chordName.length === 0){
@@ -338,15 +347,87 @@ for (var o = 0; o < 10; o++){
         return returnValue + returnChord;
     }
 
+        //---Export the module
+
+    function handleExport(){
+        const user = JSON.parse(localStorage.getItem('userInfo'))
+            const moduleDataPrototype = {
+                name: name,
+                moduleName: name,
+                desc: '',
+                author: user['name'],
+                authorId: user['_id'],
+                dataType: 'module',
+                pool: exportPool,
+                data: {
+                chordData: labInfo && labInfo['chordLab'] ? labInfo['chordLab'] : initState['chordLab'],
+                rhythmData: labInfo && labInfo['rhythmLab'] ? labInfo['rhythmLab'] : initState['rhythmLab'],
+                patternData: labInfo && labInfo['patternLab'] ? labInfo['patternLab'] : initState['patternLab'],
+                scaleData: labInfo && labInfo['scaleLab'] ? labInfo['scaleLab'] : initState['scaleLab'],
+                keyData: {
+                    keyName: keyName,
+                    root: key,
+                },
+                countData: {
+                    countName: '4',
+                    count: 4
+                }
+              }
+              }
+    
+            dispatch(insertData(moduleDataPrototype))
+    }
+
+    const exportDropdownOptions = [
+        { key: 'global', text: 'global', value: 'global'},
+        { key: 'local', text: 'local', value: 'local'},
+    ]
+    
+    const handleExportDropdown = (e, {value}) => {
+        const user = JSON.parse(localStorage.getItem('userInfo'))
+        if (value === 'local'){
+            const user = JSON.parse(localStorage.getItem('userInfo'))
+            setExportPool(user['_id'])
+        } else {
+            setExportPool(value)
+        }
+      }
+    
+    const handleDescriptionChange = e => {
+        setDescription(e.target.value)
+      }
+
     return (
         <>
         <Menu>
          <Menu.Item onClick={() => playModule()} >Play</Menu.Item>  
          <Dropdown onChange={onChangeDropdown} options={options === 'sharps' ? dropdownOptionsKeySharp : dropdownOptionsKeyFlat} text = {`Key: ${key}`} simple item/>
-         <Menu.Item onClick={() => handleExport()} > Export </Menu.Item>   
+         <Menu.Item onClick={() => setShowDescription(!showDescription)}> Desc </Menu.Item>
+         <Button.Group>
+        <Button basic disabled={localStorage.getItem('userInfo') === null} onClick={()=> handleExport()}>Export</Button>
+        <Dropdown
+          simple
+          item
+          disabled={localStorage.getItem('userInfo') === null}
+          className='button icon'
+          options={exportDropdownOptions}
+          onChange={handleExportDropdown}
+          trigger={<></>}
+        />
+        </Button.Group>
         </Menu>
         <div>
+        <div onClick={() => setInputFocus(!inputFocus)} style={{display: !inputFocus ? '': 'none' }}>
             {name}
+        </div>
+            <Input type='text'
+            value={name}
+            id={'input_moduleLab'}
+            ref={input => input && input.focus()}
+            onInput={e => setName(e.target.value)}
+            onBlur={() => setInputFocus(false)}
+            style={{display: inputFocus ? '': 'none' }}
+            />
         </div>
         <DragAndFillCard
             onDragStart = {dragStartHandler}
@@ -360,13 +441,9 @@ for (var o = 0; o < 10; o++){
             countName={labInfo && labInfo['rhythmLab'] && labInfo['rhythmLab']['length'] ? labInfo['rhythmLab']['length'] : initState['rhythmLab']['length']}
             keyName={`Key: ${key}`}
             />
-        <div>
-            <h3>Name</h3>
-            <Input type='text'
-            value={name}
-            onInput={e => setName(e.target.value)}
-            />
-        </div>
+        {showDescription && <Form>
+        <TextArea onInput={handleDescriptionChange} id={'desc_chordLab'} ref={input => input && input.focus()} placeholder='Description...' value={description} />
+        </Form>}
         </>
     )
     

@@ -239,7 +239,7 @@ function loadNoteSequenceOntoTimeline(data){
     const handleBPMChange = e => {
         setBpm(e.target.value)
         Tone.Transport.bpm.value = Math.round(e.target.value);
-        setModuleMarkers(moduleMarkerCreator(data))
+        // setModuleMarkers(moduleMarkerCreator(data))
     }
 
     const onChangeBPM = e => {
@@ -280,7 +280,7 @@ function setUpMute(){
         <button onClick={() => handlePreviousNextModulePlay('next')}>Next</button>
         <button onClick={() =>  console.log(moduleMarkerCreator(data), loopLengthCreator(data))}>test</button>
         <div>Bpm: {bpm}</div>
-        <input type="range" min='0' max='999' step='1' defaultValue={bpm} onMouseUp={handleBPMChange} onChange={onChangeBPM}/>
+        <input type="range" min='1' max='999' step='1' defaultValue={bpm} onMouseUp={handleBPMChange} onChange={onChangeBPM}/>
         <div>Mixer</div>
         <div>Channel 1 {audioSettings[0]['name']} Vol: {audioSettings[0]['volume']}</div>
         <input type="range" min='-20' max='15' step='1' defaultValue={0} onMouseUp={e => handleVolumeChange(e.target.value, 0)} onChange={onChangeVolume}/>
