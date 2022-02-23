@@ -30,24 +30,23 @@
 <!-- PROJECT LOGO -->
 <br />
 <div align="center">
-  <a href="https://github.com/https://github.com/ImmortalCount/Noodler">
+  <a href="https://github.com/github_username/repo_name">
     <img src="images/logo.png" alt="Logo" width="80" height="80">
   </a>
 
-<h3 align="center">Noodler</h3>
+<h3 align="center">project_title</h3>
 
   <p align="center">
-    Noodler - create and share pieces of musical DNA.
-    Noodler is a lightweight online DAW created specifically to allow users to share musical ideas. Users can create chords, rhythms, patterns, scales, modules (a 'riff' with musical context) and songs and store them locally or share them with the world. This app is recommended for intermediate guitar players and especially those who have an interest in jazz. 
+    project_description
     <br />
-    <a href="https://github.com/https://github.com/ImmortalCount/Noodler"><strong>Explore the docs »</strong></a>
+    <a href="https://github.com/github_username/repo_name"><strong>Explore the docs »</strong></a>
     <br />
     <br />
-    <a href="noodler.io">View Demo at Noodler.io</a>
+    <a href="https://github.com/github_username/repo_name">View Demo</a>
     ·
-    <a href="https://github.com/https://github.com/ImmortalCount/Noodler/issues">Report Bug</a>
+    <a href="https://github.com/github_username/repo_name/issues">Report Bug</a>
     ·
-    <a href="https://github.com/https://github.com/ImmortalCount/Noodler/issues">Request Feature</a>
+    <a href="https://github.com/github_username/repo_name/issues">Request Feature</a>
   </p>
 </div>
 
@@ -70,25 +69,7 @@
         <li><a href="#installation">Installation</a></li>
       </ul>
     </li>
-    <li><a href="#usage">User Manual</a>
-      <ul>
-        <li>Overview</li>
-        <li>Navbar</li>
-        <li>Instrument Display</li>
-        <li>Command Bar</li>
-        <li>Explorer</li>
-        <li>Lab</li>
-          <ul>
-          <li>Scale Lab</li>
-          <li>Chord Lab</li>
-          <li>Pattern Lab</li>
-          <li>Rhythm Lab</li>
-          <li>Module Lab</li>
-          </ul>
-        <li>Palette</li>
-        <li>Player</li>
-      </ul>
-    </li>
+    <li><a href="#usage">Usage</a></li>
     <li><a href="#roadmap">Roadmap</a></li>
     <li><a href="#contributing">Contributing</a></li>
     <li><a href="#license">License</a></li>
