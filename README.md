@@ -81,7 +81,7 @@
 <!-- ABOUT THE PROJECT -->
 ## About The Project
 
-[<img alt="alt_text" src="Noodler Full.png" />](https://www.noodler.io/)
+[<img alt="alt_text" src="/frontend/public/Noodler Full.png"/>](https://www.noodler.io/)
 
 
 Noodler is an online lightweight DAW for guitarists and bassists to create and share pieces of musical data. 
