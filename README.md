@@ -102,7 +102,7 @@
 <!-- ABOUT THE PROJECT -->
 ## About The Project
 
-[![Product Name Screen Shot][product-screenshot]](https://example.com)
+[![Product Name Screen Shot][Noodler Full.png]](https://www.noodler.io/)
 
 Here's a blank template to get started: To avoid retyping too much info. Do a search and replace with your text editor for the following: `github_username`, `repo_name`, `twitter_handle`, `linkedin_username`, `email_client`, `email`, `project_title`, `project_description`
 
@@ -112,14 +112,7 @@ Here's a blank template to get started: To avoid retyping too much info. Do a se
 
 ### Built With
 
-* [Next.js](https://nextjs.org/)
 * [React.js](https://reactjs.org/)
-* [Vue.js](https://vuejs.org/)
-* [Angular](https://angular.io/)
-* [Svelte](https://svelte.dev/)
-* [Laravel](https://laravel.com)
-* [Bootstrap](https://getbootstrap.com)
-* [JQuery](https://jquery.com)
 
 <p align="right">(<a href="#top">back to top</a>)</p>
 
@@ -162,9 +155,9 @@ This is an example of how to list things you need to use the software and how to
 <!-- USAGE EXAMPLES -->
 ## Usage
 
-Use this space to show useful examples of how a project can be used. Additional screenshots, code examples and demos work well in this space. You may also link to more resources.
+Noodler is built on drag and drop principl
 
-_For more examples, please refer to the [Documentation](https://example.com)_
+_For more examples, please refer to the [Documentation](https://www.noodler.io/docs)_
 
 <p align="right">(<a href="#top">back to top</a>)</p>
 
@@ -214,21 +207,22 @@ Distributed under the MIT License. See `LICENSE.txt` for more information.
 <!-- CONTACT -->
 ## Contact
 
-Your Name - [@twitter_handle](https://twitter.com/twitter_handle) - email@email_client.com
+Devin Turner - [@in_dev_](https://twitter.com/in_dev_) - devnaut@gmail.com
 
-Project Link: [https://github.com/github_username/repo_name](https://github.com/github_username/repo_name)
+Project Link: [https://github.com/ImmortalCount/Noodler](https://github.com/ImmortalCount/Noodler)
 
 <p align="right">(<a href="#top">back to top</a>)</p>
 
 
 
 <!-- ACKNOWLEDGMENTS -->
-## Acknowledgments
+## References and Inspiration
 
-* []()
-* []()
-* []()
-
+* [Hooktheory](https://www.hooktheory.com/)
+* [Impro-Visor](https://github.com/Impro-Visor/Impro-Visor)
+* [Trello](https://trello.com/)
+* [Ian Ring](https://ianring.com/musictheory/)
+* [Pythagoras](https://en.wikipedia.org/wiki/Pythagoras)
 <p align="right">(<a href="#top">back to top</a>)</p>
 
 
