@@ -18,12 +18,12 @@
 *** for contributors-url, forks-url, etc. This is an optional, concise syntax you may use.
 *** https://www.markdownguide.org/basic-syntax/#reference-style-links
 -->
-[![Contributors][contributors-shield]][contributors-url]
+<!-- [![Contributors][contributors-shield]][contributors-url]
 [![Forks][forks-shield]][forks-url]
 [![Stargazers][stars-shield]][stars-url]
-[![Issues][issues-shield]][issues-url]
-[![MIT License][license-shield]][license-url]
-[![LinkedIn][linkedin-shield]][linkedin-url]
+[![Issues][issues-shield]][issues-url] -->
+<!-- [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![LinkedIn][linkedin-shield]][linkedin-url] -->
 
 
 
@@ -31,7 +31,7 @@
 <br />
 <div align="center">
   <a href="https://github.com/https://github.com/ImmortalCount/Noodler">
-    <img src="images/logo.png" alt="Logo" width="80" height="80">
+    <img src="/frontend/public/Notes.svg" alt="Logo" width="80" height="80">
   </a>
 
 <h3 align="center">Noodler</h3>
@@ -40,10 +40,10 @@
     Noodler - create and share pieces of musical DNA.
     Noodler is a lightweight online DAW created specifically to allow users to share musical ideas. Users can create chords, rhythms, patterns, scales, modules (a 'riff' with musical context) and songs and store them locally or share them with the world. This app is recommended for intermediate guitar players and especially those who have an interest in jazz. 
     <br />
-    <a href="https://github.com/https://github.com/ImmortalCount/Noodler"><strong>Explore the docs »</strong></a>
+    <a href="https://noodler.io/docs"><strong>Explore the docs »</strong></a>
     <br />
     <br />
-    <a href="noodler.io">View Demo at Noodler.io</a>
+    <a href="https://noodler.io">Play at Noodler.io</a>
     ·
     <a href="https://github.com/https://github.com/ImmortalCount/Noodler/issues">Report Bug</a>
     ·
@@ -65,35 +65,14 @@
     </li>
     <li>
       <a href="#getting-started">Getting Started</a>
-      <ul>
-        <li><a href="#prerequisites">Prerequisites</a></li>
-        <li><a href="#installation">Installation</a></li>
-      </ul>
     </li>
-    <li><a href="#usage">User Manual</a>
-      <ul>
-        <li>Overview</li>
-        <li>Navbar</li>
-        <li>Instrument Display</li>
-        <li>Command Bar</li>
-        <li>Explorer</li>
-        <li>Lab</li>
-          <ul>
-          <li>Scale Lab</li>
-          <li>Chord Lab</li>
-          <li>Pattern Lab</li>
-          <li>Rhythm Lab</li>
-          <li>Module Lab</li>
-          </ul>
-        <li>Palette</li>
-        <li>Player</li>
-      </ul>
+    <li><a href="#usage">Usage</a>
     </li>
     <li><a href="#roadmap">Roadmap</a></li>
     <li><a href="#contributing">Contributing</a></li>
     <li><a href="#license">License</a></li>
     <li><a href="#contact">Contact</a></li>
-    <li><a href="#acknowledgments">Acknowledgments</a></li>
+    <li><a href="#inspiration">Inspiration</a></li>
   </ol>
 </details>
 
@@ -102,9 +81,10 @@
 <!-- ABOUT THE PROJECT -->
 ## About The Project
 
-![Noodling a monoline.](Noodler Full.png "Noodler")
+[<img alt="alt_text" src="Noodler Full.png" />](https://www.noodler.io/)
 
-Here's a blank template to get started: To avoid retyping too much info. Do a search and replace with your text editor for the following: `github_username`, `repo_name`, `twitter_handle`, `linkedin_username`, `email_client`, `email`, `project_title`, `project_description`
+
+Noodler is an online lightweight DAW for guitarists and bassists to create and share pieces of musical data. 
 
 <p align="right">(<a href="#top">back to top</a>)</p>
 
@@ -113,6 +93,12 @@ Here's a blank template to get started: To avoid retyping too much info. Do a se
 ### Built With
 
 * [React.js](https://reactjs.org/)
+* [Express.js](https://github.com/expressjs/express)
+* [MongoDB](https://github.com/mongodb/mongo)
+* [Redux](https://github.com/reduxjs/redux)
+* [Tone.js](https://github.com/Tonejs/Tone.js/)
+* [Tonal.js](https://github.com/tonaljs/tonal)
+* [Semantic-UI](https://github.com/Semantic-Org/Semantic-UI-React/)
 
 <p align="right">(<a href="#top">back to top</a>)</p>
 
@@ -121,31 +107,18 @@ Here's a blank template to get started: To avoid retyping too much info. Do a se
 <!-- GETTING STARTED -->
 ## Getting Started
 
-This is an example of how you may give instructions on setting up your project locally.
-To get a local copy up and running follow these simple example steps.
-
-### Prerequisites
-
-This is an example of how to list things you need to use the software and how to install them.
-* npm
-  ```sh
-  npm install npm@latest -g
-  ```
-
 ### Installation
-
-1. Get a free API Key at [https://example.com](https://example.com)
-2. Clone the repo
+1. Clone the repo
    ```sh
    git clone https://github.com/github_username/repo_name.git
    ```
-3. Install NPM packages
+2. Install NPM packages
    ```sh
    npm install
    ```
-4. Enter your API in `config.js`
-   ```js
-   const API_KEY = 'ENTER YOUR API';
+3. Run the app
+   ```sh
+   npm start
    ```
 
 <p align="right">(<a href="#top">back to top</a>)</p>
@@ -155,9 +128,9 @@ This is an example of how to list things you need to use the software and how to
 <!-- USAGE EXAMPLES -->
 ## Usage
 
-Noodler is built on drag and drop principl
+Noodler is built on drag and drop principles. Look up a rhythm, pattern, scale, etc in the Explorer and then drag that piece of musical data into the Lab to experiment on it, or the player to play it. Change the names of items by clicking on them. Save things in the lab or player by first logging in, and then clicking export next to the song/rhythm/etc that you are trying to export. Just poke around and have fun, you'll figure it out!
 
-_For more examples, please refer to the [Documentation](https://www.noodler.io/docs)_
+_For a comprehensive guide on how to use Noodler, check out the [Documentation](https://www.noodler.io/docs)_
 
 <p align="right">(<a href="#top">back to top</a>)</p>
 
@@ -166,10 +139,11 @@ _For more examples, please refer to the [Documentation](https://www.noodler.io/d
 <!-- ROADMAP -->
 ## Roadmap
 
-- [ ] Feature 1
-- [ ] Feature 2
-- [ ] Feature 3
-    - [ ] Nested Feature
+- [ ] Create custom 'pools' where you can invite friends and share your data
+- [ ] Export Tabs
+- [ ] Export Midi
+- [ ] Web Midi Input
+
 
 See the [open issues](https://github.com/github_username/repo_name/issues) for a full list of proposed features (and known issues).
 
@@ -216,7 +190,7 @@ Project Link: [https://github.com/ImmortalCount/Noodler](https://github.com/Immo
 
 
 <!-- ACKNOWLEDGMENTS -->
-## References and Inspiration
+## Inspiration
 
 * [Hooktheory](https://www.hooktheory.com/)
 * [Impro-Visor](https://github.com/Impro-Visor/Impro-Visor)
