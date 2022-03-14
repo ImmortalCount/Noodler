@@ -1,6 +1,6 @@
 import React, {useState, useEffect} from 'react'
 import {Button, Form, Grid, Header, Message, Segment} from 'semantic-ui-react'
-import {Link} from 'react-router-dom'
+import {Link, useNavigate} from 'react-router-dom'
 import {useDispatch, useSelector} from 'react-redux'
 import {login} from '../../store/actions/userActions'
 
@@ -10,6 +10,8 @@ export default function Login({location, history}) {
 
     const dispatch = useDispatch()
 
+    const navigate = useNavigate()
+
     const userLogin = useSelector((state) => state.userLogin)
     const { loading, error, userInfo } = userLogin
 
@@ -17,6 +19,12 @@ export default function Login({location, history}) {
       e.preventDefault()
       dispatch(login(email, password))
     }
+
+    useEffect(() => {
+      if (userInfo){
+        navigate('/')
+      }
+    }, [navigate, userInfo])
 
     return (
         <Grid textAlign='center' style={{ height: '100vh' }} verticalAlign='middle'>

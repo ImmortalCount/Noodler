@@ -19,7 +19,7 @@ export default function Player ({masterInstrumentArray}) {
     var markerValue = useRef([])
     const [currentlyPlaying, setCurrentlyPlaying] = useState([])
     var [activeButton, setActiveButton] = useState('swap')
-    const [name, setName] = useState('Song 1')
+    const [name, setName] = useState('Song: Noodler Theme')
     const [exportPool, setExportPool] = useState('global')
     const [edit, setEdit] = useState(false)
     const [songOptions, setSongOptions] = useState(false)

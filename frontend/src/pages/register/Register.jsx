@@ -2,7 +2,7 @@ import React, {useState, useEffect} from 'react'
 import { register } from '../../store/actions/userActions'
 import { useDispatch, useSelector } from 'react-redux'
 import {Button, Form, Grid, Header, Message, Segment} from 'semantic-ui-react'
-import {Link} from 'react-router-dom'
+import {Link, useNavigate} from 'react-router-dom'
 
 export default function Register({history, location}) {
     const [name, setName] = useState('')
@@ -13,6 +13,8 @@ export default function Register({history, location}) {
     const [success, setSuccess] = useState(false)
 
     const dispatch = useDispatch()
+
+    const navigate = useNavigate()
 
     const userRegister = useSelector((state) => state.userRegister)
     const {loading, error, userInfo } = userRegister
@@ -28,11 +30,11 @@ export default function Register({history, location}) {
         }
     }
 
-    // useEffect(() => {
-    //   if (userInfo) {
-    //     history.push(redirect)
-    //   }
-    // }, [history, userInfo, redirect])
+    useEffect(() => {
+      if (userInfo){
+        navigate('/login')
+      }
+    }, [navigate, userInfo])
 
     return (
         <Grid textAlign='center' style={{ height: '100vh' }} verticalAlign='middle'>

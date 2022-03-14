@@ -409,8 +409,8 @@ export const initialData4 = [
 
 export const initialDataType2 = [
     {   
-        name: 'module 1',
-        moduleName: 'module 1',
+        name: 'module A',
+        moduleName: 'module A',
         desc: '',
         author: '',
         authorId: '',
@@ -422,15 +422,16 @@ export const initialDataType2 = [
                 chord: ['D3', 'F3', 'A3'],
             },
             rhythmData: {
-                rhythmName: 'Hard Swing',
-                rhythm: [['O', 'X', 'O'], ['O', 'X', 'O'], ['O', 'X', 'O'], ['O', 'X', 'O']],
+                rhythmName: 'Str8 8s',
+                rhythm: [['O', 'O'], ['O', 'O'], ['O', 'O'], ['O', 'O']],
                 speed: 1,
                 length: 4,
                 notes: 8
             },
             patternData: {
-                patternName: 'Pattern: normal variation',
-                pattern: [1, 4, 1, 8, 2, 12, 8, 7],
+                name: 'Arp up - Scale Down',
+                patternName: 'Arp up - Scale Down',
+                pattern: [0, 2, 4, 7, 6, 5, 4, 3],
                 position: [],
             },
             scaleData: {
@@ -450,8 +451,8 @@ export const initialDataType2 = [
         }
     },
     {   
-        name: 'module 2',
-        moduleName: 'module 2',
+        name: 'module B',
+        moduleName: 'module B',
         desc: '',
         author: '',
         authorId: '',
@@ -464,17 +465,16 @@ export const initialDataType2 = [
                 chord: ['G3', 'B3', 'D4'],
             },
             rhythmData: {
-                rhythmName: 'Hard Swing 5',
-                name: 'Hard Swing 5',
-                rhythm: [['O', 'X', 'X'], ['O', 'X', 'X'], ['O', 'X', 'O'], ['O', 'X', 'O'], ['O', 'X', 'O']],
+                rhythmName: 'Str8 8s',
+                rhythm: [['O', 'O'], ['O', 'O'], ['O', 'O'], ['O', 'O']],
                 speed: 1,
-                length: 5,
+                length: 4,
                 notes: 8
             },
             patternData: {
-                patternName: 'Pattern: normal variation',
-                name: 'Pattern: normal variation',
-                pattern: [1, 4, 1, 8, 2, 12, 8, 7],
+                name: 'Arp up - Scale Down',
+                patternName: 'Arp up - Scale Down',
+                pattern: [0, 2, 4, 7, 6, 5, 4, 3],
                 position: [],
             },
             scaleData: {
@@ -496,8 +496,8 @@ export const initialDataType2 = [
         }
     },
     {
-        name: 'module 3',
-        moduleName: 'module 3',
+        name: 'module C',
+        moduleName: 'module C',
         desc: '',
         author: '',
         authorId: '',
@@ -510,17 +510,16 @@ export const initialDataType2 = [
                 chord: ['C3', 'E3', 'G3'],
             },
             rhythmData: {
-                rhythmName: 'Hard Swing',
-                name: 'Hard Swing',
-                    rhythm: [['O', 'X', 'O'], ['O', 'X', 'O'], ['O', 'X', 'O'], ['O', 'X', 'O']],
-                    speed: 1,
-                    length: 4,
-                    notes: 8
+                rhythmName: 'Str8 8s',
+                rhythm: [['O', 'O'], ['O', 'O'], ['O', 'O'], ['O', 'O']],
+                speed: 1,
+                length: 4,
+                notes: 8
             },
             patternData: {
-                patternName: 'Pattern: normal variation',
-                name: 'Pattern: normal variation',
-                pattern: [1, 4, 1, 8, 2, 12, 8, 7],
+                name: 'Arp up - Scale Down',
+                patternName: 'Arp up - Scale Down',
+                pattern: [0, 2, 4, 7, 6, 5, 4, 3],
                 position: [],
             },
             scaleData: {
@@ -543,8 +542,8 @@ export const initialDataType2 = [
         }  
     },
     {
-        name: 'module 4',
-        moduleName: 'module 4',
+        name: 'module D',
+        moduleName: 'module D',
         desc: '',
         author: '',
         authorId: '',
@@ -557,17 +556,16 @@ export const initialDataType2 = [
                 chord: ['C3', 'E3', 'G3'],
             },
             rhythmData: {
-                rhythmName: 'Hard Swing',
-                name: 'Hard Swing',
-                    rhythm: [['O', 'X', 'O'], ['O', 'X', 'O'], ['O', 'X', 'O'], ['O', 'X', 'O']],
-                    speed: 1,
-                    length: 4,
-                    notes: 8
+                rhythmName: 'Str8 8s',
+                rhythm: [['O', 'O'], ['O', 'O'], ['O', 'O'], ['O', 'O']],
+                speed: 1,
+                length: 4,
+                notes: 8
             },
             patternData: {
-                patternName: 'Pattern: normal variation',
-                name: 'Pattern: normal variation',
-                pattern: [1, 4, 1, 8, 2, 12, 8, 7],
+                name: 'Arp up - Scale Down',
+                patternName: 'Arp up - Scale Down',
+                pattern: [0, 2, 4, 7, 6, 5, 4, 3],
                 position: [],
             },
             scaleData: {
