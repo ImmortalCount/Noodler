@@ -4,16 +4,15 @@ import {Link, useNavigate} from 'react-router-dom'
 import {useDispatch, useSelector} from 'react-redux'
 import {login} from '../../store/actions/userActions'
 
-export default function Login({location, history}) {
+export default function Login() {
     const [email, setEmail] = useState('')
     const [password, setPassword] = useState('')
 
     const dispatch = useDispatch()
-
     const navigate = useNavigate()
 
     const userLogin = useSelector((state) => state.userLogin)
-    const { loading, error, userInfo } = userLogin
+    const { loading, userInfo } = userLogin
 
     const loginHandler = (e) => {
       e.preventDefault()
@@ -21,7 +20,7 @@ export default function Login({location, history}) {
     }
 
     useEffect(() => {
-      if (userInfo){
+      if (userInfo && userInfo.name){
         navigate('/')
       }
     }, [navigate, userInfo])
@@ -30,7 +29,7 @@ export default function Login({location, history}) {
         <Grid textAlign='center' style={{ height: '100vh' }} verticalAlign='middle'>
     <Grid.Column style={{ maxWidth: 450 }}>
       <Header as='h2' color='teal' textAlign='center'>
-        Log-in to your account
+      {userInfo && userInfo.message ? userInfo.message : 'Log-in to your account'}
       </Header>
       <Form size='large'>
         <Segment stacked>
@@ -51,13 +50,9 @@ export default function Login({location, history}) {
             value={password}
             onChange={(e) => setPassword(e.target.value)}
           />
-
-          {!userInfo && <Button onClick={loginHandler} color='teal' fluid size='large' loading={loading}>
+          <Button onClick={loginHandler} color='teal' fluid size='large' loading={loading}>
             Login
-          </Button>}
-          {userInfo && <Button as={Link} to='/' color='teal' fluid size='large' loading={loading}>
-            Start Noodling {userInfo.name}
-          </Button>}
+          </Button>
         </Segment>
       </Form>
       <Message>

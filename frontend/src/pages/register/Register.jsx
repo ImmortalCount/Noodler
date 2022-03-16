@@ -9,30 +9,22 @@ export default function Register({history, location}) {
     const [email, setEmail] = useState('')
     const [password, setPassword] = useState('')
     const [confirmPassword, setConfirmPassword] = useState('')
-    const [message, setMessage] = useState('Register')
-    const [success, setSuccess] = useState(false)
 
     const dispatch = useDispatch()
 
     const navigate = useNavigate()
 
     const userRegister = useSelector((state) => state.userRegister)
-    const {loading, error, userInfo } = userRegister
+    const {loading, userInfo } = userRegister
 
     const submitHandler = (e) => {
         e.preventDefault()
-        if (password !== confirmPassword){
-            setMessage('Passwords do not match')
-        } else {
-            setMessage('Success!')
-            dispatch(register(name, email, password))
-            setSuccess(true)
-        }
+        dispatch(register(name, email, password, confirmPassword))
     }
 
     useEffect(() => {
-      if (userInfo){
-        navigate('/login')
+      if (userInfo && userInfo.registered){
+        setTimeout(() => navigate('/login'), 1000);
       }
     }, [navigate, userInfo])
 
@@ -40,7 +32,7 @@ export default function Register({history, location}) {
         <Grid textAlign='center' style={{ height: '100vh' }} verticalAlign='middle'>
         <Grid.Column style={{ maxWidth: 450 }}>
           <Header as='h2' color='teal' textAlign='center'>
-            {message}
+          {userInfo && userInfo.message ? userInfo.message : 'Register'}
           </Header>
           <Form size='large'>
             <Segment stacked>
@@ -78,12 +70,9 @@ export default function Register({history, location}) {
                 value={confirmPassword}
                 onChange={(e) => setConfirmPassword(e.target.value)}
               />
-              { !success && <Button onClick={submitHandler} color='teal' fluid size='large'>
+             <Button onClick={submitHandler} color='teal' fluid size='large' loading={loading}>
                 Register
-              </Button>}
-              { success && <Button as={Link} to= '/login' color='teal' fluid size='large'>
-                Sign in
-              </Button>}
+              </Button>
             </Segment>
           </Form>
           <Message>

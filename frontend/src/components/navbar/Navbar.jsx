@@ -1,12 +1,11 @@
-import React, {useState} from 'react'
-import { Dropdown, Menu, Select } from 'semantic-ui-react'
+import React from 'react'
+import { Dropdown, Menu} from 'semantic-ui-react'
 import { Link } from 'react-router-dom';
 import { useSelector, useDispatch } from 'react-redux';
 import {logout} from '../../store/actions/userActions.js'
 
 export default function Navbar() {
     var activeItem;
-    var OnClickHandler;
 
     const userLogin = useSelector((state) => state.userLogin)
     const { userInfo } = userLogin
@@ -19,7 +18,9 @@ export default function Navbar() {
     ]
 
     const logoutHandler = () => {
-        dispatch(logout())
+        dispatch(logout());
+        // eslint-disable-next-line no-restricted-globals
+        location.reload();
     }
 
 

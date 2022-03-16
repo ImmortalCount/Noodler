@@ -101,7 +101,7 @@ const onDragStart = (e) => {
             <Menu>
             <Input type='text' placeholder='Search...' icon='search' onChange={(e, {value}) => setKeyword(value)} />
             {localStorage.getItem('userInfo') !== null  && <Select compact options={scopeOptions} onChange={handleScopeOptions} defaultValue='global'/>}
-            {localStorage.getItem('userInfo') === null && <Select compact options={restrictedScopeOptions} onChange={(e, {value}) => setSubData(value)} defaultValue='pattern'/>}
+            {localStorage.getItem('userInfo') === null && <Select compact options={restrictedScopeOptions} onChange={(e, {value}) => setSubData(value)} defaultValue='global'/>}
             <Select compact options={dataSubTypeOptions} onChange={(e, {value}) => setSubData(value)} defaultValue='pattern'/>
             </Menu>
         <Grid>
