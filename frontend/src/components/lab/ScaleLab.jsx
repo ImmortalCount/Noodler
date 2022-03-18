@@ -5,6 +5,7 @@ import * as Tone from 'tone';
 import { useDispatch, useSelector } from 'react-redux';
 import { setLabData } from '../../store/actions/labDataActions';
 import { scaleHandler } from './utils';
+import ExportModal from '../modal/ExportModal';
 
 import '../../../public/Do_Mayor_armadura.svg'
 import { keySynth } from './synths';
@@ -26,6 +27,7 @@ export default function ScaleLab({importedScaleData, masterInstrumentArray}) {
     const [inputFocus, setInputFocus] = useState(false)
     const [displayName, setDisplayName] = useState('C major')
     const isMuted = false;
+    const user = JSON.parse(localStorage.getItem('userInfo'))
 
     function setInit(){
       setNotes(["C", "D", "E", "F", "G", "A", "B"])
@@ -617,20 +619,35 @@ function handleExport(){
   dispatch(insertData(scaleDataPrototype))
 }
 
-const exportDropdownOptions = [
-  { key: 'global', text: 'global', value: 'global'},
-  { key: 'local', text: 'local', value: 'local'},
-]
-
-const handleExportDropdown = (e, {value}) => {
-  const user = JSON.parse(localStorage.getItem('userInfo'))
-  if (value === 'local'){
-      const user = JSON.parse(localStorage.getItem('userInfo'))
-      setExportPool(user['_id'])
-  } else {
-      setExportPool(value)
-  }
+const exportObj = {
+      name: rootNote + ' ' + scaleName,
+      scaleName: rootNote + ' ' + scaleName,
+      binary: scaleDataBinary,
+      desc: '',
+      number: scaleNumber,
+      scale: notes,
+      type: 'normal',
+      length: notes.length,
+      dataType: 'scale',
+      author: user['name'],
+      authorId: user['_id'],
+      pool: exportPool,
 }
+
+// const exportDropdownOptions = [
+//   { key: 'global', text: 'global', value: 'global'},
+//   { key: 'local', text: 'local', value: 'local'},
+// ]
+
+// const handleExportDropdown = (e, {value}) => {
+//   const user = JSON.parse(localStorage.getItem('userInfo'))
+//   if (value === 'local'){
+//       const user = JSON.parse(localStorage.getItem('userInfo'))
+//       setExportPool(user['_id'])
+//   } else {
+//       setExportPool(value)
+//   }
+// }
 
 const handleScaleNameChange = e => {
   setScaleName(e.target.value)
@@ -736,8 +753,11 @@ const handleScaleDescriptionChange = e => {
         </Dropdown>
         </Menu.Item> */}
         <Button.Group>
-        <Button basic disabled={localStorage.getItem('userInfo') === null} onClick={()=> handleExport()}>Export</Button>
-        <Dropdown
+        {/* <Button basic disabled={localStorage.getItem('userInfo') === null} onClick={()=> handleExport()}>Export</Button> */}
+        <ExportModal
+        dataType={'Scale'}
+        exportObj={exportObj}/>
+        {/* <Dropdown
           simple
           item
           disabled={localStorage.getItem('userInfo') === null}
@@ -745,7 +765,7 @@ const handleScaleDescriptionChange = e => {
           options={exportDropdownOptions}
           onChange={handleExportDropdown}
           trigger={<></>}
-        />
+        /> */}
         </Button.Group>
       </Menu>
         <div>

@@ -40,3 +40,26 @@ import {
                 return state
         }
     }
+
+    export const dataInsertReducer =  (state = {}, action) => {
+        switch (action.type){
+            case DATA_POOL_INSERT_REQUEST:
+                return {
+                    loading: true,
+                }
+            case DATA_POOL_INSERT_SUCCESS:
+                return {
+                    loading: false,
+                    dataInsert: action.payload,
+                    // dataInsert: {message: 'WHAT IS GOING ON?'}
+                }
+            case DATA_POOL_INSERT_FAIL:
+                return {
+                    loading: false,
+                    error: action.payload,
+                }
+            default: 
+                return state
+        }
+    }
+

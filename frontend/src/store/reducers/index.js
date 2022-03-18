@@ -1,5 +1,5 @@
 import { combineReducers } from "redux";
-import { dataListReducer } from "./dataPoolReducer.js";
+import { dataInsertReducer, dataListReducer } from "./dataPoolReducer.js";
 import moduleDataReducer from './moduleDataReducer.js';
 import scaleDataReducer from './scaleDataReducer.js';
 import { userLoginReducer, userRegisterReducer } from "./userReducers.js";
@@ -18,6 +18,7 @@ const reducers = combineReducers({
     songData: songDataReducer,
     songImport: songImportDataReducer,
     instrumentNames: instrumentNameReducer,
+    dataInsert: dataInsertReducer
 })
 
 export default reducers

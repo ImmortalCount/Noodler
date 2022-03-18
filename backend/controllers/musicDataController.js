@@ -3,8 +3,8 @@ import musicDataActions from "../actions/musicDataActions.js";
 export default class musicDataController{
     static async addMusicModule(req, res, next){
         try{
-            await musicDataActions.addMusicData(req.body)
-            res.status(201).json({message: 'music_data_created'})
+            const reply = await musicDataActions.addMusicData(req.body)
+            res.status(201).json(reply)
         } catch (e) {
             res.status(500).json({error: e.message})
         }

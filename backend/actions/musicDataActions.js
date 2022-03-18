@@ -1,4 +1,3 @@
-
 let music_data
 
 export default class musicDataActions {
@@ -15,7 +14,19 @@ export default class musicDataActions {
 
   static async addMusicData(dataObject) {
     try {
-      return await music_data.insertOne(dataObject)
+      const dataName = dataObject.name
+      const authorId = dataObject.authorId
+      const identicalItem = await music_data.findOne(
+        {authorId: authorId, name: dataName}
+      )
+      const isUnique = (identicalItem === null)
+      if (!isUnique){
+        return {message: `You have already uploaded ${dataName}`}
+      } else {
+        await music_data.insertOne(dataObject)
+        return {message: `${dataName} successfully uploaded`, success: true}
+      }
+
     } catch (e) {
       console.error(`Unable to add music_data: ${e}`)
       return { error: e }
