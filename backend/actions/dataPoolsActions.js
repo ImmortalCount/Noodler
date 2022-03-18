@@ -49,4 +49,31 @@ export default class dataPoolsActions {
     }
   }
 
+  static async getDataPools(dataRequest){
+    const userID = dataRequest.userID
+    let query = {};
+
+      // if (dataRequest.pool !== 'all'){
+      //   query["pool"] = dataRequest.pool
+      // } else {
+      //   query['$or'] = [{'pool': 'global'},{'pool': userID}]
+      // }
+
+      // if (dataRequest.dataType !== 'all'){
+      //   query["dataType"] = dataRequest.dataType
+      // }
+      // if (dataRequest.keyword !== undefined && dataRequest.keyword.length > 0){
+      //   query["$text"] = {$search: dataRequest.keyword}
+      // }
+      
+    try {
+      const dataResults = await music_data.find(query).toArray()
+      return dataResults
+    } catch (e){
+      console.error(`Unable to return reviews: ${e}`)
+      return { error: e }
+    }
+
+  }
+
 }

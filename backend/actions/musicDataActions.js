@@ -50,23 +50,35 @@ export default class musicDataActions {
   }
 
   static async getMusicData(dataRequest){
-    let query;
-    if (dataRequest.keyword !== undefined && dataRequest.keyword.length > 0){
-      query = {
-        "pool": dataRequest.pool,
-        "dataType": dataRequest.dataType, 
-         $text: {$search: dataRequest.keyword}
-        }
-    } else {
-      query = {
-        "pool": dataRequest.pool,
-        "dataType": dataRequest.dataType, 
-        }
+    const userID = dataRequest.userID
+    const countPerPage = 10;
+    const pageNumber = dataRequest.pageNumber;
+    const totalNumberOfPages = (count) => {
+      return Math.max(Math.floor(count/countPerPage), 1)
     }
-    
+    // const totalPages = totalNumberOfPages(count)
+    let query = {};
+
+      if (dataRequest.pool !== 'all'){
+        query["pool"] = dataRequest.pool
+      } else {
+        query['$or'] = [{'pool': 'global'},{'pool': userID}]
+      }
+
+      if (dataRequest.dataType !== 'all'){
+        query["dataType"] = dataRequest.dataType
+      }
+      if (dataRequest.keyword !== undefined && dataRequest.keyword.length > 0){
+        query["$text"] = {$search: dataRequest.keyword}
+      }
+      
     try {
-      const dataResults = await music_data.find(query).toArray()
-      return dataResults
+      const dataResults = await music_data.find(query).skip(countPerPage * pageNumber).limit(10).toArray()
+      const count = await music_data.find(query).count();
+     const returnObj = {}
+     returnObj['dataResults'] = dataResults
+     returnObj['numberOfPages'] = totalNumberOfPages(count)
+      return returnObj
     } catch (e){
       console.error(`Unable to return reviews: ${e}`)
       return { error: e }

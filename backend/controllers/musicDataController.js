@@ -14,6 +14,8 @@ export default class musicDataController{
             dataRequest.dataType = req.query.dataType
             dataRequest.keyword = req.query.keyword
             dataRequest.pool = req.query.pool
+            dataRequest.userID = req.query.userID
+            dataRequest.pageNumber = req.query.pageNumber
         try {
             const list = await musicDataActions.getMusicData(dataRequest)
             res.status(201).json(list)

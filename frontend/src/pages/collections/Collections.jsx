@@ -1,23 +1,21 @@
-import React, {useState, useEffect, useRef} from 'react'
-import {List, Select, Input, Icon, Grid, Button, Menu, ButtonGroup} from 'semantic-ui-react'
+import React, {useState, useEffect} from 'react'
+import {List, Select, Input, Icon, Grid, Button, Menu, Header} from 'semantic-ui-react'
 import { useDispatch, useSelector} from 'react-redux';
 import { getMusicData } from '../../store/actions/dataPoolActions';
 
 
-export default function Explorer() {
+export default function Collections() {
   const [scope, setScope] = useState('global')
-  const [subData, setSubData] = useState('all')
+  const [data, setData] = useState('component')
+  const [subData, setSubData] = useState('pattern')
   const [keyword, setKeyword] = useState('')
+  const [local, setLocal] = useState(false)
   const [userID, setUserID] = useState(null)
-  const [pageNumber, setPageNumber] = useState(0)
 
   const dispatch = useDispatch();
 
   const dataList  = useSelector(state => state.dataList)
   const {loading, error, displayData} = dataList
-
-  const lastPageTotalFromQuery = useRef(1)
-  const pageTotalFromQuery = displayData?.data.numberOfPages
 
 useEffect(() => {
     if (localStorage.getItem('userInfo') !== null){
@@ -27,22 +25,12 @@ useEffect(() => {
 }, [])
 
 useEffect(() => {
-    setPageNumber(0)
-}, [keyword, scope, userID, subData])
-
-useEffect(() => {
     let queryObject = {}
     queryObject["pool"] = scope
     queryObject["dataType"] = subData
     queryObject["keyword"] = keyword
-    queryObject["userID"] = userID
-    queryObject["pageNumber"] = pageNumber
     dispatch(getMusicData(queryObject))
-    // ===Check display page
-    if (pageTotalFromQuery !== lastPageTotalFromQuery.current){
-        lastPageTotalFromQuery.current = pageTotalFromQuery
-    }
-}, [scope, subData, keyword, dispatch, userID, pageNumber])
+}, [scope, subData, keyword, dispatch])
 
     //========================================================
 
@@ -57,11 +45,12 @@ const onDragStart = (e) => {
         type: displayData.data[e.currentTarget.id.split('_')[0]].dataType + 'ExplorerExport'
     }
         e.dataTransfer.setData('text', JSON.stringify(obj));
+        console.log(obj)
 }
     const scopeOptions = [
     { key: 'all', text: 'All', value: 'all' },
     { key: 'global', text: 'Global', value: 'global' },
-    { key: 'local', text: 'Local', value: userID },
+    { key: 'local', text: 'Local', value: 'local' },
     ]
 
     const restrictedScopeOptions = [
@@ -105,56 +94,36 @@ const onDragStart = (e) => {
     }
 
     const handleScopeOptions = (e, {value}) => {
+        setLocal(false)
         if (value === 'local'){
             setScope(userID)
+            setLocal(true)
         } else {
             setScope(value)
         }
     }
 
-    const handleNavigatePreviousPage = () =>{
-        if (pageNumber <= 0){
-            return
-        } else {
-            setPageNumber(pageNumber - 1)
-        }
-        }
-    const handleNavigateNextPage = () => {
-        if (pageNumber + 1 > pageTotalFromQuery){
-            return
-        } else {
-            setPageNumber(pageNumber + 1)
-        }
-    }
-    
-
     return (
         <div>
+            <Header>Welcome to Collections</Header>
             <Menu>
             <Input type='text' placeholder='Search...' icon='search' onChange={(e, {value}) => setKeyword(value)} />
             {userID !== null  && <Select compact options={scopeOptions} onChange={handleScopeOptions} defaultValue='global'/>}
             {userID === null && <Select compact options={restrictedScopeOptions} onChange={(e, {value}) => setSubData(value)} defaultValue='global'/>}
-            <Select compact options={dataSubTypeOptions} onChange={(e, {value}) => setSubData(value)} defaultValue='all'/>
+            <Select compact options={dataSubTypeOptions} onChange={(e, {value}) => setSubData(value)} defaultValue='pattern'/>
             </Menu>
         <Grid>
-            <Grid.Column width={15}>
-            <pre style={{ overflowX: 'auto' , margin:0}}>
-            <div>{pageNumber + 1} / {pageTotalFromQuery ? pageTotalFromQuery : lastPageTotalFromQuery.current}</div>
-            <ButtonGroup style={{margin:0}}>
-                <Button disabled={pageNumber === 0} onClick={() => setPageNumber(0)}> First </Button>
-                <Button disabled={pageNumber === 0} onClick={handleNavigatePreviousPage}> Prev </Button>
-                <Button disabled={pageNumber + 1 >= pageTotalFromQuery} onClick={handleNavigateNextPage}> Next</Button>
-                <Button disabled={pageNumber + 1 >= pageTotalFromQuery} onClick={() => setPageNumber(4)}> Last </Button>
-            </ButtonGroup>
-            {loading && <h3>Loading...</h3>}
+            <Grid.Column width={10}>
+            <pre style={{ overflowX: 'auto' }}>
+            {loading && <h3>Loading</h3>}
             {error && <h3>Error</h3>}
             <List>
-                {displayData?.data.dataResults.map((displayData, idx) => (
-                <List.Item id={idx + '_explorer'} key={idx + '_explorer'} className={'explorer'} style={{ marginTop: '5px', marginBottom: '5px', maxWidth: '300px',backgroundColor: returnColor(displayData.dataType)}}draggable onDrag={onDrag} onDragStart ={onDragStart}>
+                {displayData && displayData.data.map((displayData, idx) => (
+                <List.Item id={idx + '_explorer'} key={idx + '_explorer'} className={'explorer'} style={{backgroundColor: returnColor(displayData.dataType)}}draggable onDrag={onDrag} onDragStart ={onDragStart}>
                 <List.Content>
                 <List.Header > <Icon name='play' size='small'/>{displayData.name}</List.Header>
                 <List.Description >type: {displayData.dataType}</List.Description>
-                <List.Description >pool: {displayData.pool === userID ? 'local' : displayData.pool}</List.Description>
+                <List.Description >pool: {local ? 'local' : displayData.pool}</List.Description>
                 <List.Description >author: {displayData.author}</List.Description>
                 </List.Content>
                 </List.Item>
@@ -166,3 +135,5 @@ const onDragStart = (e) => {
         </div>
     )
 }
+
+

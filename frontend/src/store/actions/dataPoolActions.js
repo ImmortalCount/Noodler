@@ -60,8 +60,10 @@ export const getMusicData = (requestData) => async (dispatch) => {
         const dataType = requestData.dataType
         const pool = requestData.pool
         const keyword = requestData.keyword
+        const userID = requestData.userID
+        const pageNumber = requestData.pageNumber
         const data = await http.get(
-            `data?dataType=${dataType}&pool=${pool}&keyword=${keyword}`
+            `data?dataType=${dataType}&pool=${pool}&keyword=${keyword}&userID=${userID}&pageNumber=${pageNumber}`
         )
 
         dispatch({
