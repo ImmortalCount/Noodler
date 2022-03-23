@@ -7,6 +7,7 @@ import { insertData } from '../../store/actions/dataPoolActions';
 import { scaleHandler } from './utils';
 import * as Tone from 'tone';
 import { keySynth, polySynth } from './synths';
+import ExportModal from '../modal/ExportModal'
 
 export default function ModuleLab({importedModuleData}) {
     const [name, setName] = useState('Module 1')
@@ -17,6 +18,7 @@ export default function ModuleLab({importedModuleData}) {
     const [inputFocus, setInputFocus] = useState(false)
     const [description, setDescription] = useState('')
     const [showDescription, setShowDescription] = useState(false)
+    const user = JSON.parse(localStorage.getItem('userInfo'))
     var sequence = useRef('')
 
     const dispatch = useDispatch()
@@ -176,7 +178,6 @@ for (var o = 0; o < 10; o++){
                 notesExport.push(allNotes[startingIndex + clonePattern[k]])
             }
         }
-        console.log(notesExport, 'NOTES EXPORT!')
         return notesExport
     }
 
@@ -349,34 +350,26 @@ for (var o = 0; o < 10; o++){
 
         //---Export the module
 
-    function handleExport(){
-        const user = JSON.parse(localStorage.getItem('userInfo'))
-            const moduleDataPrototype = {
-                name: name,
-                moduleName: name,
-                desc: '',
-                author: user['name'],
-                authorId: user['_id'],
-                dataType: 'module',
-                pool: exportPool,
-                data: {
-                chordData: labInfo && labInfo['chordLab'] ? labInfo['chordLab'] : initState['chordLab'],
-                rhythmData: labInfo && labInfo['rhythmLab'] ? labInfo['rhythmLab'] : initState['rhythmLab'],
-                patternData: labInfo && labInfo['patternLab'] ? labInfo['patternLab'] : initState['patternLab'],
-                scaleData: labInfo && labInfo['scaleLab'] ? labInfo['scaleLab'] : initState['scaleLab'],
-                keyData: {
-                    keyName: keyName,
-                    root: key,
-                },
-                countData: {
-                    countName: '4',
-                    count: 4
-                }
-              }
-              }
-    
-            dispatch(insertData(moduleDataPrototype))
+    const exportObj = {
+        name: name,
+        moduleName: name,
+        desc: '',
+        author: user?.['name'],
+        authorId: user?.['_id'],
+        dataType: 'module',
+        pool: exportPool,
+        data: {
+        chordData: labInfo && labInfo['chordLab'] ? labInfo['chordLab'] : initState['chordLab'],
+        rhythmData: labInfo && labInfo['rhythmLab'] ? labInfo['rhythmLab'] : initState['rhythmLab'],
+        patternData: labInfo && labInfo['patternLab'] ? labInfo['patternLab'] : initState['patternLab'],
+        scaleData: labInfo && labInfo['scaleLab'] ? labInfo['scaleLab'] : initState['scaleLab'],
+        keyData: {
+            keyName: keyName,
+            root: key,
+        },
+      }
     }
+
 
     const exportDropdownOptions = [
         { key: 'global', text: 'global', value: 'global'},
@@ -404,16 +397,9 @@ for (var o = 0; o < 10; o++){
          <Dropdown onChange={onChangeDropdown} options={options === 'sharps' ? dropdownOptionsKeySharp : dropdownOptionsKeyFlat} text = {`Key: ${key}`} simple item/>
          <Menu.Item onClick={() => setShowDescription(!showDescription)}> Desc </Menu.Item>
          <Button.Group>
-        <Button basic disabled={localStorage.getItem('userInfo') === null} onClick={()=> handleExport()}>Export</Button>
-        <Dropdown
-          simple
-          item
-          disabled={localStorage.getItem('userInfo') === null}
-          className='button icon'
-          options={exportDropdownOptions}
-          onChange={handleExportDropdown}
-          trigger={<></>}
-        />
+        <ExportModal
+        dataType={'Module'}
+        exportObj={exportObj}/>
         </Button.Group>
         </Menu>
         <div>

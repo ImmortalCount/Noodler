@@ -6,16 +6,14 @@ import {logout} from '../../store/actions/userActions.js'
 
 export default function Navbar() {
     var activeItem;
-
-    const userLogin = useSelector((state) => state.userLogin)
-    const { userInfo } = userLogin
+    const user = JSON.parse(localStorage.getItem('userInfo'))
     const dispatch = useDispatch()
 
-    var accountOptions = [
-        { key: 'name', text: 'Name', value: 'name' },
-        { key: 'login', text: 'Login', value: 'login' },
-        { key: 'logout', text: 'Logout', value: 'logout' },
-    ]
+    // var accountOptions = [
+    //     { key: 'name', text: 'Name', value: 'name' },
+    //     { key: 'login', text: 'Login', value: 'login' },
+    //     { key: 'logout', text: 'Logout', value: 'logout' },
+    // ]
 
     const logoutHandler = () => {
         dispatch(logout());
@@ -63,14 +61,14 @@ export default function Navbar() {
             onClick={() => console.log(userInfo)}
             /> */}
             <Menu.Menu position='right'>
-            {(userInfo) && 
-                <Dropdown item text={userInfo.name}>
+            {(user) && 
+                <Dropdown item text={user.name}>
                     <Dropdown.Menu>
                         <Dropdown.Item onClick={logoutHandler}> Logout</Dropdown.Item>
                     </Dropdown.Menu>
                 </Dropdown>
             }
-            {!(userInfo) && 
+            {!(user) && 
             <>
             <Menu.Item as={Link}
             to='/login'

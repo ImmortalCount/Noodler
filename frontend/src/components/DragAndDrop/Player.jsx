@@ -1,15 +1,15 @@
 import React, { useState, useEffect, useRef} from 'react'
 import DragAndFillCard from './DragAndFillCard'
 import {Button, Dropdown, Menu, Icon, Input, Form, TextArea} from 'semantic-ui-react';
-import { Note, Scale, Chord} from '@tonaljs/tonal';
+import { Note, Scale, Chord, Midi, ChordType} from '@tonaljs/tonal';
 import { useDispatch, useSelector } from 'react-redux';
 import { bindActionCreators } from 'redux';
 import { actionCreators } from '../../store/index.js';
 import { initialData, initialDataType2} from './dummyData';
 import { DataPrototype } from './dataPrototypes';
 import * as Tone from 'tone';
-import { insertData } from '../../store/actions/dataPoolActions';
 import { setSongImportData } from '../../store/actions/songImportDataActions';
+import ExportModal from '../modal/ExportModal';
 
 export default function Player ({masterInstrumentArray}) {
     const [instrumentFocus, setInstrumentFocus] = useState(0);
@@ -19,7 +19,7 @@ export default function Player ({masterInstrumentArray}) {
     var markerValue = useRef([])
     const [currentlyPlaying, setCurrentlyPlaying] = useState([])
     var [activeButton, setActiveButton] = useState('swap')
-    const [name, setName] = useState('Song: Noodler Theme')
+    const [name, setName] = useState('Noodler Theme')
     const [exportPool, setExportPool] = useState('global')
     const [edit, setEdit] = useState(false)
     const [songOptions, setSongOptions] = useState(false)
@@ -27,6 +27,7 @@ export default function Player ({masterInstrumentArray}) {
     const [description, setDescription] = useState('')
     const [showDescription, setShowDescription] = useState(false)
     const [inputFocus, setInputFocus] = useState(false)
+    const user = JSON.parse(localStorage.getItem('userInfo'))
     var controls = useRef('swap')
     const dispatch = useDispatch();
 
@@ -44,8 +45,6 @@ export default function Player ({masterInstrumentArray}) {
             setName(songImport['name'])
             setDescription(songImport['desc'])
             setBpm(songImport['bpm'])
-            console.log(songImport['bpm'], 'SONG IMPORT BPM')
-            console.log(songImport['desc'], 'SONG IMPORT DESCRIPTION')
         } else {
             return
         }
@@ -53,7 +52,7 @@ export default function Player ({masterInstrumentArray}) {
 
     useEffect (()=>{
         setModuleMarkers()
-        const sentData = convertModuleDataIntoPlayableSequence3(data)
+        const sentData = convertModuleDataIntoPlayableSequence(data)
         sendModuleData(JSON.stringify({markers: markers, data: sentData})) 
     }, [data, bpm]);
 
@@ -202,28 +201,6 @@ function chordIntoRhythm(chord, rhythm, numberOfNotes){
     return notesIntoRhythm(chordPattern, rhythm)
 }
 
-function convertModuleDataIntoPlayableSequence(data){
-        var returnObject = 
-        {displayOnly: false,
-        highlight: [],
-        data: []};
-
-        for (var i = 0; i < data.length; i++){
-        var innerObject = {speed:'', notes:[]}
-        var rhythm = data[i]['rhythmData']['rhythm'];
-        var pattern = data[i]['patternData']['pattern']
-        var scale = data[i]['scaleData']['scale']
-        var notes = patternAndScaleToNotes(pattern, scale)
-        var sequence = notesIntoRhythm(notes, rhythm)
-        
-        innerObject['speed'] = '4n'
-        innerObject['notes'] = sequence
-        returnObject['data'].push(innerObject)
-        }
-        
-        return [returnObject];
-    }
-
 function scaleIntoScaleDisplayNotes(scale, duration){
         if (duration === undefined){
             duration = 4;
@@ -251,65 +228,7 @@ function handleOffMode(duration){
         return returnArr;
     }
 
-function convertModuleDataIntoPlayableSequence2(musicData){
-        var returnArr = [];
-        for (var h = 0; h < musicData.length; h++){
-            var returnObject = 
-            {displayOnly: true,
-            highlight: [],
-            data: []};
-            if (musicData[h]['mode'] === 'melody' || musicData[h]['mode'] === 'chord'){
-                returnObject['displayOnly'] = false;
-                for (var i = 0; i < musicData[h]['data'].length; i++){
-                    var innerObject = {speed:'', notes:[]}
-                    var rhythm = musicData[h]['data'][i]['rhythmData']['rhythm'];
-                    var pattern = musicData[h]['data'][i]['patternData']['pattern']
-                    var scale = musicData[h]['data'][i]['scaleData']['scale']
-                    var notes = patternAndScaleToNotes(pattern, scale)
-                    var sequence = notesIntoRhythm(notes, rhythm)
-                    innerObject['speed'] = '4n'
-                    innerObject['notes'] = sequence
-                    returnObject['data'].push(innerObject)
-                    }
-                returnArr.push(returnObject)
-            } else if (musicData[h]['mode'] === 'off'){
-                returnObject['displayOnly'] = true;
-                for (var i = 0; i < musicData[h]['data'].length; i++){
-                    var innerObject = {speed:'', notes:[]}
-                    innerObject['speed'] = '4n'
-                    innerObject['notes'] = handleOffMode();
-                    returnObject['data'].push(innerObject)
-                    }
-                returnArr.push(returnObject)
-            } else if (musicData[h]['mode'] === 'scale'){
-                returnObject['displayOnly'] = true;
-                for (var i = 0; i < musicData[h]['data'].length; i++){
-                    var innerObject = {speed:'', notes:[]}
-                    var scale = musicData[h]['data'][i]['scaleData']['scale']
-                    var sequence = scaleIntoScaleDisplayNotes(scale)
-                    innerObject['speed'] = '4n'
-                    innerObject['notes'] = sequence
-                    returnObject['data'].push(innerObject)
-                    }
-                returnArr.push(returnObject)
-            } else if (musicData[h]['mode'] === 'chordTones'){
-                returnObject['displayOnly'] = true;
-                for (var i = 0; i < musicData[h]['data'].length; i++){
-                    var innerObject = {speed:'', notes:[]}
-                    var chord = musicData[h]['data'][i]['chordData']['chord']
-                    var sequence = scaleIntoScaleDisplayNotes(chord)
-                    innerObject['speed'] = '4n'
-                    innerObject['notes'] = sequence
-                    returnObject['data'].push(innerObject)
-                    }
-                returnArr.push(returnObject)
-            }
-            
-        }
-        return returnArr;
-    }
-
-function convertModuleDataIntoPlayableSequence3(musicData){
+function convertModuleDataIntoPlayableSequence(musicData){
         var returnArr = [];
         for (var h = 0; h < musicData.length; h++){
             var returnObject = 
@@ -397,7 +316,6 @@ const dragStartHandler = e => {
             var obj = {id: e.currentTarget.id, className: e.target.className, message: 
                 data[instrumentID]['data'][cardID], 
                 type: 'player'}
-            console.log(obj)
             e.dataTransfer.setData('text', JSON.stringify(obj));
         } else {
             var obj = {id: e.currentTarget.id, className: e.target.className, message: 
@@ -508,18 +426,21 @@ const dropHandlerBackground = e => {
 }
 
 const cardClickHandler = e => {
+    var ex2 = e.currentTarget.id.split('_')
+    var endIndex = Number(ex2[1])
+    var endInstrument = Number(ex2[2])
+
+    Tone.Transport.position = markers[endInstrument][endIndex]
+
     if (controls.current === 'delete'){
         var clone = JSON.parse(JSON.stringify(data))
-        var ex2 = e.currentTarget.id.split('_')
-        var endIndex = Number(ex2[1])
-        var endInstrument = Number(ex2[2])
         if (clone[endInstrument]['data'].length === 1){
             return
         } else {
             clone[endInstrument]['data'].splice(endIndex, 1)
         setData(clone)
         }
-    }
+    } 
 }
 
 function moduleAdd(){
@@ -542,7 +463,6 @@ function moduleSubtract(){
     //----------------------------------MAP COMPONENTS
 
     function mapCards(cardData, instrument){
-        console.log('rerendered!!!')
         return (
             cardData.map((cardData, idx) => 
             <DragAndFillCard
@@ -604,8 +524,6 @@ function moduleSubtract(){
     }
     //--------SET INTERVAL WHICH CHECKS TO SEE WHAT MODULE IS PLAYING
 
-
-
     function setModuleMarkers(){
         var markers = [];
         const timeConstant = Tone.Time('4n').toSeconds()
@@ -623,31 +541,6 @@ function moduleSubtract(){
         setMarkers(markers)
     }
 
-    function checkCurrentTimeAndSetCurrentlyPlaying() {
-        let currentTime = Tone.Time(Tone.Transport.position).toSeconds()
-        let state = Tone.Transport.state
-        if (state === 'stopped' && currentlyPlaying.length !== 0){
-            setCurrentlyPlaying([])
-            return
-        } else if (state !== 'stopped'){
-            var playingArr = [];
-            for (var i = 0; i < markers.length; i++){
-                for (var j = 0; j < markers[i].length -1; j++){
-                    if (currentTime < markers[i][j + 1] && currentTime >= markers[i][j]){
-                        playingArr.push(j + '_' + i)
-                        continue
-                    }
-                }
-            }
-            if (JSON.stringify(currentlyPlaying) === JSON.stringify(playingArr)){
-                return
-            } else {
-                setCurrentlyPlaying(playingArr)
-            }
-        } else {
-            return
-        }
-    }
     var currentlyPlayingValue = useRef([])
 
     useEffect(() => {
@@ -700,11 +593,8 @@ function moduleSubtract(){
         var idx = Number(id.split("_")[1])
         clone[idx]['mode'] = value;
         if (value === 'melody'){
-            console.log('changed to melody!')
         } else if (value === 'chord'){
-            console.log('changed to chord!')
         }
-        console.log(data[idx]['mode'])
         setData(clone)
     }
 
@@ -732,37 +622,17 @@ function handleUpdate(){
     }
 }
 
-function handleExport(){
-    const user = JSON.parse(localStorage.getItem('userInfo'))
-    const songDataPrototype = {
-        name: name,
-        desc: description,
-        bpm: bpm,
-        author: user['name'],
-        authorId: user['_id'],
-        dataType: 'song',
-        pool: exportPool,
-        instruments: songInfo,
-        data: data,
-    }
-    dispatch(insertData(songDataPrototype))
+const exportObj = {
+    name: name,
+    desc: description,
+    bpm: bpm,
+    author: user?.['name'],
+    authorId: user?.['_id'],
+    dataType: 'song',
+    pool: exportPool,
+    instruments: songInfo,
+    data: data,
 }
-
-const exportDropdownOptions = [
-    { key: 'global', text: 'global', value: 'global'},
-    { key: 'local', text: 'local', value: 'local'},
-]
-
-const handleExportDropdown = (e, {value}) => {
-    const user = JSON.parse(localStorage.getItem('userInfo'))
-    if (value === 'local'){
-        const user = JSON.parse(localStorage.getItem('userInfo'))
-        setExportPool(user['_id'])
-    } else {
-        setExportPool(value)
-    }
-  }
-
 
   //BPM
 const handleBPMChange = e => {
@@ -779,6 +649,60 @@ const handleDescriptionChange = e => {
     setDescription(e.target.value)
 }
 
+var scaleDataPrototype = {
+    scaleName: 'D Dorian',
+    name: 'D Dorian',
+    scale: ['D', 'E', 'F', 'G', 'A', 'B', 'C'],
+    binary: [1, 0, 1, 1, 0, 1, 0, 1, 0, 1, 1, 0],
+    number: 2902
+}
+
+
+
+const determineChordType = (noteArr) => {
+    const chord = data[0]['data'][0]['data']['chordData']['chord']
+
+
+    var midiArr = [];
+    var lowestValue = Number.POSITIVE_INFINITY
+    for (let i = 0; i < chord.length; i++){
+        const midiVal = Midi.toMidi(chord[i])
+        if (midiVal < lowestValue){
+            lowestValue = midiVal
+        }
+        midiArr.push(midiVal)
+    }
+    //normalize the array
+    for (let j = 0; j < midiArr.length; j++){
+        let x = midiArr[j] - lowestValue
+        while (x > 12){
+            x -= 12;
+        }
+        midiArr[j] = x
+    }
+    if (midiArr.includes(4) && midiArr.includes(10)){
+        return 'dominant'
+    }
+    if (midiArr.includes(3) && midiArr.includes(10)){
+        return 'minorMajor'
+    }
+    if (midiArr.includes(3)){
+        return 'minor'
+    }
+    if (midiArr.includes(4)){
+        return 'major'
+    }
+    return 'unknown'
+}
+
+const setRecommendedScales = () => {
+    console.log(data[0]['data'][0]['data']['keyData']['root'])
+}
+
+const distanceFromChordRootToKeyRoot = () => {
+    const chromaticScale = []
+}
+
     return (
         <>
         <div onDrop={dropHandlerBackground}>
@@ -790,17 +714,11 @@ const handleDescriptionChange = e => {
         <Menu.Item basic active={edit} onClick={()=> setEdit(!edit)}>Edit</Menu.Item>
         <Menu.Item basic active={songOptions} onClick={()=> setSongOptions(!songOptions)}>Bpm </Menu.Item>
         <Menu.Item basic active={showDescription} onClick={() => setShowDescription(!showDescription)}> Desc</Menu.Item>
+        <Menu.Item basic active={showDescription} onClick={setRecommendedScales}> Set Recommended Scales</Menu.Item>
         <Button.Group>
-        <Button basic disabled={localStorage.getItem('userInfo') === null} onClick={()=> handleExport()}>Export</Button>
-        <Dropdown
-          simple
-          item
-          disabled={localStorage.getItem('userInfo') === null}
-          className='button icon'
-          options={exportDropdownOptions}
-          onChange={handleExportDropdown}
-          trigger={<></>}
-        />
+        <ExportModal
+        dataType={'Song'}
+        exportObj={exportObj}/>
         </Button.Group>
         </Menu>
         <div>

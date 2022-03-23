@@ -2,7 +2,7 @@ import React, {useState} from 'react'
 import { Tab, List, Button, Segment, Icon } from 'semantic-ui-react' 
 import './palette.css'
 
-export default function Palette() {
+export default function Palette({display}) {
     const activeTabStates = [
         "Components",
         // "Collections",
@@ -158,6 +158,7 @@ export default function Palette() {
 
     const dragOverHandler = e => {
         e.preventDefault();
+        console.log('This is OVER!')
     }
 
     const dragLeaveHandler = e => {
@@ -167,6 +168,7 @@ export default function Palette() {
     const dropHandler = e => {
         var cloneStorage = JSON.parse(JSON.stringify(storage))
         var data = JSON.parse(e.dataTransfer.getData("text"));
+        console.log(data)
         if (data['type'] !== 'palette' && data['type'] !== 'modulePaletteExport'){
            if (data['className'] === 'chordData'){
             cloneStorage['Components']['Chords'].push(data['message'])
@@ -205,7 +207,7 @@ export default function Palette() {
 
     return (
         <>
-        <div onDrop={dropHandler} onDragOver={dragOverHandler}>
+        <div style={{display: display ? '' : 'none'}} onDrop={dropHandler} onDragOver={dragOverHandler}>
          <List relaxed divided size='large' className='fixed-width'>
         <div style={{display:'flex', flexDirection:'column'}}>
         {/* <Button.Group className='no-padding'>

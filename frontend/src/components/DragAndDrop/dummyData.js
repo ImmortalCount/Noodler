@@ -419,6 +419,7 @@ export const initialDataType2 = [
         data: {
             chordData: {
                 chordName: 'Dm',
+                name: 'Dm',
                 chord: ['D3', 'F3', 'A3'],
             },
             rhythmData: {
@@ -436,6 +437,7 @@ export const initialDataType2 = [
             },
             scaleData: {
                 scaleName: 'D Dorian',
+                name: 'D Dorian',
                 scale: ['D', 'E', 'F', 'G', 'A', 'B', 'C'],
                 binary: [1, 0, 1, 1, 0, 1, 0, 1, 0, 1, 1, 0],
                 number: 2902
@@ -443,10 +445,6 @@ export const initialDataType2 = [
             keyData: {
                 keyName: 'Key: C',
                 root: 'C'
-            },
-            countData: {
-                countName: '4',
-                count: 4,
             },
         }
     },
@@ -489,10 +487,6 @@ export const initialDataType2 = [
                 name: 'Key: C',
                 root: 'C'
             },
-            countData: {
-                countName: '4',
-                count: 4,
-            },
         }
     },
     {
@@ -534,11 +528,6 @@ export const initialDataType2 = [
                 name: 'Key: C',
                 root: 'C'
             },
-            countData: {
-                countName: '4',
-                name: '4',
-                count: 4,
-            },
         }  
     },
     {
@@ -578,10 +567,6 @@ export const initialDataType2 = [
             keyData: {
                 keyName: 'Key: C',
                 root: 'C'
-            },
-            countData: {
-                countName: '4',
-                count: 4,
             },
         }  
     },

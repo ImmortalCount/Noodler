@@ -9,16 +9,13 @@ function ExportModal({dataType, exportObj}) {
   const [messageDisplay, setMessageDisplay] = useState(false)
   const [poolDisplay, setPoolDisplay] = useState('global')
   const [overWriteOptionDisplay, setOverWriteOptionDisplay] = useState()
-
+  const user = JSON.parse(localStorage.getItem('userInfo'))
   const exportDropdownOptions = [
     { key: 'global', text: 'global', value: 'global'},
     { key: 'local', text: 'local', value: 'local'},
   ]
-
   const handleExportDropdown = (e, {value}) => {
-    const user = JSON.parse(localStorage.getItem('userInfo'))
     if (value === 'local'){
-        const user = JSON.parse(localStorage.getItem('userInfo'))
         exportObj['pool'] = (user['_id'])
         setPoolDisplay('local')
     } else {
@@ -46,6 +43,19 @@ function ExportModal({dataType, exportObj}) {
     dispatch(insertData(exportObj))
   }
 
+  const dontRender = [
+    'authorId',
+    'scaleName',
+    'chordName',
+    'rhythmName',
+    'moduleName',
+    'patternName',
+    'desc',
+    'instruments',
+    'data'
+  ]
+
+
   return (
     <>
       {isOpen && (
@@ -53,7 +63,7 @@ function ExportModal({dataType, exportObj}) {
           <div className="overlay"></div>
           <div className="modal">
             <header className="modal__header">
-              <h2>Export {dataType} To: {poolDisplay}</h2>
+              <h2>Export {dataType} '{exportObj.name}' To: {poolDisplay}</h2>
               <Dropdown
               simple
               item
@@ -67,11 +77,31 @@ function ExportModal({dataType, exportObj}) {
             <main className="modal__main">
              {messageDisplay && <h3>{dataInsert?.data?.message}</h3>}
               <h3>Name: {exportObj.name}</h3>
-              <h3>Desc: {exportObj.desc}</h3>
+              <h3>Description: {exportObj.desc}</h3>
               <h3>
-              {Object.entries(exportObj).map(([key, value], i) => (
-                <div key={i}>{key}: {value}</div>
-))}
+              {Object.entries(exportObj).map(([key, value], i) => {
+                     if (key === 'data' && dataType !== 'Song'){
+                    return (
+                      <>
+                    <div>scale name:{value.scaleData.name}</div>
+                    <div>scale: {value.scaleData.scale}</div>
+                    <div>chord name:{value.chordData.name}</div>
+                    <div>chord: {value.chordData.chord}</div>
+                    <div>pattern name:{value.patternData.name}</div>
+                    <div>pattern:{value.patternData.pattern}</div>
+                    <div>rhythm name:{value.rhythmData.name}</div>
+                    <div>{value.keyData.keyName}</div>
+                      </>
+                    )
+                  } else if (dontRender.includes(key) ||typeof value === 'object'){
+                      return <div key={i}></div>
+                  } else if (value === user['_id'])  {
+                    return <div key={i}>{key}: local</div>
+                  } else {
+                    return <div key={i}>{key}: {value}</div>
+                  }
+              }
+              )}
               </h3>
 
             </main>

@@ -5,6 +5,7 @@ import { useDispatch, useSelector} from 'react-redux';
 import { insertData } from '../../store/actions/dataPoolActions';
 import { setLabData } from '../../store/actions/labDataActions';
 import { drumKit } from './synths';
+import ExportModal from '../modal/ExportModal'
 import './lab.css'
 
 
@@ -25,6 +26,7 @@ export default function RhythmLab({importedRhythmData}) {
     const [inputFocus, setInputFocus] = useState(false)
     const [description, setDescription] = useState('')
     const [showDescription, setShowDescription] = useState(false)
+    const user = JSON.parse(localStorage.getItem('userInfo'))
     const isMuted = false;
     const dispatch = useDispatch()
 
@@ -839,23 +841,37 @@ const onChangeModuleLength = e => {
     setPlayConstant(squishTiming(notes.length, e.target.value))
 }
 
-function handleExport(){
-    const user = JSON.parse(localStorage.getItem('userInfo'))
-    const rhythmDataPrototype = {
-        name: name,
-        rhythmName: name,
-        desc: '',
-        rhythm: notes,
-        length: moduleLengthDisplay,
-        speed: playConstant,
-        notes: noteSlots,
-        dataType: 'rhythm',
-        author: user['name'],
-        authorId: user['_id'],
-        pool: exportPool,
+// function handleExport(){
+//     const user = JSON.parse(localStorage.getItem('userInfo'))
+//     const rhythmDataPrototype = {
+//         name: name,
+//         rhythmName: name,
+//         desc: '',
+//         rhythm: notes,
+//         length: moduleLengthDisplay,
+//         speed: playConstant,
+//         notes: noteSlots,
+//         dataType: 'rhythm',
+//         author: user['name'],
+//         authorId: user['_id'],
+//         pool: exportPool,
        
-    }
-    dispatch(insertData(rhythmDataPrototype))
+//     }
+//     dispatch(insertData(rhythmDataPrototype))
+// }
+
+const exportObj = {
+    name: name,
+    rhythmName: name,
+    desc: '',
+    rhythm: notes,
+    length: moduleLengthDisplay,
+    speed: playConstant,
+    notes: noteSlots,
+    dataType: 'rhythm',
+    author: user?.['name'],
+    authorId: user?.['_id'],
+    pool: exportPool,
 }
 
 const exportDropdownOptions = [
@@ -886,7 +902,7 @@ const handleDescriptionChange = e => {
          <Menu.Item onClick={()=> setStretchCompress(!stretchCompress)}>  Stretch/Compress </Menu.Item>      
          <Menu.Item onClick={() => setShowDescription(!showDescription)}> Desc </Menu.Item>
          <Button.Group>
-        <Button basic disabled={localStorage.getItem('userInfo') === null} onClick={()=> handleExport()}>Export</Button>
+        {/* <Button basic disabled={localStorage.getItem('userInfo') === null} onClick={()=> handleExport()}>Export</Button>
         <Dropdown
           simple
           item
@@ -895,7 +911,10 @@ const handleDescriptionChange = e => {
           options={exportDropdownOptions}
           onChange={handleExportDropdown}
           trigger={<></>}
-        />
+        /> */}
+        <ExportModal
+        dataType={'Rhythm'}
+        exportObj={exportObj}/>
         </Button.Group>
         </Menu>
         {edit && <Button.Group>

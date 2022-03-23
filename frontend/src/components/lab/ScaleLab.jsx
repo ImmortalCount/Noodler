@@ -599,25 +599,25 @@ function createScaleSVG(){
         )
 }
 
-function handleExport(){
-  const user = JSON.parse(localStorage.getItem('userInfo'))
+// function handleExport(){
+//   const user = JSON.parse(localStorage.getItem('userInfo'))
 
-  const scaleDataPrototype = {
-      name: rootNote + ' ' + scaleName,
-      scaleName: rootNote + ' ' + scaleName,
-      binary: scaleDataBinary,
-      desc: '',
-      number: scaleNumber,
-      scale: notes,
-      type: 'normal',
-      length: notes.length,
-      dataType: 'scale',
-      author: user['name'],
-      authorId: user['_id'],
-      pool: exportPool,
-  }
-  dispatch(insertData(scaleDataPrototype))
-}
+//   const scaleDataPrototype = {
+//       name: rootNote + ' ' + scaleName,
+//       scaleName: rootNote + ' ' + scaleName,
+//       binary: scaleDataBinary,
+//       desc: '',
+//       number: scaleNumber,
+//       scale: notes,
+//       type: 'normal',
+//       length: notes.length,
+//       dataType: 'scale',
+//       author: user['name'],
+//       authorId: user['_id'],
+//       pool: exportPool,
+//   }
+//   dispatch(insertData(scaleDataPrototype))
+// }
 
 const exportObj = {
       name: rootNote + ' ' + scaleName,
@@ -629,8 +629,8 @@ const exportObj = {
       type: 'normal',
       length: notes.length,
       dataType: 'scale',
-      author: user['name'],
-      authorId: user['_id'],
+      author: user?.['name'],
+      authorId: user?.['_id'],
       pool: exportPool,
 }
 

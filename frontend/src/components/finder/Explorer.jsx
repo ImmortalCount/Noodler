@@ -50,11 +50,13 @@ const onDrag = (e) => {
 }
 
 const onDragStart = (e) => {
+
+    const itemNumber = e.currentTarget.id.split('_')[0]
     var obj = {
         id: 'special', 
-        className: displayData.data[e.currentTarget.id.split('_')[0]].dataType + 'Data', 
-        message: displayData.data[e.currentTarget.id.split('_')[0]], 
-        type: displayData.data[e.currentTarget.id.split('_')[0]].dataType + 'ExplorerExport'
+        className: displayData.data.dataResults[itemNumber].dataType + 'Data', 
+        message: displayData.data.dataResults[itemNumber], 
+        type: displayData.data.dataResults[itemNumber].dataType + 'ExplorerExport'
     }
         e.dataTransfer.setData('text', JSON.stringify(obj));
 }

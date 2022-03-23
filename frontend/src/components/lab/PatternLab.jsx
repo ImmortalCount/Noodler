@@ -10,6 +10,7 @@ import { keySynth } from './synths';
 import { setLabData } from '../../store/actions/labDataActions';
 import { scaleHandler } from './utils';
 import { keyMap } from './keymap';
+import ExportModal from '../modal/ExportModal';
 
 
 export default function PatternLab({importedPatternData}) {
@@ -35,6 +36,7 @@ const [inputFocus, setInputFocus] = useState(false)
 const [description, setDescription] = useState('')
 const [showDescription, setShowDescription] = useState(false)
 const isMuted = false;
+const user = JSON.parse(localStorage.getItem('userInfo'))
 
 const dispatch = useDispatch()
 
@@ -748,9 +750,25 @@ if (keyType === 'minor'){
 }
 }
 //====
-function handleExport(){
-    const user = JSON.parse(localStorage.getItem('userInfo'))
-    const patternDataPrototype = {
+// function handleExport(){
+//     const user = JSON.parse(localStorage.getItem('userInfo'))
+//     const patternDataPrototype = {
+//         name: name,
+//         patternName: name,
+//         desc: '',
+//         type: 'normal',
+//         length: notes.length,
+//         dataType: 'pattern',
+//         pattern: pattern,
+//         position: [],
+//         author: user['name'],
+//         authorId: user['_id'],
+//         pool: exportPool,
+//     }
+//     dispatch(insertData(patternDataPrototype))
+// }
+
+const exportObj = {
         name: name,
         patternName: name,
         desc: '',
@@ -759,11 +777,9 @@ function handleExport(){
         dataType: 'pattern',
         pattern: pattern,
         position: [],
-        author: user['name'],
-        authorId: user['_id'],
+        author: user?.['name'],
+        authorId: user?.['_id'],
         pool: exportPool,
-    }
-    dispatch(insertData(patternDataPrototype))
 }
 
 const handleEditOptions = () => {
@@ -850,7 +866,7 @@ const handleExportDropdown = (e, {value}) => {
         </Dropdown>
         <Menu.Item onClick={() => setShowDescription(!showDescription)}> Desc </Menu.Item>
         <Button.Group>
-        <Button basic disabled={localStorage.getItem('userInfo') === null} onClick={()=> handleExport()}>Export</Button>
+        {/* <Button basic disabled={localStorage.getItem('userInfo') === null} onClick={()=> handleExport()}>Export</Button>
         <Dropdown
           simple
           item
@@ -859,7 +875,10 @@ const handleExportDropdown = (e, {value}) => {
           options={exportDropdownOptions}
           onChange={handleExportDropdown}
           trigger={<></>}
-        />
+        /> */}
+        <ExportModal
+        dataType={'Pattern'}
+        exportObj={exportObj}/>
         </Button.Group>
         </Menu>
         {edit === 'on' && 

@@ -7,6 +7,7 @@ import { setLabData } from '../../store/actions/labDataActions';
 import { Icon, Menu, Dropdown, Button, Input, Form, TextArea } from 'semantic-ui-react';
 import { polySynth } from './synths';
 import { scaleHandler } from './utils';
+import ExportModal from '../modal/ExportModal'
 
 export default function ChordLab({importedChordData, masterInstrumentArray}) {
     const [chords, setChords] = useState([['C3', 'E3', 'G3']])
@@ -21,6 +22,7 @@ export default function ChordLab({importedChordData, masterInstrumentArray}) {
     const [exportPool, setExportPool] = useState('global')
     const [edit, setEdit] = useState(false)
     const isMuted = false;
+    const user = JSON.parse(localStorage.getItem('userInfo'))
 
     const dispatch = useDispatch()
 
@@ -634,6 +636,18 @@ export default function ChordLab({importedChordData, masterInstrumentArray}) {
         dispatch(insertData(chordDataPrototype))
     }
 
+    const exportObj = {
+        name: exportNames[0] ? exportNames[0] : Chord.detect(chords[0])[0],
+        chordName: exportNames[0] ? exportNames[0] : Chord.detect(chords[0])[0],
+        desc: '',
+        chord: chords[0],
+        position: [],
+        author: user?.['name'],
+        authorId: user?.['_id'],
+        dataType: 'chord',
+        pool: exportPool,
+  }
+
     const exportDropdownOptions = [
         { key: 'global', text: 'global', value: 'global'},
         { key: 'local', text: 'local', value: 'local'},
@@ -711,7 +725,10 @@ export default function ChordLab({importedChordData, masterInstrumentArray}) {
          <Menu.Item onClick={() => setEdit(!edit)}> Edit </Menu.Item>    
          <Menu.Item onClick={() => setShowDescription(!showDescription)}> Desc </Menu.Item>   
          <Button.Group>
-        <Button basic disabled={localStorage.getItem('userInfo') === null} onClick={()=> handleExport()}>Export</Button>
+         <ExportModal
+        dataType={'Chord'}
+        exportObj={exportObj}/>
+        {/* <Button basic disabled={localStorage.getItem('userInfo') === null} onClick={()=> handleExport()}>Export</Button>
         <Dropdown
           simple
           item
@@ -720,7 +737,7 @@ export default function ChordLab({importedChordData, masterInstrumentArray}) {
           options={exportDropdownOptions}
           onChange={handleExportDropdown}
           trigger={<></>}
-        />
+        /> */}
         </Button.Group>  
         </Menu>
         {edit && <Button.Group>

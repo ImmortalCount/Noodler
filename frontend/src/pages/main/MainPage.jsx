@@ -96,11 +96,6 @@ export default function MainPage() {
             )
     }
 
-    function testChangeInstrumentNames(){
-       const clone = [...masterInstrumentArray]
-       console.log(instrumentNames, 'XXX')
-       setMasterInstrumentArray(instrumentNames['nameInfo'])
-    }
 
 function Midbar() {
         return (
@@ -159,11 +154,6 @@ function Midbar() {
                 >
                 <Icon name='minus'/>
                 </Menu.Item>
-                <Menu.Item
-                name='test'
-                onClick={() => testChangeInstrumentNames()}
-                >
-                </Menu.Item>
                 </Menu.Menu>
     
             </Menu>
@@ -183,17 +173,22 @@ function Midbar() {
         </div>
         <div className="bottomhalf" style={{display: 'flex', flexDirection: 'row', backgroundColor: 'white'}}>
             <div className="bottomleft" style={{display: 'flex', flexDirection: 'row', backgroundColor: 'white'}}> 
-            {activeTabs.includes('explorer') && <Explorer/>}
-            {activeTabs.includes('lab') && <Lab
+            <div style={{display: activeTabs.includes('explorer') ? '' : 'none'}}>
+            <Explorer/>
+            </div>
+            <div style={{display: activeTabs.includes('lab') ? '' : 'none'}}>
+            <Lab
             masterInstrumentArray = {masterInstrumentArray}
-            />}
-            {activeTabs.includes('palette') && <Palette/>}
+            />
+            </div>
+            <Palette display= {activeTabs.includes('palette')} />
             </div>
             <div className="bottomright"> 
-            {activeTabs.includes('player') && 
+            <div style={{display: activeTabs.includes('player') ? '' : 'none'}}>
             <Player
             masterInstrumentArray = {masterInstrumentArray}
-            />}
+            />
+            </div>
             </div>
         </div>
         </>

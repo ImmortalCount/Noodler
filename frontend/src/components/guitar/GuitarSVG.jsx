@@ -29,24 +29,7 @@ export default function GuitarSVG({masterInstrumentArray, activelyDisplayedInstr
         data: [{speed:1, notes:[['D4','X','D4 F4 A4', 'E4'],['X','X', 'D4 F4 A4', 'X'],['X', 'G4','D4 F4 A4', 'X'],['B4', 'X','D4 F4 A4', 'F5']]}, {speed:1, notes:[['G5','X', 'F5', 'X'],['E5','X', 'D5', 'X'],['B4','X', 'E4', 'X'],['B4', 'X','E4', 'X']]}, {speed: 1, notes:[['C4','X', 'D4', 'X'],['E4','X', 'F4', 'X'],['G4', 'X','C4', 'X'],['D4','X', 'C4', 'X']]}, {speed:1 , notes:[['A4','X', 'C4', 'X'],['D4','X', 'E4', 'X'],['A5','X', 'C5', 'X'],['D5','X', 'E5', 'X']]}]
     }
     ])
-    const [audioSettings, setAudioSettings] = useState([
-        {   
-            name: 'acoustic guitar 1',
-            instrument: 'acoustic_guitar_nylon',
-            volume: 0,
-            effects:[],
-    },
-    {   
-        name: 'bass 1',
-        instrument: 'acoustic bass 1',
-        volume: 0,
-        effects:[],
-    },
-    ])
-    const [bpm, setBpm] = useState(120)
-    const [focus, setFocus] = useState(0)
     const [loop, setLoop] = useState(false)
-    const [loopEnd, setLoopEnd] = useState(1)
     const [activeEdits, setActiveEdits] = useState([])
     const [moduleMarkers, setModuleMarkers] = useState(moduleMarkerCreator(data))
     
@@ -127,7 +110,8 @@ function createGuitarSVG(){
     //=============================================
     var fretNumber = instruments[NUM]['fretNumber'];
     var tuning = instruments[NUM]['tuning']
-    var scale = instruments[NUM]['scale']
+    var instrumentScale =  instruments[NUM]['scale']
+    var scale = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B']
     var instrumentType = instruments[NUM]['instrument']
     var noteColor = instruments[NUM]['noteColors'];
     var leftHanded = false;
@@ -398,7 +382,7 @@ function createGuitarSVG(){
             noteName.setAttribute('class', noteValues[index]["name"] + '_' + NUM + '_name notename_' + NUM + ' notename notename_pitchClass_' + Note.pitchClass(noteValues[index]["name"]) + '_' + NUM)
             noteName.setAttribute('id', (k + 1) + "_" + l + "_" + NUM + "_name");
             noteName.textContent = noteValues[index]["name"];
-            if (scale.indexOf(noteValues[index]["note"]) === -1){
+            if (instrumentScale.indexOf(noteValues[index]["note"]) === -1){
                 note.setAttribute('visibility', 'hidden');
                 noteName.setAttribute('visibility', 'hidden');
             }
