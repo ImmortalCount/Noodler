@@ -369,7 +369,7 @@ const handleDeleteNote = (e) => {
 
 const handleEditAllUp = () => {
 var clone = [...notes]
-if (allOptions === 'scale'){
+if (noteOptions === 'scale'){
     for (var i = 0; i < clone.length; i++){
         if (allScaleNotes.indexOf(notes[i]) === -1){
             var chromaIndex = allChromaticNotes.indexOf(notes[i]);
@@ -391,14 +391,14 @@ if (allOptions === 'scale'){
         }
     }
     setNotes(clone)
-} else if (allOptions === 'octave') {
+} else if (noteOptions === 'octave') {
     for (var i = 0; i < clone.length; i++){
         var note = Note.pitchClass(notes[i])
         var octave = Note.octave(notes[i])
         clone[i] = note + (octave + 1)
         setNotes(clone)
     }
-} else if (allOptions === 'chromatic'){
+} else if (noteOptions === 'chromatic'){
     for (var i = 0; i < clone.length; i++){
         var chromaIndex = allChromaticNotes.indexOf(notes[i])
         if (allChromaticNotes.indexOf(notes[i]) === -1){
@@ -415,7 +415,7 @@ if (allOptions === 'scale'){
 
 const handleEditAllDown = () => {
     var clone = [...notes]
-    if (allOptions === 'scale'){
+    if (noteOptions === 'scale'){
         for (var i = 0; i < clone.length; i++){
             if (allScaleNotes.indexOf(notes[i]) === -1){
                 var chromaIndex = allChromaticNotes.indexOf(notes[i]);
@@ -437,14 +437,14 @@ const handleEditAllDown = () => {
             }
         }
         setNotes(clone)
-    } else if (allOptions === 'octave') {
+    } else if (noteOptions === 'octave') {
         for (var i = 0; i < clone.length; i++){
             var note = Note.pitchClass(notes[i])
             var octave = Note.octave(notes[i])
             clone[i] = note + (octave - 1)
             setNotes(clone)
         }
-    } else if (allOptions === 'chromatic'){
+    } else if (noteOptions === 'chromatic'){
         for (var i = 0; i < clone.length; i++){
             var chromaIndex = allChromaticNotes.indexOf(notes[i])
             if (allChromaticNotes.indexOf(notes[i]) === -1){
@@ -460,7 +460,24 @@ const handleEditAllDown = () => {
 
 const handleDeleteAll = () => {
     setNotes([])
-    setAllOptions('delete')
+    setNoteOptions('delete')
+}
+
+const handleAddNoteToEnd = () => {
+    const clone = [...notes]
+    if (clone.length === 0){
+        clone.push('C3')
+    } else {
+        const lastNote = clone[clone.length - 1]
+        clone.push(lastNote)
+    }
+    setNotes(clone)
+}
+
+const handleRemoveNoteFromEnd = () => {
+    const clone =  [...notes]
+    clone.pop()
+    setNotes(clone)
 }
 
 const handlePlayThis = (e) => {
@@ -786,11 +803,9 @@ const handleEditOptions = () => {
     setManipulate(false)
     if (edit === 'off'){
         setEdit('on')
-    } else if (edit === 'on'){
-        setEdit('all')
-    } else if (edit === 'all'){
+    } else {
         setEdit('off')
-    }
+    } 
 }
 
 const handleManipulateOptions = () => {
@@ -820,16 +835,18 @@ const handleExportDropdown = (e, {value}) => {
     return (
         <>
         <Menu>
-         <Menu.Item onClick={() => playAll()}> Play </Menu.Item>   
-         <Menu.Item onClick={()=> generateRandomMelody()}> Generate </Menu.Item>
+         <Menu.Item onClick={() => playAll()}><Icon name='play'/></Menu.Item>
+         <Button.Group>
+         <Button basic onClick={()=> generateRandomMelody()}> Generate </Button>
          <Dropdown
           simple
           item
           className='button icon'
         > 
             <Dropdown.Menu>
+                <Dropdown.Header>Generate Options</Dropdown.Header>
                 <Dropdown.Item>
-                length of pattern
+                # notes
                 <Input type='number' 
                 onKeyDown={(e) => {e.preventDefault()}}
                 onChange={(e, {value}) => setGeneratePatternLength(value)}
@@ -840,10 +857,16 @@ const handleExportDropdown = (e, {value}) => {
                 value={generatePatternLength}
                 />
                 </Dropdown.Item>
+                <Dropdown.Divider />
+                <Dropdown.Header> Common Patterns</Dropdown.Header>
+                <Dropdown.Item>Scale Up</Dropdown.Item>
+                <Dropdown.Item>Scale Down</Dropdown.Item>
+                <Dropdown.Item>Arpeggio Up</Dropdown.Item>
+                <Dropdown.Item>Arpeggio Down</Dropdown.Item>
             </Dropdown.Menu> 
-        </Dropdown>   
-         <Menu.Item onClick={handleEditOptions}> Edit: {edit} </Menu.Item>      
-         <Menu.Item onClick={handleManipulateOptions}> Manipulate: {manipulate ? 'on' : 'off'} </Menu.Item>    
+        </Dropdown> 
+        </Button.Group> 
+         <Menu.Item onClick={handleEditOptions}> Edit</Menu.Item>       
          <Dropdown
          simple
          item
@@ -851,7 +874,7 @@ const handleExportDropdown = (e, {value}) => {
          >
         <Dropdown.Menu>
             <Dropdown.Item onClick={() => setNotesTruePatternFalse(!notesTruePatternFalse)}>
-            View: {notesTruePatternFalse ? 'notes': 'pattern'} 
+                {notesTruePatternFalse ? 'Change to pattern view': 'Change to note view'} 
             </Dropdown.Item>
             <Dropdown.Item onClick={()=> setScaleLock(!scaleLock)}>
             Scale lock: {scaleLock ? 'on' : 'off'}
@@ -881,23 +904,20 @@ const handleExportDropdown = (e, {value}) => {
         exportObj={exportObj}/>
         </Button.Group>
         </Menu>
-        {edit === 'on' && 
+        {(edit === 'on' && !manipulate) && 
         <Button.Group>
             <Button  compact basic active={noteOptions === 'octave'} onClick ={() => setNoteOptions('octave')}>Octave</Button>
             <Button compact basic active={noteOptions === 'scale'} onClick ={() => setNoteOptions('scale')}> Scale</Button>
             <Button  compact basic active={noteOptions === 'chromatic'} onClick ={() => setNoteOptions('chromatic')}>Chromatic</Button>
             <Button  compact basic active={noteOptions === 'insert'} onClick ={() => setNoteOptions('insert')}>Insert</Button>
             <Button  compact basic active={noteOptions === 'delete'} onClick ={() => setNoteOptions('delete')}>Delete</Button>
-        </Button.Group>
-        }
-        {edit === 'all' &&
-        <Button.Group>
-            <Button  compact basic active={allOptions === 'octave'} onClick ={() => setAllOptions('octave')}>Octave</Button>
-            <Button compact basic active={allOptions === 'scale'} onClick ={() => setAllOptions('scale')}>Scale</Button>
-            <Button  compact basic active={allOptions === 'chromatic'} onClick ={() => setAllOptions('chromatic')}>Chromatic</Button>
-            <Button  compact basic active={allOptions === 'delete'} onClick ={handleDeleteAll}>Delete</Button>
-            <Button  compact basic onClick ={() => handleEditAllUp('up')}>Up</Button>
-            <Button  compact basic onClick ={() => handleEditAllDown('down')}>Down</Button>
+            <Button compact basic onClick={() => handleRemoveNoteFromEnd()}>Note-- </Button>
+            <Button compact basic onClick={() => handleAddNoteToEnd()}>Note++ </Button>
+            {noteOptions === 'delete' && <Button  compact basic onClick ={handleDeleteAll}>Delete All</Button>}
+            {noteOptions !== 'delete' && noteOptions !== 'insert' && <Button  compact basic onClick ={() => handleEditAllUp('up')}>All Up</Button>}
+            {noteOptions !== 'delete' && noteOptions !== 'insert' && <Button  compact basic onClick ={() => handleEditAllDown('down')}>All Down</Button>}
+            <Button  compact basic onClick ={() => setManipulate(!manipulate)}>Advanced</Button>
+
         </Button.Group>
         }
         {manipulate &&
@@ -906,6 +926,7 @@ const handleExportDropdown = (e, {value}) => {
             <Button  compact basic onClick ={reverseMelody}>Reverse Melody</Button>
             <Button  compact basic onClick ={invertMelodyChromatically}>Invert Melody</Button>
             <Button  compact basic onClick ={() => patternAndScaleToNotes()}>Fit Pattern To Scale</Button>
+            <Button  compact basic  active onClick ={() => setManipulate(!manipulate)}>Advanced</Button>
         </Button.Group>
         }
   

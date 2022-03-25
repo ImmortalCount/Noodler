@@ -1,7 +1,7 @@
 import React, {useState, useRef, useEffect} from 'react'
 import { Scale, Note, Chord } from '@tonaljs/tonal';
 import DragAndFillCard from '../DragAndDrop/DragAndFillCard'
-import { Menu , Input, Dropdown, Button, Form, TextArea} from 'semantic-ui-react';
+import { Menu , Input, Dropdown, Button, Form, TextArea, Icon} from 'semantic-ui-react';
 import { useSelector, useDispatch } from 'react-redux';
 import { insertData } from '../../store/actions/dataPoolActions';
 import { scaleHandler } from './utils';
@@ -393,7 +393,7 @@ for (var o = 0; o < 10; o++){
     return (
         <>
         <Menu>
-         <Menu.Item onClick={() => playModule()} >Play</Menu.Item>  
+         <Menu.Item onClick={() => playModule()} ><Icon name='play' /></Menu.Item>  
          <Dropdown onChange={onChangeDropdown} options={options === 'sharps' ? dropdownOptionsKeySharp : dropdownOptionsKeyFlat} text = {`Key: ${key}`} simple item/>
          <Menu.Item onClick={() => setShowDescription(!showDescription)}> Desc </Menu.Item>
          <Button.Group>

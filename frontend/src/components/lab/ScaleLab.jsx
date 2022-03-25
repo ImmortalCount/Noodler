@@ -29,11 +29,26 @@ export default function ScaleLab({importedScaleData, masterInstrumentArray}) {
     const isMuted = false;
     const user = JSON.parse(localStorage.getItem('userInfo'))
 
-    function setInit(){
-      setNotes(["C", "D", "E", "F", "G", "A", "B"])
-      setScaleNumber(2773)
-      setScaleName('major')
-      setScaleDataBinary([1,0,1,0,1,1,0,1,0,1,0,1])
+    function setScale(scaleName){
+      const rootChromaticScale = Scale.get(rootNote + ' chromatic').notes
+      const scaleNumber = Scale.get(rootNote + ' ' + scaleName).setNum
+      const chromaReturn = Scale.get(rootNote + ' ' + scaleName).chroma.split("")
+
+      for (let k = 0; k < chromaReturn.length; k++){
+          chromaReturn[k] = Number(chromaReturn[k])
+      }
+      const returnScale = [];
+
+      for (let j = 0; j < chromaReturn.length; j++){
+          if (chromaReturn[j] === 1){
+              returnScale.push(rootChromaticScale[j]);
+          }
+      }
+
+      setScaleName(scaleName);
+      setScaleNumber(scaleNumber)
+      setScaleDataBinary(chromaReturn);
+      setNotes(scaleHandler(returnScale, options));
     }
 
     const [rootNote, setRootNote] = useState('C')
@@ -674,13 +689,14 @@ const handleScaleDescriptionChange = e => {
         />
       </Button.Group>
       <Button.Group>
-        <Button basic onClick={() => handleRandomClick()}>Random</Button>
+        <Button basic onClick={() => handleRandomClick()}>Generate</Button>
         <Dropdown
           simple
           item
           className='button icon'
         >
           <Dropdown.Menu>
+          <Dropdown.Header> generate options</Dropdown.Header>
             <Dropdown.Item>range
             <Dropdown.Menu>
                 <Dropdown.Item>
@@ -732,8 +748,15 @@ const handleScaleDescriptionChange = e => {
                 <Dropdown.Item active={randomOptions === 'all'} onClick={()=> setRandomOptions('all')}>true random</Dropdown.Item>
               </Dropdown.Menu>
             </Dropdown.Item>
-            <Dropdown.Item onClick={() => setInit()}>init
-            </Dropdown.Item>
+            <Dropdown.Divider />
+            <Dropdown.Header> common scales</Dropdown.Header>
+            <Dropdown.Item onClick={() => setScale('major')}> Major</Dropdown.Item>
+            <Dropdown.Item onClick={() => setScale('harmonic minor')}> Harmonic Minor</Dropdown.Item>
+            <Dropdown.Item onClick={() => setScale('melodic minor')}> Melodic Minor</Dropdown.Item>
+            <Dropdown.Item onClick={() => setScale('harmonic major')}> Harmonic Major</Dropdown.Item>
+            <Dropdown.Item onClick={() => setScale('double harmonic major')}> Double Harmonic Major</Dropdown.Item>
+            <Dropdown.Item onClick={() => setScale('diminished')}> Diminished</Dropdown.Item>
+            <Dropdown.Item onClick={() => setScale('whole tone')}> Whole Tone</Dropdown.Item>
           </Dropdown.Menu>
           </Dropdown>
       </Button.Group>

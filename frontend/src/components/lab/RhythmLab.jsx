@@ -1,6 +1,6 @@
 import {React, useState, useEffect, useRef} from 'react'
 import * as Tone from 'tone';
-import { Menu, Button, Input, Dropdown, Form, TextArea } from 'semantic-ui-react';
+import { Menu, Button, Input, Dropdown, Form, TextArea, Icon } from 'semantic-ui-react';
 import { useDispatch, useSelector} from 'react-redux';
 import { insertData } from '../../store/actions/dataPoolActions';
 import { setLabData } from '../../store/actions/labDataActions';
@@ -896,22 +896,12 @@ const handleDescriptionChange = e => {
     return (
         <>
         <Menu>
-         <Menu.Item onClick={() => playSynth()}>Play</Menu.Item>  
+         <Menu.Item onClick={() => playSynth()}><Icon name='play'/></Menu.Item>  
          <Menu.Item onClick={()=> randomRhythmGenerator()}> Generate </Menu.Item>   
          <Menu.Item onClick={()=> setEdit(!edit)}> Edit</Menu.Item>   
          <Menu.Item onClick={()=> setStretchCompress(!stretchCompress)}>  Stretch/Compress </Menu.Item>      
          <Menu.Item onClick={() => setShowDescription(!showDescription)}> Desc </Menu.Item>
          <Button.Group>
-        {/* <Button basic disabled={localStorage.getItem('userInfo') === null} onClick={()=> handleExport()}>Export</Button>
-        <Dropdown
-          simple
-          item
-          disabled={localStorage.getItem('userInfo') === null}
-          className='button icon'
-          options={exportDropdownOptions}
-          onChange={handleExportDropdown}
-          trigger={<></>}
-        /> */}
         <ExportModal
         dataType={'Rhythm'}
         exportObj={exportObj}/>

@@ -697,6 +697,33 @@ const determineChordType = (noteArr) => {
 
 const setRecommendedScales = () => {
     console.log(data[0]['data'][0]['data']['keyData']['root'])
+    const positions = {
+    'major_key': {
+            'major': ['major', 'lydian', 'mixolydian', 'lydian','phrygian dominant', 'lydian', 'mixolydian', 'lydian', 'lydian', 'lydian', 'lydian', 'lydian'],
+            'minor': ['aeolian', 'dorian', 'dorian', 'dorian', 'phyrgian', 'dorian', 'melodic minor', 'dorian', 'dorian', 'dorian', 'aeolian', 'dorian', 'phrygian'],
+            'dominant': ['mixolydian', 'lydian dominant', 'mixolydian', 'lydian dominant', 'phyrgian dominant', 'mixolydian', 'lydian dominant', 'mixolydian', 'lydian dominant', 'mixolydian b6', 'lydian dominant', 'lydian dominant'],
+            'diminished': ['locrian 6', '2477', '2918', 'locrian 6', '2477', '2918', 'locrian 6', '2477', '2918', 'locrian 6', '2477', '2918'],
+    }, 
+    'minor_key': {
+        'major_chord': ['major', 'lydian', 'lydian', 'major', 'lydian', 'lydian', 'lydian', 'double harmonic major', 'lydian', 'lydian', 'mixolydian', 'lydian'],
+        'minor_chord': ['aeolian', 'dorian', 'dorian', 'dorian', 'dorian', 'dorian', 'dorian', 'phrygian', 'dorian', 'dorian', 'dorian', 'dorian'],
+        'dominant_chord': ['mixolydian', 'lydian dominant', 'mixolydian', 'lydian dominant', 'phyrgian dominant', 'mixolyian', 'lydian dominant', 'phyrgian dominant', 'lydian dominant', 'lydian dominant', 'mixolydian', 'lydian dominant'],
+        'quayle_diminished_options': ['lydian diminished', '2477', '2918', 'lydian diminished', '2477', '2918', 'lydian diminished', '2477', '2918', 'lydian diminished', '2918', 'ultralocrian'],
+    },
+    }
+    const always = {
+        '7b9': 'phyrgian dominant',
+        '7#5': 'altered',
+        '7b5': 'altered',
+        '7#9': 'altered',
+        '7#11': 'lydian dominant',
+        '7b6': 'mixolydian b6',
+        'maj7#11': 'lydian',
+        'min7b5': 'locrian',
+        'aug': 'major augmented',
+        'dim': 'ultralocrian', 
+        //dim options: 3436
+    }
 }
 
 const distanceFromChordRootToKeyRoot = () => {
