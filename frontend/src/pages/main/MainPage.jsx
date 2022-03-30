@@ -174,7 +174,7 @@ function Midbar() {
         <div className="bottomhalf" style={{display: 'flex', flexDirection: 'row', backgroundColor: 'white'}}>
             <div className="bottomleft" style={{display: 'flex', flexDirection: 'row', backgroundColor: 'white'}}> 
             <div style={{display: activeTabs.includes('explorer') ? '' : 'none'}}>
-            {/* <Explorer/> */}
+            <Explorer/>
             </div>
             <div style={{display: activeTabs.includes('lab') ? '' : 'none'}}>
             <Lab

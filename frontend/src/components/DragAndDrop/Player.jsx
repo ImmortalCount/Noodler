@@ -546,11 +546,12 @@ function moduleSubtract(){
     useEffect(() => {
         const thisInterval = setInterval(function checkCurrentTimeAndSetCurrentlyPlaying() {
             let state = Tone.Transport.state
-        if (state === 'stopped' && currentlyPlayingValue.current.length !== 0){
+            let startingPos = Tone.Time(Tone.Transport.position).toSeconds() === 0
+        if (state === 'stopped' && startingPos){
             setCurrentlyPlaying([])
             currentlyPlayingValue.current = []
             return
-        } else if (state !== 'stopped'){
+        } else {
             let currentTime = Tone.Time(Tone.Transport.position).toSeconds()
             var playingArr = [];
             for (var i = 0; i < markerValue.current.length; i++){
@@ -567,10 +568,8 @@ function moduleSubtract(){
                 currentlyPlayingValue.current = playingArr
                 setCurrentlyPlaying(playingArr)
             }
-        } else {
-            return
-        }
-    }, 100)
+        } 
+    }, 50)
         return () => {
           clearInterval(thisInterval);
         };

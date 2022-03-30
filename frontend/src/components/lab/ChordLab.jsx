@@ -7,6 +7,7 @@ import { setLabData } from '../../store/actions/labDataActions';
 import { Icon, Menu, Dropdown, Button, Input, Form, TextArea } from 'semantic-ui-react';
 import { polySynth } from './synths';
 import { scaleHandler } from './utils';
+import { setNoteDisplay } from '../../store/actions/noteDisplayActions';
 import ExportModal from '../modal/ExportModal'
 
 export default function ChordLab({importedChordData, masterInstrumentArray}) {
@@ -20,6 +21,9 @@ export default function ChordLab({importedChordData, masterInstrumentArray}) {
     const [octave, setOctave] = useState(3)
     const [options, setOptions] = useState('sharps')
     const [exportPool, setExportPool] = useState('global')
+    const [voicing, setVoicing] = useState('basic')
+    const [progression, setProgression] = useState('default')
+    const [instrumentDisplay, setInstrumentDisplay] = useState(-2)
     const [edit, setEdit] = useState(false)
     const isMuted = false;
     const user = JSON.parse(localStorage.getItem('userInfo'))
@@ -69,6 +73,46 @@ export default function ChordLab({importedChordData, masterInstrumentArray}) {
         dispatch(setLabData(newInfo))
         
     }, [chords])
+
+    useEffect(() => {
+        dispatch(setNoteDisplay(convertScaleForDispatch()))
+      }, [instrumentDisplay, chords])
+      
+      function convertScaleForDispatch(){
+        var arrOfObj = []
+        var dispatchObj = {data: [{speed: 1, notes: [['']]}], displayOnly: false, highlight: []}
+        var scaleString = ''
+      
+        for (let i= 0; i < chords[0].length; i++){
+            if (i === chords[0].length - 1){
+                scaleString += chords[0][i] 
+            } else {
+                scaleString += chords[0][i] + ' '
+            }
+            scaleString = [scaleString]
+        }
+
+        console.log(scaleString, 'from chord lab')
+      
+      
+        for (let h = 0; h < masterInstrumentArray.length; h++){
+          arrOfObj.push(JSON.parse(JSON.stringify(dispatchObj)))
+        }
+      
+        if (instrumentDisplay === -2){
+          return arrOfObj
+        } else if (instrumentDisplay === -1){
+          for (let j = 0; j < arrOfObj.length; j++){
+            arrOfObj[j]['data'][0]['notes'][0] = scaleString
+          }
+          return arrOfObj
+        } else {
+          arrOfObj[instrumentDisplay - 1]['data'][0]['notes'][0] = scaleString
+          console.log(arrOfObj, 'arr of obj', scaleString, 'scale string')
+          return arrOfObj
+        }
+      
+      }
     
 
     const allScaleNotes = [];
@@ -97,11 +141,13 @@ export default function ChordLab({importedChordData, masterInstrumentArray}) {
         var chordStack = [];
         var nullStack = [];
         let numberOfChords;
+
         if (limit !== undefined){
             numberOfChords = limit
         } else {
             numberOfChords = scaleNotes.length
         }
+        console.log(numberOfChords)
             var interval = generateChordOptions['intervals'];
             var stackHeight = generateChordOptions['number'];
             var root = scaleNotes[0] + '3';
@@ -152,6 +198,9 @@ export default function ChordLab({importedChordData, masterInstrumentArray}) {
         return returnArr
     }
     //============
+
+    //voicing drop 2 - second note goes up an octave
+    
 
     function playChords(){
         if (isMuted){
@@ -533,7 +582,7 @@ export default function ChordLab({importedChordData, masterInstrumentArray}) {
 
     const handleDeleteNote = (e) =>{
         var clone = [...chords]
-        var positionId = e.target.parentNode.parentNode.id;
+        var positionId = e.target.parentNode.id;
         var x = positionId.split('_')[1]
         var y = positionId.split('_')[2]
 
@@ -543,6 +592,7 @@ export default function ChordLab({importedChordData, masterInstrumentArray}) {
 
         clone[x].splice(y, 1)
         setChords(clone)
+
     }
 
     const handleDeleteChord =(e) => {
@@ -562,6 +612,7 @@ export default function ChordLab({importedChordData, masterInstrumentArray}) {
         const clone = JSON.parse(JSON.stringify(chords))
         if (chords.length === 0){
             generateChordStack(1)
+            return 
         } else {
         const lastChord = clone[clone.length - 1]
         clone.push(JSON.parse(JSON.stringify(lastChord)))
@@ -763,6 +814,19 @@ export default function ChordLab({importedChordData, masterInstrumentArray}) {
         return returnArr;
     }
 
+    function mapMenuItems(){
+        return (
+            masterInstrumentArray.map((instrument, idx) => 
+            <Dropdown.Item
+            text={instrument}
+            key={'mappedInstr' + idx}
+            selected={instrumentDisplay === idx + 1}
+            onClick={() => setInstrumentDisplay(idx + 1)}
+            />
+            )
+        )
+}   
+
     const handleGenerateChordDropdownOptions = (e, {value}) => {
         var clone = JSON.parse(JSON.stringify(generateChordOptions))
         var thisID = e.target.id;
@@ -840,8 +904,7 @@ export default function ChordLab({importedChordData, masterInstrumentArray}) {
           className='button icon'
         >
          <Dropdown.Menu>
-             <Dropdown.Item> Character
-                <Dropdown.Menu>
+             <Dropdown.Header>generate options</Dropdown.Header>
                 <Dropdown.Item>
                 interval size:
                 <Input type='number' 
@@ -866,36 +929,43 @@ export default function ChordLab({importedChordData, masterInstrumentArray}) {
                 value={generateChordOptions['number']}
                 />
                 </Dropdown.Item>
-                </Dropdown.Menu>
-             </Dropdown.Item>
-             <Dropdown.Item> Progression
-                <Dropdown.Menu>
-                <Dropdown.Item selected>Diatonic</Dropdown.Item>
-                <Dropdown.Item>4ths</Dropdown.Item>
-                <Dropdown.Item>5ths</Dropdown.Item>
-                </Dropdown.Menu>
-             </Dropdown.Item>
-            
+            <Dropdown.Divider/>
+            <Dropdown.Header>voicing</Dropdown.Header>
+                <Dropdown.Item>Basic</Dropdown.Item>
+                <Dropdown.Item>Drop 2</Dropdown.Item>
+                <Dropdown.Item>{`Drop 2 & 4`}</Dropdown.Item>
+                <Dropdown.Item>4 Chord Pop</Dropdown.Item>
+            <Dropdown.Divider/>
+            <Dropdown.Header>common progressions</Dropdown.Header>
+                <Dropdown.Item>Circle of 5ths</Dropdown.Item>
+                <Dropdown.Item>Circle of 4ths</Dropdown.Item>
+                <Dropdown.Item>Canon Progression</Dropdown.Item>
+                <Dropdown.Item>4 Chord Pop</Dropdown.Item>
               </Dropdown.Menu>
             
           </Dropdown>
           </Button.Group> 
-         <Menu.Item onClick={() => setEdit(!edit)}> Edit </Menu.Item>    
-         <Menu.Item onClick={() => setShowDescription(!showDescription)}> Desc </Menu.Item>   
+         <Menu.Item onClick={() => setEdit(!edit)}> Voicing </Menu.Item>    
+         <Menu.Item onClick={() => setEdit(!edit)}> Progression </Menu.Item> 
+         <Menu.Item onClick={() => setEdit(!edit)}> Edit </Menu.Item>     
+         <Menu.Item onClick={() => setShowDescription(!showDescription)}> Desc </Menu.Item>
+         <Menu.Item>
+            <Dropdown
+            simple 
+            text = 'Display   ' 
+       >
+          <Dropdown.Menu>
+            <Dropdown.Item selected={instrumentDisplay === -2} onClick={() => setInstrumentDisplay(-2)}> None </Dropdown.Item>
+            <Dropdown.Item selected={instrumentDisplay === -1} onClick={() => setInstrumentDisplay(-1)}> All </Dropdown.Item>
+             {mapMenuItems()}
+          </Dropdown.Menu>
+        </Dropdown>
+        </Menu.Item>   
+         <Menu.Item onClick={() => generateChordStack(1)}> Map </Menu.Item>  
          <Button.Group>
          <ExportModal
         dataType={'Chord'}
         exportObj={exportObj}/>
-        {/* <Button basic disabled={localStorage.getItem('userInfo') === null} onClick={()=> handleExport()}>Export</Button>
-        <Dropdown
-          simple
-          item
-          disabled={localStorage.getItem('userInfo') === null}
-          className='button icon'
-          options={exportDropdownOptions}
-          onChange={handleExportDropdown}
-          trigger={<></>}
-        /> */}
         </Button.Group>  
         </Menu>
         {edit && <Button.Group>

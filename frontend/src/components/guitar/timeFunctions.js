@@ -27,6 +27,22 @@ export function moduleMarkerCreatorCompact(data){
     return moduleMarkers;
 }
 
+export function moduleMarkerCreatorAll(data){
+    const timeConstant = Tone.Time('4n').toSeconds()
+    let allInstrumentMarkers = [];
+    for (let h = 0; h < data.length; h++){
+        let moduleMarkers = [0]
+        let count = 0;
+        for (let i = 0; i < data[h]['data'].length; i++){
+            var moduleDuration = ((1/(data[h]['data'][i].speed) * timeConstant * data[h]['data'][i].notes.length))
+            moduleMarkers.push(moduleDuration + count)
+            count += moduleDuration;
+        }
+        allInstrumentMarkers.push(moduleMarkers)
+    }
+    return allInstrumentMarkers;
+}
+
 //====FINDS THE ENDPOINT OF A LOOP
 export function loopLengthCreator(data){
     var loopLength = 0;
@@ -40,7 +56,7 @@ export function loopLengthCreator(data){
 //=====FIND THE CURRENT MODULE BASED ON TIME
 
 export function findBetween(number, list){
-    var returnObj = {previous: undefined, next: undefined, playingIndex: undefined, current: undefined}
+    let returnObj = {}
         for (var i = 1; i < list.length; i++){
             if (number <= list[0]){
                 returnObj['previous'] = list[0]

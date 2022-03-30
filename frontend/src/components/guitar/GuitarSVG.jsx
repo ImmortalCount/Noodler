@@ -3,7 +3,7 @@ import * as Tone from 'tone';
 import { allSynths } from './allSynths';
 import { useSelector, useDispatch} from 'react-redux';
 import { Dropdown, Button, Icon, Segment, Input } from 'semantic-ui-react';
-import {moduleMarkerCreator, moduleMarkerCreatorCompact, loopLengthCreator, findBetween} from './timeFunctions'
+import {moduleMarkerCreator, moduleMarkerCreatorAll, moduleMarkerCreatorCompact, loopLengthCreator, findBetween} from './timeFunctions'
 import { shadeHexColor, showAll } from './guitarDisplayFunctions';
 import {noteValues, romanNumerals} from './guitarSVGConstants';
 import { guitarPrototype, bassPrototype } from './instrumentPrototypes';
@@ -32,11 +32,15 @@ export default function GuitarSVG({masterInstrumentArray, activelyDisplayedInstr
     const [loop, setLoop] = useState(false)
     const [activeEdits, setActiveEdits] = useState([])
     const [moduleMarkers, setModuleMarkers] = useState(moduleMarkerCreator(data))
+    const [allModuleMarkers, setAllModuleMarkers] = useState(moduleMarkerCreatorAll(data))
     
     const dispatch = useDispatch()
 
     const songImportData = useSelector(state => state.songImport)
     const {songImport} = songImportData
+
+    const noteDisplayData = useSelector(state => state.noteDisplay)
+    const {noteDisplay} = noteDisplayData
     //=====Consts
     const guitarInstruments = [
         "acoustic_guitar_nylon",
@@ -52,16 +56,48 @@ export default function GuitarSVG({masterInstrumentArray, activelyDisplayedInstr
     useEffect(() => {
         handleInstrumentUpdate();
     }, [masterInstrumentArray])
-    
+
+    var lastPosition = useRef(0)
+    const refData = useRef('')
+    const refInstruments = useRef('')
+
+
+    useEffect(() => {
+        refData.current = data
+        refInstruments.current = instruments
+    }, [data, instruments])
+
     useEffect(() => {
         loadNoteSequenceAndVisualDataOntoTimeline(data)
+        displayNotes()
     }, [data, instruments])
+
+    //===if position has changed while paused
+
+
+    useEffect(() => {
+        const thisInterval = setInterval(function () {
+            let state = Tone.Transport.state
+            if (state === 'started'){
+                return
+            } else {
+                if (lastPosition.current !== Tone.Time(Tone.Transport.position).toSeconds()){
+                    displayNotes() 
+                    lastPosition.current = Tone.Time(Tone.Transport.position).toSeconds()
+                }
+            }
+    }, 50)
+        return () => {
+          clearInterval(thisInterval);
+        };
+      }, [])
 
     useEffect(() => {
         if (state !== "Initial Module Data"){
             const dataPackage = JSON.parse(state)
             setData(dataPackage['data'])
             setModuleMarkers(moduleMarkerCreator(dataPackage['data']))
+            setAllModuleMarkers(moduleMarkerCreatorAll(dataPackage['data']))
         } else {
             return
         }
@@ -88,6 +124,17 @@ export default function GuitarSVG({masterInstrumentArray, activelyDisplayedInstr
         }
     }, [songImport])
 
+    useEffect(() => {
+        if (noteDisplay){
+            displayNotes(noteDisplay)
+        } else {
+            return
+        }
+    }, [noteDisplay])
+
+
+
+    //----Check if the position has moved while paused
 
 function findIndex(name){
         for (var z = 0; z < noteValues.length; z++){
@@ -398,7 +445,7 @@ function createGuitarSVG(){
     }
     //generate fretIndicators
     
-    for (var l = 1; l < fretNumber + 1; l++){
+    for (let l = 1; l < fretNumber + 1; l++){
         var fretIndicator = document.createElementNS("http://www.w3.org/2000/svg", 'text');
         if (leftHanded === true){
             if (l === 1){
@@ -436,7 +483,7 @@ function createGuitarSVG(){
 function positionNamer(notesArr, tuning){
     //See if you can make this change for each board 
     var fretNumber = 24;
-
+    //sort the notes coming in from the Notes Ar
     //generate fretboard
     var fretboard = [];
     for (var i = 0; i < tuning.length; i++){
@@ -480,7 +527,7 @@ function positionNamer(notesArr, tuning){
 
 
 
-    //Multiple notes --> continue
+//-----------------Multiple notes --> continue
 
     function alreadyCalled(val){
         var state = false;
@@ -538,7 +585,7 @@ const anchorNoteIndex = notesArr.length - 1;
         //scan strings
         
         
-        for (var k = 0;  k < tuning.length;){
+        for (let k = 0;  k < tuning.length;){
             var foundFretIndex = fretboard[k].indexOf(notesArr[notesArrIndex]);
             //if the note we're looking for is on the string 
             if (foundFretIndex !== -1){
@@ -575,7 +622,7 @@ const anchorNoteIndex = notesArr.length - 1;
                         singlePosition = [];
                         notesArrIndex = notesArr.length - 1
                         safetyCount++
-                        if (safetyCount > 6){
+                        if (safetyCount > 16){
                             complete = true;
                         }
                     }
@@ -587,6 +634,35 @@ const anchorNoteIndex = notesArr.length - 1;
 
     return allPositions;
 }
+
+function positionNamer2(notesArr, tuning){
+    //remember that the notes are sorted before entering from lowest to highest
+    var fretNumber = 24;
+    var fretboard = [];
+    for (let i = 0; i < tuning.length; i++){
+        let stringNotes = [];
+        let index = findIndex(tuning[i]);
+        for (let j = 0; j < fretNumber + 1; j++){
+            stringNotes.push(noteValues[index + j]['name'])
+        }
+        fretboard.push(stringNotes)
+    }
+
+    var allPositions = [];
+
+    //scan fretboard horizontally to find root notes, the vertically for added notes
+    for (let i = 0; i < fretboard.length; i++){
+        for (let j = 0; j < tuning.length; j++){
+            if (fretboard[i][j] === notesArr[0]){
+                allPositions.push('found note')
+            }
+        }
+    }
+
+    
+}
+
+
 
 var playPosition = 0;
 
@@ -605,14 +681,19 @@ function flattenNotes(notes, returnArr){
 }   
 
 function noteStringHandler(notes){
+    if (notes.length === 0){
+        return ['']
+    }
     var returnArr = []
     if (notes.indexOf(' ') === -1){
         returnArr.push(notes)
     } else {
         returnArr = notes.split(' ')
     }
-    return returnArr
+    
+    return Note.sortedNames(returnArr)
 }
+
 
 function handleInstrumentUpdate(){
     var clone = [...instruments]
@@ -640,21 +721,23 @@ function playHandler(){
     Tone.Transport.start();
 }
 
+function returnPosition(note, tuning){
+    if (positionNamer(noteStringHandler(note), tuning)[globalPosition.current] === undefined){
+        return positionNamer(noteStringHandler(note), tuning)[positionNamer(noteStringHandler(note), tuning).length -1]
+    } else {
+        return positionNamer(noteStringHandler(note), tuning)[globalPosition.current]
+    }
+}
+
 function loadNoteSequenceAndVisualDataOntoTimeline(data){
     Tone.Transport.cancel();
     var playPositions = [];
     for (var j = 0; j < data.length; j++){
         playPositions.push(0)
     }
-    function returnPosition(note, tuning){
-        if (positionNamer(noteStringHandler(note), tuning)[globalPosition.current] === undefined){
-            return positionNamer(noteStringHandler(note), tuning)[positionNamer(noteStringHandler(note), tuning).length -1]
-        } else {
-            return positionNamer(noteStringHandler(note), tuning)[globalPosition.current]
-        }
-    }
+
     function setUpSequence(data, instrument, instrumentNumber, displayOnly){
-        for (var i = 0; i < data.length; i++){
+        for (let i = 0; i < data.length; i++){
             var tuning = instruments[instrumentNumber]['tuning']
             new Tone.Sequence(
                  // eslint-disable-next-line no-loop-func
@@ -668,10 +751,10 @@ function loadNoteSequenceAndVisualDataOntoTimeline(data){
                   //
                   //hide all
                   if (note !== 'X'){
-                    var x = document.getElementsByClassName('note_' + instrumentNumber);
-                    var y = document.getElementsByClassName('notename_' + instrumentNumber);
-                    var z = document.getElementsByClassName('notespecial_' + instrumentNumber);
-                for (var i = 0; i < x.length; i++){
+                    let x = document.getElementsByClassName('note_' + instrumentNumber);
+                    let y = document.getElementsByClassName('notename_' + instrumentNumber);
+                    let z = document.getElementsByClassName('notespecial_' + instrumentNumber);
+                for (let i = 0; i < x.length; i++){
                     x[i].setAttribute('visibility', 'hidden');
                     y[i].setAttribute('visibility', 'hidden');
                     z[i].setAttribute('visibility', 'hidden');
@@ -682,10 +765,11 @@ function loadNoteSequenceAndVisualDataOntoTimeline(data){
               if (note !== 'X'){
                 var currentArray = noteStringHandler(note);
                 var highlights = [1];
+                //If the instrument is set to display only
                 if (displayOnly){
-                    for (var i = 0; i < currentArray.length; i++){
-                        var x;
-                        var y;
+                    for (let i = 0; i < currentArray.length; i++){
+                        let x;
+                        let y;
                         if (highlights.includes(i + 1)){
                             x = document.getElementsByClassName('notespecial_pitchClass_' + currentArray[i] + '_' + instrumentNumber);
                         } else {
@@ -697,15 +781,13 @@ function loadNoteSequenceAndVisualDataOntoTimeline(data){
                         y[j].setAttribute('visibility', '');
                     }
                     }
+                    //if the globalPosition is set to -1 'show all notes'
                 } else if (globalPosition.current < 0){
-                    for (var w = 0; w < currentArray.length; w++){
-                        var x = document.getElementsByClassName(currentArray[w] + '_' + instrumentNumber);
-                        var y = document.getElementsByClassName(currentArray[w] + '_' + instrumentNumber + '_name');
+                    for (let w = 0; w < currentArray.length; w++){
+                        let x = document.getElementsByClassName(currentArray[w] + '_' + instrumentNumber);
+                        let y = document.getElementsByClassName(currentArray[w] + '_' + instrumentNumber + '_name');
                         if (x !== null && y !== null && x !== undefined && y !== undefined){
-                            for (var j = 0; j < x.length; j++){
-                                if (w === 0 && j === 0){
-                                    // console.log(x[0], 'X', y[0], 'y')
-                                }
+                            for (let j = 0; j < x.length; j++){
                                 x[j].setAttribute('visibility', '');
                                 y[j].setAttribute('visibility', '');
                                 // note.setAttribute('class', noteValues[index]["name"] + '_' + NUM + ' note_' + NUM + ' note');
@@ -750,10 +832,97 @@ function loadNoteSequenceAndVisualDataOntoTimeline(data){
                 .loop = 1;
             }  
     }
-    for (var j = 0; j < data.length; j++){
+    for (let j = 0; j < data.length; j++){
         setUpSequence(data[j]['data'], allSynths[instruments[j]['instrument']], j, data[j]['displayOnly'])
     }
 }
+
+// Functionality for if the player is paused and you change the timeline!!
+function displayNotes(input){
+    let data;
+    if (!input){
+        data = refData.current
+    } else {
+        data = input
+    }
+
+    let instruments = refInstruments.current
+    let time = Tone.Time(Tone.Transport.position).toSeconds()
+    let currentModuleIndex = findBetween(time + 0.01, moduleMarkers)['playingIndex']
+    
+
+        for (let i = 0; i < data.length; i++){
+            //first hide all
+                    let x = document.getElementsByClassName('note_' + i);
+                    let y = document.getElementsByClassName('notename_' + i);
+                    let z = document.getElementsByClassName('notespecial_' + i);
+                for (let i = 0; i < x.length; i++){
+                    x[i].setAttribute('visibility', 'hidden');
+                    y[i].setAttribute('visibility', 'hidden');
+                    z[i].setAttribute('visibility', 'hidden');
+                }
+            //global position
+            if (data[i]['data'][currentModuleIndex] === undefined){
+                return
+            }
+            let currentArray = noteStringHandler(data[i]['data'][currentModuleIndex]['notes'][0][0])
+            let displayOnly = data[i]['displayOnly'];
+            // let highlights = data[i]['highlight']
+            let highlights = [1];
+            if (displayOnly){
+                for (let q = 0; q < currentArray.length; q++){
+                    let x;
+                    let y;
+                    if (highlights.includes(q + 1)){
+                        x = document.getElementsByClassName('notespecial_pitchClass_' + currentArray[q] + '_' + i);
+                    } else {
+                        x = document.getElementsByClassName('note_pitchClass_' + currentArray[q] + '_' + i);
+                    }
+                    y = document.getElementsByClassName('notename_pitchClass_' + currentArray[q] + '_' + i);
+                for (let r = 0; r < x.length; r++){
+                    x[r].setAttribute('visibility', '');
+                    y[r].setAttribute('visibility', '');
+                }
+                }
+                //if the globalPosition is set to -1 'show all notes'
+            } else if (globalPosition.current < 0){
+
+                for (let w = 0; w < currentArray.length; w++){
+                    let x = document.getElementsByClassName(currentArray[w] + '_' + i);
+                    let y = document.getElementsByClassName(currentArray[w] + '_' + i + '_name');
+                    if (x !== null && y !== null && x !== undefined && y !== undefined){
+                        for (let j = 0; j < x.length; j++){
+                            x[j].setAttribute('visibility', '');
+                            y[j].setAttribute('visibility', '');
+                        }
+                    } else {
+                        console.log('off Model!')
+                    }
+                }
+            } else {
+                var pos = returnPosition(data[i]['data'][currentModuleIndex]['notes'][0][0], instruments[i]['tuning']);
+                // var tabArray = []
+                if (pos !== undefined){
+                    for (var w = 0; w < pos.length; w++){
+                        let x = document.getElementById(pos[w] + '_' + i);
+                        let y = document.getElementById(pos[w] + '_' + i + '_name');
+                        if (x !== null && y !== null){
+                            x.setAttribute('visibility', '');
+                            y.setAttribute('visibility', '');
+                        }
+                    }
+                } else {
+                    console.log('off Model!')
+                }
+            }
+        }
+    
+    return
+}
+
+
+
+//
 //----------------------------------
 
 
@@ -827,7 +996,6 @@ function loopOn(){
 //Temp storage for direction NEXT on module play
 function handlePreviousNextModulePlay(direction){
     var currentTime = Tone.Time(Tone.Transport.position).toSeconds();
-    // console.log(currentTime, lastCurrentTime.current)
     if (direction === 'next'){
         Tone.Transport.position = findBetween(currentTime + 0.01, moduleMarkers)['next']
     }
@@ -837,6 +1005,7 @@ function handlePreviousNextModulePlay(direction){
     if (direction === 'current'){
         Tone.Transport.position = findBetween(currentTime, moduleMarkers)['current']
     }
+    // displayNotes()
 }
 
 function handleStringChange(direction, instrumentNumber){
@@ -879,7 +1048,6 @@ const onChangeTuning = (e, {id, value}) => {
     var clone = [...instruments]
     var idx = Number(id.split("_")[1])
     clone[idx]['tuning'] = value
-    console.log(id)
     setInstruments(clone)
   }
 
@@ -1022,6 +1190,7 @@ function handleSeeAllPositions(){
     } else if (globalPosition.current === -1) {
         globalPosition.current = 0
     }
+    displayNotes()
 }
 
 function globalPositionChange(direction){
@@ -1034,12 +1203,24 @@ function globalPositionChange(direction){
             globalPosition.current--
         }
     }
+    displayNotes()
+}
+
+const handleStop = () => {
+    Tone.Transport.stop()
+    lastPosition.current = 0
+}
+
+const handlePause = () => {
+    Tone.Transport.pause()
+    lastPosition.current = Tone.Time(Tone.Transport.position).toSeconds()
+
 }
     return (
         <>
         {mapGuitarSVGContainers(instruments)}
-        <Button compact basic onClick={() => Tone.Transport.stop()}><Icon name='stop'/></Button>
-        <Button compact basic onClick={() => Tone.Transport.pause()}><Icon name='pause'/></Button>
+        <Button compact basic onClick={handleStop}><Icon name='stop'/></Button>
+        <Button compact basic onClick={handlePause}><Icon name='pause'/></Button>
         <Button compact basic onClick={() => playHandler()}><Icon name='play'/> </Button>
         <Button compact basic active={loop === true} onClick={()=>loopOn()}><Icon name='retweet'/></Button>
         <Button compact basic onClick={() => handlePreviousNextModulePlay('previous')} ><Icon name='fast backward'/></Button>
@@ -1048,6 +1229,7 @@ function globalPositionChange(direction){
         <Button compact basic onClick={() => globalPositionChange('down')}><Icon name='arrow down'/></Button>
         <Button compact basic onClick={() => globalPositionChange('up')}><Icon name='arrow up'/></Button>
         <Button compact basic onClick={() => handleSeeAllPositions()}><Icon name='arrows alternate vertical'/></Button>
+        <Button compact basic onClick={() => console.log(Note.sortedNames(['C3', 'F4', 'G3', 'A3']))}>Test</Button>
         </>
     )
 }

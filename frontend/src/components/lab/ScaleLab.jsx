@@ -9,7 +9,7 @@ import ExportModal from '../modal/ExportModal';
 
 import '../../../public/Do_Mayor_armadura.svg'
 import { keySynth } from './synths';
-import { insertData } from '../../store/actions/dataPoolActions';
+import { setNoteDisplay } from '../../store/actions/noteDisplayActions';
 
 export default function ScaleLab({importedScaleData, masterInstrumentArray}) {
     const [scaleDataBinary, setScaleDataBinary] = useState([1,0,1,0,1,1,0,1,0,1,0,1])
@@ -26,6 +26,7 @@ export default function ScaleLab({importedScaleData, masterInstrumentArray}) {
     const [exportPool, setExportPool] = useState('global')
     const [inputFocus, setInputFocus] = useState(false)
     const [displayName, setDisplayName] = useState('C major')
+    const [instrumentDisplay, setInstrumentDisplay] = useState(-2)
     const isMuted = false;
     const user = JSON.parse(localStorage.getItem('userInfo'))
 
@@ -57,6 +58,7 @@ export default function ScaleLab({importedScaleData, masterInstrumentArray}) {
 
     const labData = useSelector(state => state.labData)
     const {labInfo} = labData
+
 
 
 function createScaleSVG(){
@@ -171,6 +173,40 @@ function createScaleSVG(){
     dispatch(setLabData(newInfo))
     // sendScaleData(notes)
 }, [notes]);
+
+// Change the instrument display data sent to the guitarSVG
+useEffect(() => {
+  dispatch(setNoteDisplay(convertScaleForDispatch()))
+}, [instrumentDisplay, notes])
+
+function convertScaleForDispatch(){
+  var arrOfObj = []
+  var dispatchObj = {data: [{speed: 1, notes: [['']]}], displayOnly: true, highlight: []}
+  var scaleString = ''
+
+  for (let i= 0; i < notes.length; i++){
+    scaleString += notes[i] + ' '
+  }
+
+
+  for (let h = 0; h < masterInstrumentArray.length; h++){
+    arrOfObj.push(JSON.parse(JSON.stringify(dispatchObj)))
+  }
+
+  if (instrumentDisplay === -2){
+    return arrOfObj
+  } else if (instrumentDisplay === -1){
+    for (let j = 0; j < arrOfObj.length; j++){
+      arrOfObj[j]['data'][0]['notes'][0] = [scaleString]
+    }
+    return arrOfObj
+  } else {
+    arrOfObj[instrumentDisplay - 1]['data'][0]['notes'][0] = [scaleString]
+    console.log(arrOfObj, 'arr of obj', scaleString, 'scale string')
+    return arrOfObj
+  }
+
+}
 
 
 
@@ -583,6 +619,10 @@ function createScaleSVG(){
       const handlePlayDropdown = (e, {value}) => {
         setPlayOptions(value)
       }
+
+      const handleInstrumentDisplayDropdown = (e, {value}) => {
+        setInstrumentDisplay(value)
+      }
       
       function testScaleNotesHighlight(){
         var circle = document.getElementById('scale_' + 5)
@@ -609,9 +649,15 @@ function createScaleSVG(){
             <Dropdown.Item
             text={instrument}
             key={'mappedInstr' + idx}
+            selected={instrumentDisplay === idx + 1}
+            onClick={() => setInstrumentDisplay(idx + 1)}
             />
             )
         )
+}
+
+const handleInstrumentDisplay = () => {
+  
 }
 
 // function handleExport(){
@@ -678,7 +724,7 @@ const handleScaleDescriptionChange = e => {
         <Menu.Item onClick={() => handleSharpsOrFlats()}>{options === 'sharps' ? '#' : 'b'}</Menu.Item>
         <Dropdown onChange={onChangeDropdown} options={options === 'sharps' ? dropdownOptionsSharp : dropdownOptionsFlat} text = {`Root: ${rootNote}`} simple item/>
         <Button.Group>
-        <Button basic onClick={()=> playNoteSequence()}><Icon name='play'/></Button>
+        <Button basic compact onClick={()=> playNoteSequence()}><Icon name='play'/></Button>
         <Dropdown
           simple
           item
@@ -689,7 +735,7 @@ const handleScaleDescriptionChange = e => {
         />
       </Button.Group>
       <Button.Group>
-        <Button basic onClick={() => handleRandomClick()}>Generate</Button>
+        <Button basic compact onClick={() => handleRandomClick()}>Generate</Button>
         <Dropdown
           simple
           item
@@ -761,20 +807,23 @@ const handleScaleDescriptionChange = e => {
           </Dropdown>
       </Button.Group>
       <Button.Group>
-      <Button basic onClick={() => toggleModes('previous', notes)}><Icon name='caret left'/></Button>
-      <Button basic > Mode </Button>
-      <Button basic onClick={() => toggleModes('next', notes)}><Icon name='caret right'/></Button>
+      <Button basic compact onClick={() => toggleModes('previous', notes)}><Icon name='caret left'/></Button>
+      <Button basic compact > Mode </Button>
+      <Button basic compact onClick={() => toggleModes('next', notes)}><Icon name='caret right'/></Button>
       </Button.Group>
-      <Menu.Item onClick={() => setShowDescription(!showDescription)}>
-        Desc
-      </Menu.Item>
-      {/* <Menu.Item>
-      <Dropdown simple text = 'Display   ' >
+      <Menu.Item>
+      <Dropdown
+       simple 
+       text = 'Display   ' 
+       >
           <Dropdown.Menu>
+            <Dropdown.Item selected={instrumentDisplay === -2} onClick={() => setInstrumentDisplay(-2)}> None </Dropdown.Item>
+            <Dropdown.Item selected={instrumentDisplay === -1} onClick={() => setInstrumentDisplay(-1)}> All </Dropdown.Item>
              {mapMenuItems()}
           </Dropdown.Menu>
         </Dropdown>
-        </Menu.Item> */}
+        </Menu.Item>
+        <Menu.Item onClick={() => setShowDescription(!showDescription)}>Desc</Menu.Item>
         <Button.Group>
         {/* <Button basic disabled={localStorage.getItem('userInfo') === null} onClick={()=> handleExport()}>Export</Button> */}
         <ExportModal

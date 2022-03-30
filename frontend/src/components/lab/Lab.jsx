@@ -125,7 +125,10 @@ export default function Lab({masterInstrumentArray}) {
           Chord Lab
         </Accordion.Title>
         <Accordion.Content active={activeLabIndices.includes(1)}>
-            <ChordLab importedChordData={importedChordData}/>
+            <ChordLab
+             importedChordData={importedChordData}
+             masterInstrumentArray = {masterInstrumentArray}
+             />
         </Accordion.Content>
 
         <Accordion.Title
@@ -137,7 +140,10 @@ export default function Lab({masterInstrumentArray}) {
           Pattern Lab
         </Accordion.Title>
         <Accordion.Content active={activeLabIndices.includes(2)}>
-          <PatternLab importedPatternData={importedPatternData}/>
+          <PatternLab 
+          importedPatternData={importedPatternData}
+          masterInstrumentArray = {masterInstrumentArray}
+          />
         </Accordion.Content>
 
         <Accordion.Title
