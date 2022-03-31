@@ -479,163 +479,167 @@ function createGuitarSVG(){
     }
     
 }
+    //positionNamer only takes one instrument at a time
+// function positionNamer2(notesArr, tuning){
+
+//     //See if you can make this change for each board 
+//     var fretNumber = 24;
+//     //sort the notes coming in from the Notes Ar
+//     //generate fretboard
+//     var fretboard = [];
+//     for (var i = 0; i < tuning.length; i++){
+//         var stringNotes = [];
+//         var index = findIndex(tuning[i]);
+//         for (var j = 0; j < fretNumber + 1; j++){
+//             stringNotes.push(noteValues[index + j]['name'])
+//         }
+//         fretboard.push(stringNotes)
+//     }
+
+//     var allPositions = [];
+//     //scan etc
+
+
+//     //single note function
+
+//     if (Array.isArray(notesArr) === false){
+//         for (var k = 0; k < tuning.length;k++){
+//             var foundFretIndex = fretboard[k].indexOf(notesArr);
+//         //if the note we're looking for is on the string 
+//             if (foundFretIndex !== -1){
+//             var indexID = (k + 1 + "_" + foundFretIndex);
+//             allPositions.push([indexID]);
+//         }
+//     }
+//     return allPositions;
+// }
+//     //if the array is only one note long
+//     if (notesArr.length === 1){
+//         for (var k = 0; k < tuning.length;k++){
+//             var foundFretIndex = fretboard[k].indexOf(notesArr[0]);
+//         //if the note we're looking for is on the string 
+//             if (foundFretIndex !== -1){
+//             var indexID = (k + 1 + "_" + foundFretIndex);
+//             allPositions.push([indexID]);
+//         }
+//     }
+//     return allPositions;
+// }
+
+
+
+// //-----------------Multiple notes --> continue
+
+//     function alreadyCalled(val){
+//         var state = false;
+//         for (var m = 0; m < allPositions.length; m++){
+//             if (allPositions[m].indexOf(val) !== -1){
+//                 state = true;
+//             }
+//     }
+//     return state;
+// }   
+
+//     function notSharingString(val){
+        
+//         var stringsInUse = [];
+//         for (var i = 0; i< singlePosition.length; i++){
+//             var calledNote = (singlePosition[i][0])
+//             stringsInUse.push(calledNote);
+//         }
+//         if (stringsInUse.indexOf((val[0])) === -1){
+//             return true;
+//         } else {
+//             return false;
+            
+//         }
+//     }
+
+// const anchorNoteIndex = notesArr.length - 1;
+// //update fingering Or something so that it can't put two things on same line
+//     function fingeringSort(arr, anchorNoteID){
+
+//         var smallest = Infinity
+//         var smallestIndex = 0;
+//         for (var i = 0; i < arr.length; i++){
+//             var anchorNote = Number(anchorNoteID.split('_')[1]);
+//             var movingNote = Number(arr[i].split('_')[1]);
+//             if ((Math.abs(anchorNote - movingNote)) < smallest){
+//                 smallest = Math.abs(anchorNote - movingNote);
+//                 smallestIndex = i;
+//             }
+//         }
+//     return arr[smallestIndex] + "";
+//     }
+//     //is it complete?
+//     var complete = false;
+//     //make sure that it hasn't been called before
+    
+//     var notesArrIndex = notesArr.length - 1;
+//     var toBeSorted = [];
+//     var singlePosition = [];
+//     var anchorNoteID = '';
+//     var safetyCount = 0;
+
+//     while (complete === false){
+        
+//         //scan strings
+        
+        
+//         for (let k = 0;  k < tuning.length;){
+//             var foundFretIndex = fretboard[k].indexOf(notesArr[notesArrIndex]);
+//             //if the note we're looking for is on the string 
+//             if (foundFretIndex !== -1){
+//                 var indexID = (k + 1 + "_" + foundFretIndex);
+//                 //and its the anchor note
+//                 if (notesArrIndex === anchorNoteIndex){
+//                     //and it hasnt been called before
+//                     if (alreadyCalled(indexID) === false){
+//                         //push it
+//                         notesArrIndex--;
+//                         singlePosition.push(indexID);
+//                         anchorNoteID = indexID;
+//                         continue;
+//                     }
+//                 }
+//                 //if it isnt the anchor note and it hasn't been called
+//                 if ((alreadyCalled(indexID) === false) && (notSharingString(indexID))){
+//                     //and it isn't on the same string as a previous thing
+//                     toBeSorted.push(indexID);
+//                 }
+//             }
+//             //if its the last string scan
+//             if (k === tuning.length -1){
+//                 notesArrIndex--;
+//                 var bestNote = (fingeringSort(toBeSorted, anchorNoteID));
+//                 singlePosition.push(bestNote);
+//                 toBeSorted = [];
+//                 //if it is the last string and last note
+//                 if (notesArrIndex === -1){
+//                     if (singlePosition.indexOf("undefined") !== -1){
+//                         complete = true;
+//                     } else {
+//                         allPositions.push(singlePosition);
+//                         singlePosition = [];
+//                         notesArrIndex = notesArr.length - 1
+//                         safetyCount++
+//                         if (safetyCount > 16){
+//                             complete = true;
+//                         }
+//                     }
+//                 }  
+//             }
+//             k++;
+//         }
+//     }
+
+//     return allPositions;
+// }
 
 function positionNamer(notesArr, tuning){
-    //See if you can make this change for each board 
-    var fretNumber = 24;
-    //sort the notes coming in from the Notes Ar
-    //generate fretboard
-    var fretboard = [];
-    for (var i = 0; i < tuning.length; i++){
-        var stringNotes = [];
-        var index = findIndex(tuning[i]);
-        for (var j = 0; j < fretNumber + 1; j++){
-            stringNotes.push(noteValues[index + j]['name'])
-        }
-        fretboard.push(stringNotes)
-    }
 
-    var allPositions = [];
-    //scan etc
-
-
-    //single note function
-
-    if (Array.isArray(notesArr) === false){
-        for (var k = 0; k < tuning.length;k++){
-            var foundFretIndex = fretboard[k].indexOf(notesArr);
-        //if the note we're looking for is on the string 
-            if (foundFretIndex !== -1){
-            var indexID = (k + 1 + "_" + foundFretIndex);
-            allPositions.push([indexID]);
-        }
-    }
-    return allPositions;
-}
-    //if the array is only one note long
-    if (notesArr.length === 1){
-        for (var k = 0; k < tuning.length;k++){
-            var foundFretIndex = fretboard[k].indexOf(notesArr[0]);
-        //if the note we're looking for is on the string 
-            if (foundFretIndex !== -1){
-            var indexID = (k + 1 + "_" + foundFretIndex);
-            allPositions.push([indexID]);
-        }
-    }
-    return allPositions;
-}
-
-
-
-//-----------------Multiple notes --> continue
-
-    function alreadyCalled(val){
-        var state = false;
-        for (var m = 0; m < allPositions.length; m++){
-            if (allPositions[m].indexOf(val) !== -1){
-                state = true;
-            }
-    }
-    return state;
-}   
-
-    function notSharingString(val){
-        
-        var stringsInUse = [];
-        for (var i = 0; i< singlePosition.length; i++){
-            var calledNote = (singlePosition[i][0])
-            stringsInUse.push(calledNote);
-        }
-        if (stringsInUse.indexOf((val[0])) === -1){
-            return true;
-        } else {
-            return false;
-            
-        }
-    }
-
-const anchorNoteIndex = notesArr.length - 1;
-//update fingering Or something so that it can't put two things on same line
-    function fingeringSort(arr, anchorNoteID){
-
-        var smallest = Infinity
-        var smallestIndex = 0;
-        for (var i = 0; i < arr.length; i++){
-            var anchorNote = Number(anchorNoteID.split('_')[1]);
-            var movingNote = Number(arr[i].split('_')[1]);
-            if ((Math.abs(anchorNote - movingNote)) < smallest){
-                smallest = Math.abs(anchorNote - movingNote);
-                smallestIndex = i;
-            }
-        }
-    return arr[smallestIndex] + "";
-    }
-    //is it complete?
-    var complete = false;
-    //make sure that it hasn't been called before
-    
-    var notesArrIndex = notesArr.length - 1;
-    var toBeSorted = [];
-    var singlePosition = [];
-    var anchorNoteID = '';
-    var safetyCount = 0;
-
-    while (complete === false){
-        
-        //scan strings
-        
-        
-        for (let k = 0;  k < tuning.length;){
-            var foundFretIndex = fretboard[k].indexOf(notesArr[notesArrIndex]);
-            //if the note we're looking for is on the string 
-            if (foundFretIndex !== -1){
-                var indexID = (k + 1 + "_" + foundFretIndex);
-                //and its the anchor note
-                if (notesArrIndex === anchorNoteIndex){
-                    //and it hasnt been called before
-                    if (alreadyCalled(indexID) === false){
-                        //push it
-                        notesArrIndex--;
-                        singlePosition.push(indexID);
-                        anchorNoteID = indexID;
-                        continue;
-                    }
-                }
-                //if it isnt the anchor note and it hasn't been called
-                if ((alreadyCalled(indexID) === false) && (notSharingString(indexID))){
-                    //and it isn't on the same string as a previous thing
-                    toBeSorted.push(indexID);
-                }
-            }
-            //if its the last string scan
-            if (k === tuning.length -1){
-                notesArrIndex--;
-                var bestNote = (fingeringSort(toBeSorted, anchorNoteID));
-                singlePosition.push(bestNote);
-                toBeSorted = [];
-                //if it is the last string and last note
-                if (notesArrIndex === -1){
-                    if (singlePosition.indexOf("undefined") !== -1){
-                        complete = true;
-                    } else {
-                        allPositions.push(singlePosition);
-                        singlePosition = [];
-                        notesArrIndex = notesArr.length - 1
-                        safetyCount++
-                        if (safetyCount > 16){
-                            complete = true;
-                        }
-                    }
-                }  
-            }
-            k++;
-        }
-    }
-
-    return allPositions;
-}
-
-function positionNamer2(notesArr, tuning){
+    notesArr = Note.sortedNames(notesArr)
+    //assume the tuning is from highest to lowest
     //remember that the notes are sorted before entering from lowest to highest
     var fretNumber = 24;
     var fretboard = [];
@@ -647,22 +651,86 @@ function positionNamer2(notesArr, tuning){
         }
         fretboard.push(stringNotes)
     }
-
-    var allPositions = [];
-
-    //scan fretboard horizontally to find root notes, the vertically for added notes
-    for (let i = 0; i < fretboard.length; i++){
-        for (let j = 0; j < tuning.length; j++){
-            if (fretboard[i][j] === notesArr[0]){
-                allPositions.push('found note')
+    var rootNotes = [];
+    var rootPositions = [];
+    //find ROOT NOTE
+    for (let i = 0; i < fretNumber + 1; i++){
+        for (let j = tuning.length - 1; j > -1; j--){
+            if (fretboard[j][i] === notesArr[0]){
+                let indexID = (j + 1 + '_' + i)
+                rootNotes.push({string: j, fret: i})
+                rootPositions.push([indexID])
             }
         }
     }
 
-    
+    if (notesArr.length < 2){
+        return rootPositions
+    }
+
+var allPositions = []
+for (var g = 0; g < rootNotes.length; g++ ){
+    //starting string
+    var j = rootNotes[g]['string'] 
+    //starting fret
+    var i = rootNotes[g]['fret']
+
+    var tempArr = []
+    tempArr.push(rootPositions[g][0])
+
+    var noteCounter = 1;
+    for (j > 0; j--;){
+        var condition = false;
+        var k = 0;
+        while (!condition){
+            if (noteCounter > 0){
+                if (fretboard[j][i + k] === notesArr[noteCounter - 1]){
+                    let x = j + 1
+                    let y = i + k
+                    tempArr.pop()
+                    tempArr.push(x + '_' + y)
+                    condition = true;
+                }
+                if (fretboard[j][i - k] === notesArr[noteCounter - 1]){
+                    let x = j + 1
+                    let y = i - k
+                    tempArr.pop()
+                    tempArr.push(x + '_' + y)
+                    condition = true;
+                }
+            }
+            if (i + k < 25){
+                if (fretboard[j][i + k] === notesArr[noteCounter]){
+                    let x = j + 1
+                    let y = i + k
+                    tempArr.push(x + '_' + y)
+                    noteCounter++
+                    condition = true
+                }
+            }
+            if (i - k > -1){
+                if (fretboard[j][i - k] === notesArr[noteCounter]){
+                    let x = j + 1
+                    let y = i - k
+                    tempArr.push(x + '_' + y)
+                    noteCounter++
+                    condition = true
+                }
+            }
+            if (k > 25){
+                condition = true
+            }
+
+        k++
+        }
+    }
+
+    if(tempArr.length === notesArr.length){
+        allPositions.push(tempArr)
+    }
+}   
+    return allPositions;
 }
-
-
 
 var playPosition = 0;
 
@@ -691,7 +759,9 @@ function noteStringHandler(notes){
         returnArr = notes.split(' ')
     }
     
-    return Note.sortedNames(returnArr)
+    // Note.sortedNames(returnArr)
+
+    return returnArr
 }
 
 

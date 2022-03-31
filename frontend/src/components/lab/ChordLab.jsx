@@ -92,7 +92,6 @@ export default function ChordLab({importedChordData, masterInstrumentArray}) {
             scaleString = [scaleString]
         }
 
-        console.log(scaleString, 'from chord lab')
       
       
         for (let h = 0; h < masterInstrumentArray.length; h++){
