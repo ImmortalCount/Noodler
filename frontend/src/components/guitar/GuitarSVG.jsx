@@ -33,6 +33,7 @@ export default function GuitarSVG({masterInstrumentArray, activelyDisplayedInstr
     const [activeEdits, setActiveEdits] = useState([])
     const [moduleMarkers, setModuleMarkers] = useState(moduleMarkerCreator(data))
     const [allModuleMarkers, setAllModuleMarkers] = useState(moduleMarkerCreatorAll(data))
+    const [labDisplay, setLabDisplay] = useState(false)
     
     const dispatch = useDispatch()
 
@@ -127,6 +128,7 @@ export default function GuitarSVG({masterInstrumentArray, activelyDisplayedInstr
     useEffect(() => {
         if (noteDisplay){
             displayNotes(noteDisplay)
+            setLabDisplay(true)
         } else {
             return
         }
@@ -637,7 +639,6 @@ function createGuitarSVG(){
 // }
 
 function positionNamer(notesArr, tuning){
-
     notesArr = Note.sortedNames(notesArr)
     //assume the tuning is from highest to lowest
     //remember that the notes are sorted before entering from lowest to highest
@@ -676,6 +677,7 @@ for (var g = 0; g < rootNotes.length; g++ ){
     var i = rootNotes[g]['fret']
 
     var tempArr = []
+    var previousNoteFretPosition = 0;
     tempArr.push(rootPositions[g][0])
 
     var noteCounter = 1;
@@ -687,15 +689,19 @@ for (var g = 0; g < rootNotes.length; g++ ){
                 if (fretboard[j][i + k] === notesArr[noteCounter - 1]){
                     let x = j + 1
                     let y = i + k
-                    tempArr.pop()
-                    tempArr.push(x + '_' + y)
+                    if (Math.abs(y - i) < Math.abs(previousNoteFretPosition - i)){
+                        tempArr.pop()
+                        tempArr.push(x + '_' + y)
+                    }
                     condition = true;
                 }
                 if (fretboard[j][i - k] === notesArr[noteCounter - 1]){
                     let x = j + 1
                     let y = i - k
-                    tempArr.pop()
-                    tempArr.push(x + '_' + y)
+                    if (Math.abs(y - i) < Math.abs(previousNoteFretPosition - i)){
+                        tempArr.pop()
+                        tempArr.push(x + '_' + y)
+                    }
                     condition = true;
                 }
             }
@@ -703,6 +709,7 @@ for (var g = 0; g < rootNotes.length; g++ ){
                 if (fretboard[j][i + k] === notesArr[noteCounter]){
                     let x = j + 1
                     let y = i + k
+                    previousNoteFretPosition = y;
                     tempArr.push(x + '_' + y)
                     noteCounter++
                     condition = true
@@ -712,6 +719,7 @@ for (var g = 0; g < rootNotes.length; g++ ){
                 if (fretboard[j][i - k] === notesArr[noteCounter]){
                     let x = j + 1
                     let y = i - k
+                    previousNoteFretPosition = y;
                     tempArr.push(x + '_' + y)
                     noteCounter++
                     condition = true
@@ -1260,7 +1268,12 @@ function handleSeeAllPositions(){
     } else if (globalPosition.current === -1) {
         globalPosition.current = 0
     }
-    displayNotes()
+    if (labDisplay){
+        displayNotes(noteDisplay)
+    } else {
+        displayNotes()
+    }
+
 }
 
 function globalPositionChange(direction){
@@ -1273,7 +1286,12 @@ function globalPositionChange(direction){
             globalPosition.current--
         }
     }
-    displayNotes()
+    if (labDisplay){
+        displayNotes(noteDisplay)
+    } else {
+        displayNotes()
+    }
+    
 }
 
 const handleStop = () => {
