@@ -24,6 +24,7 @@ export default function ChordLab({importedChordData, masterInstrumentArray}) {
     const [voicing, setVoicing] = useState('basic')
     const [progression, setProgression] = useState('default')
     const [instrumentDisplay, setInstrumentDisplay] = useState(-2)
+    const [chromaticNotes, setChromaticNotes] = useState(['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B'])
     const [edit, setEdit] = useState(false)
     const isMuted = false;
     const user = JSON.parse(localStorage.getItem('userInfo'))
@@ -114,12 +115,11 @@ export default function ChordLab({importedChordData, masterInstrumentArray}) {
       }
     
 
-    const allScaleNotes = [];
-    const scaleNotes = labInfo && labInfo['scaleLab'] && labInfo['scaleLab']['scale'] ? scaleHandler(labInfo['scaleLab']['scale'], options): Scale.get('c major').notes
-    const allChromaticNotes = [];
-    const chromaticNotes = scaleHandler(Scale.get('c chromatic').notes, options);
+    let allScaleNotes = [];
+    let scaleNotes = labInfo && labInfo['scaleLab'] && labInfo['scaleLab']['scale'] ? scaleHandler(labInfo['scaleLab']['scale'], options): Scale.get('c major').notes
+    let allChromaticNotes = [];
 
-    
+
     //generate chromatic notes
     for (var o = 0; o < 10; o++){
         for (var p = 0; p < chromaticNotes.length; p++){
@@ -890,10 +890,42 @@ export default function ChordLab({importedChordData, masterInstrumentArray}) {
       const handleDescriptionChange = e => {
         setDescription(e.target.value)
       }
+
+      function handleSharpsOrFlats(){
+          if (options === 'sharps'){
+            setChromaticNotes(['C', 'Db', 'D', 'Eb', 'E', 'F', 'Gb', 'G', 'Ab', 'A', 'Bb', 'B'])
+            setOptions('flats')
+            let chordsClone = JSON.parse(JSON.stringify(chords))
+            for (let i = 0; i < chordsClone.length; i++){
+                for (let j = 0; j < chordsClone[i].length; j++){
+                    if (Note.accidentals(chordsClone[i][j]) === '#'){
+                        let x = Note.enharmonic(chordsClone[i][j])
+                        chordsClone[i][j] = x
+                    }
+                }
+            }
+            setChords(chordsClone)
+          }
+          if (options === 'flats'){
+            setChromaticNotes(['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B'])
+            setOptions('sharps')
+            let chordsClone = JSON.parse(JSON.stringify(chords))
+            for (let i = 0; i < chordsClone.length; i++){
+                for (let j = 0; j < chordsClone[i].length; j++){
+                    if (Note.accidentals(chordsClone[i][j]) === 'b'){
+                        let x = Note.enharmonic(chordsClone[i][j])
+                        chordsClone[i][j] = x
+                    }
+                }
+            }
+            setChords(chordsClone)
+          }
+      }
       //====
     return (
         <>
         <Menu>
+        <Menu.Item onClick={() => handleSharpsOrFlats()}>{options === 'sharps' ? '#' : 'b'}</Menu.Item>
          <Menu.Item onClick={() => playChords()}> <Icon name='play'/> </Menu.Item> 
          <Button.Group> 
          <Button basic onClick={()=> generateChordStack()}> Generate </Button>   

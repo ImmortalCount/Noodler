@@ -825,19 +825,9 @@ const handleScaleDescriptionChange = e => {
         </Menu.Item>
         <Menu.Item onClick={() => setShowDescription(!showDescription)}>Desc</Menu.Item>
         <Button.Group>
-        {/* <Button basic disabled={localStorage.getItem('userInfo') === null} onClick={()=> handleExport()}>Export</Button> */}
         <ExportModal
         dataType={'Scale'}
         exportObj={exportObj}/>
-        {/* <Dropdown
-          simple
-          item
-          disabled={localStorage.getItem('userInfo') === null}
-          className='button icon'
-          options={exportDropdownOptions}
-          onChange={handleExportDropdown}
-          trigger={<></>}
-        /> */}
         </Button.Group>
       </Menu>
         <div>

@@ -639,7 +639,15 @@ function createGuitarSVG(){
 // }
 
 function positionNamer(notesArr, tuning){
+    //make sure notes are sorted
     notesArr = Note.sortedNames(notesArr)
+    //make sure everything is in sharps for calculations
+    for (let i = 0; i < notesArr.length; i++){
+        if (Note.accidentals(notesArr[i]) === 'b'){
+            const replacementNote = Note.enharmonic(notesArr[i])
+            notesArr[i] = replacementNote
+        }
+    }
     //assume the tuning is from highest to lowest
     //remember that the notes are sorted before entering from lowest to highest
     var fretNumber = 24;
@@ -756,6 +764,7 @@ function flattenNotes(notes, returnArr){
     return returnArr;
 }   
 
+//This function converts everything to flats
 function noteStringHandler(notes){
     if (notes.length === 0){
         return ['']
@@ -766,7 +775,8 @@ function noteStringHandler(notes){
     } else {
         returnArr = notes.split(' ')
     }
-    
+    //added to handle flats
+
     // Note.sortedNames(returnArr)
 
     return returnArr
@@ -836,6 +846,10 @@ function loadNoteSequenceAndVisualDataOntoTimeline(data){
                     x[i].setAttribute('visibility', 'hidden');
                     y[i].setAttribute('visibility', 'hidden');
                     z[i].setAttribute('visibility', 'hidden');
+                    //make sure everything is in sharps by default
+                    if (Note.accidentals(y[i].textContent) === 'b'){
+                        y[i].textContent = Note.enharmonic(y[i].textContent)
+                    }
                 }
                   }
                 
@@ -846,28 +860,49 @@ function loadNoteSequenceAndVisualDataOntoTimeline(data){
                 //If the instrument is set to display only
                 if (displayOnly){
                     for (let i = 0; i < currentArray.length; i++){
+                        console.log(currentArray[i])
+                        let findNote = currentArray[i]
+                        let flat = false
+                        if (Note.accidentals(currentArray[i]) === 'b'){
+                            findNote = Note.enharmonic(currentArray[i])
+                            flat = true
+                        }
                         let x;
                         let y;
                         if (highlights.includes(i + 1)){
-                            x = document.getElementsByClassName('notespecial_pitchClass_' + currentArray[i] + '_' + instrumentNumber);
+                            x = document.getElementsByClassName('notespecial_pitchClass_' + findNote + '_' + instrumentNumber);
                         } else {
-                            x = document.getElementsByClassName('note_pitchClass_' + currentArray[i] + '_' + instrumentNumber);
+                            x = document.getElementsByClassName('note_pitchClass_' + findNote + '_' + instrumentNumber);
                         }
-                        y = document.getElementsByClassName('notename_pitchClass_' + currentArray[i] + '_' + instrumentNumber);
+                        y = document.getElementsByClassName('notename_pitchClass_' + findNote + '_' + instrumentNumber);
                     for (var j = 0; j < x.length; j++){
                         x[j].setAttribute('visibility', '');
                         y[j].setAttribute('visibility', '');
+                        if (flat){
+                            const previousTextContent = y[j].textContent 
+                            y[j].textContent = Note.enharmonic(previousTextContent)
+                        }
                     }
                     }
                     //if the globalPosition is set to -1 'show all notes'
                 } else if (globalPosition.current < 0){
                     for (let w = 0; w < currentArray.length; w++){
-                        let x = document.getElementsByClassName(currentArray[w] + '_' + instrumentNumber);
-                        let y = document.getElementsByClassName(currentArray[w] + '_' + instrumentNumber + '_name');
+                        let findNote = currentArray[w]
+                        let flat = false
+                        if (Note.accidentals(currentArray[w]) === 'b'){
+                            findNote = Note.enharmonic(currentArray[w])
+                            flat = true
+                        }
+                        let x = document.getElementsByClassName(findNote + '_' + instrumentNumber);
+                        let y = document.getElementsByClassName(findNote + '_' + instrumentNumber + '_name');
                         if (x !== null && y !== null && x !== undefined && y !== undefined){
                             for (let j = 0; j < x.length; j++){
                                 x[j].setAttribute('visibility', '');
                                 y[j].setAttribute('visibility', '');
+                                if (flat){
+                                    const previousTextContent = y[j].textContent 
+                                    y[j].textContent = Note.enharmonic(previousTextContent)
+                                }
                                 // note.setAttribute('class', noteValues[index]["name"] + '_' + NUM + ' note_' + NUM + ' note');
                                 // noteDiamond.setAttribute('class', noteValues[index]["name"] + '_' + NUM + '_special notespecial_' + NUM + ' notespecial');
                                 // noteName.setAttribute('class', noteValues[index]["name"] + '_' + NUM + '_name notename_' + NUM + ' notename' )
@@ -877,15 +912,22 @@ function loadNoteSequenceAndVisualDataOntoTimeline(data){
                         }
                     }
                 } else {
+                    //Information uses #sharp notes only, nameArray contains info on sharp/flat 
+                    let nameArray = noteStringHandler(note)
                     var pos = returnPosition(note, tuning);
                     // var tabArray = []
                     if (pos !== undefined){
                         for (var w = 0; w < pos.length; w++){
-                            var x = document.getElementById(pos[w] + '_' + instrumentNumber);
-                            var y = document.getElementById(pos[w] + '_' + instrumentNumber + '_name');
+                            let findNote = pos[w]
+                            if (Note.accidentals(pos[w]) === 'b'){
+                                findNote = Note.enharmonic(pos[w])
+                            }
+                            var x = document.getElementById(findNote + '_' + instrumentNumber);
+                            var y = document.getElementById(findNote + '_' + instrumentNumber + '_name');
                             if (x !== null && y !== null){
                                 x.setAttribute('visibility', '');
                                 y.setAttribute('visibility', '');
+                                y.textContent = nameArray[w]
                             }
                             // tabArray.push(x.getAttribute('id')); 
                         }
@@ -915,6 +957,8 @@ function loadNoteSequenceAndVisualDataOntoTimeline(data){
     }
 }
 
+
+
 // Functionality for if the player is paused and you change the timeline!!
 function displayNotes(input){
     let data;
@@ -938,6 +982,10 @@ function displayNotes(input){
                     x[i].setAttribute('visibility', 'hidden');
                     y[i].setAttribute('visibility', 'hidden');
                     z[i].setAttribute('visibility', 'hidden');
+                    //turn everything back into flats
+                    if (Note.accidentals(y[i].textContent) === 'b'){
+                        y[i].textContent = Note.enharmonic(y[i].textContent)
+                    }
                 }
             //global position
             if (data[i]['data'][currentModuleIndex] === undefined){
@@ -949,44 +997,72 @@ function displayNotes(input){
             let highlights = [1];
             if (displayOnly){
                 for (let q = 0; q < currentArray.length; q++){
+                    let findNote = currentArray[q]
+                    let flat = false
+                    if (Note.accidentals(currentArray[q]) === 'b'){
+                        findNote = Note.enharmonic(currentArray[q])
+                        flat = true
+                    }
                     let x;
                     let y;
                     if (highlights.includes(q + 1)){
-                        x = document.getElementsByClassName('notespecial_pitchClass_' + currentArray[q] + '_' + i);
+                        x = document.getElementsByClassName('notespecial_pitchClass_' + findNote + '_' + i);
                     } else {
-                        x = document.getElementsByClassName('note_pitchClass_' + currentArray[q] + '_' + i);
+                        x = document.getElementsByClassName('note_pitchClass_' + findNote + '_' + i);
                     }
-                    y = document.getElementsByClassName('notename_pitchClass_' + currentArray[q] + '_' + i);
+                    y = document.getElementsByClassName('notename_pitchClass_' + findNote + '_' + i);
+                    
                 for (let r = 0; r < x.length; r++){
                     x[r].setAttribute('visibility', '');
                     y[r].setAttribute('visibility', '');
+                    if (flat){
+                        const previousTextContent = y[r].textContent 
+                        y[r].textContent = Note.enharmonic(previousTextContent)
+                    }
                 }
                 }
                 //if the globalPosition is set to -1 'show all notes'
             } else if (globalPosition.current < 0){
 
                 for (let w = 0; w < currentArray.length; w++){
-                    let x = document.getElementsByClassName(currentArray[w] + '_' + i);
-                    let y = document.getElementsByClassName(currentArray[w] + '_' + i + '_name');
+                    let findNote = currentArray[w]
+                    let flat = false
+                    if (Note.accidentals(currentArray[w]) === 'b'){
+                        findNote = Note.enharmonic(currentArray[w])
+                        flat = true
+                    }
+                    let x = document.getElementsByClassName(findNote + '_' + i);
+                    let y = document.getElementsByClassName(findNote + '_' + i + '_name');
                     if (x !== null && y !== null && x !== undefined && y !== undefined){
                         for (let j = 0; j < x.length; j++){
                             x[j].setAttribute('visibility', '');
                             y[j].setAttribute('visibility', '');
+                            if (flat){
+                                const previousTextContent = y[j].textContent 
+                                y[j].textContent = Note.enharmonic(previousTextContent)
+                            }
                         }
                     } else {
                         console.log('off Model!')
                     }
                 }
             } else {
+                let nameArray = noteStringHandler(data[i]['data'][currentModuleIndex]['notes'][0][0])
                 var pos = returnPosition(data[i]['data'][currentModuleIndex]['notes'][0][0], instruments[i]['tuning']);
                 // var tabArray = []
                 if (pos !== undefined){
                     for (var w = 0; w < pos.length; w++){
-                        let x = document.getElementById(pos[w] + '_' + i);
-                        let y = document.getElementById(pos[w] + '_' + i + '_name');
+                        let findNote = pos[w]
+                        if (Note.accidentals(pos[w]) === 'b'){
+                            findNote = Note.enharmonic(pos[w])
+                        }
+                        let x = document.getElementById(findNote + '_' + i);
+                        let y = document.getElementById(findNote + '_' + i + '_name');
                         if (x !== null && y !== null){
                             x.setAttribute('visibility', '');
                             y.setAttribute('visibility', '');
+                            y.textContent = nameArray[w]
+                            
                         }
                     }
                 } else {
@@ -1268,11 +1344,12 @@ function handleSeeAllPositions(){
     } else if (globalPosition.current === -1) {
         globalPosition.current = 0
     }
-    if (labDisplay){
-        displayNotes(noteDisplay)
-    } else {
-        displayNotes()
-    }
+    // if (labDisplay){
+    //     displayNotes(noteDisplay)
+    // } else {
+    //     displayNotes()
+    // }
+    displayNotes()
 
 }
 
@@ -1286,11 +1363,12 @@ function globalPositionChange(direction){
             globalPosition.current--
         }
     }
-    if (labDisplay){
-        displayNotes(noteDisplay)
-    } else {
-        displayNotes()
-    }
+    // if (labDisplay){
+    //     displayNotes(noteDisplay)
+    // } else {
+    //     displayNotes()
+    // }
+    displayNotes()
     
 }
 
@@ -1317,7 +1395,7 @@ const handlePause = () => {
         <Button compact basic onClick={() => globalPositionChange('down')}><Icon name='arrow down'/></Button>
         <Button compact basic onClick={() => globalPositionChange('up')}><Icon name='arrow up'/></Button>
         <Button compact basic onClick={() => handleSeeAllPositions()}><Icon name='arrows alternate vertical'/></Button>
-        <Button compact basic onClick={() => console.log(Note.sortedNames(['C3', 'F4', 'G3', 'A3']))}>Test</Button>
+        {/* <Button compact basic onClick={() => getChangeNoteToFlat()}>Test</Button> */}
         </>
     )
 }

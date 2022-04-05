@@ -33,6 +33,7 @@ const [startOnScaleDegree, setStartOnScaleDegree] = useState(true)
 const [generateScaleDegree, setGenerateScaleDegree] = useState(1)
 const [exportPool, setExportPool] = useState('global')
 const [inputFocus, setInputFocus] = useState(false)
+const [chromaticNotes, setChromaticNotes] = useState(['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B'])
 const [description, setDescription] = useState('')
 const [showDescription, setShowDescription] = useState(false)
 const isMuted = false;
@@ -46,7 +47,6 @@ const {labInfo} = labData
 const allScaleNotes = [];
 const scaleNotes = labInfo && labInfo['scaleLab'] && labInfo['scaleLab']['scale'] ? scaleHandler(labInfo['scaleLab']['scale'], options): Scale.get('c major').notes;
 const allChromaticNotes = [];
-const chromaticNotes = scaleHandler(Scale.get('c chromatic').notes, options);
 
 //generate chromatic notes
 
@@ -589,7 +589,7 @@ function patternExtraction(){
 
     var root = scaleNotes[0] + 3
     
-    var chromaticScale = Scale.get('c chromatic').notes
+    var chromaticNotes = Scale.get('c chromatic').notes
     var allNotes = [];
     var allChromaticNotes = [];
     var patternExport = [];
@@ -600,8 +600,8 @@ function patternExtraction(){
     }
 
     for (var m = 0; m < 10; m++){
-        for (var n = 0; n < chromaticScale.length; n++){
-            allChromaticNotes.push(chromaticScale[n] + m)
+        for (var n = 0; n < chromaticNotes.length; n++){
+            allChromaticNotes.push(chromaticNotes[n] + m)
         }
     }
  
@@ -666,106 +666,106 @@ function chordParser(chord){
 }
 
 //key is string A major, B minor, etc
-function romanNumeralAssigner(chord, key){
-var chordRoot = chordParser(chord)[0];
-var chordType = chordParser(chord)[1];
+// function romanNumeralAssigner(chord, key){
+// var chordRoot = chordParser(chord)[0];
+// var chordType = chordParser(chord)[1];
 
-var root = key.split(" ")[0];
-var scale = Scale.get(root + ' chromatic').notes
-var romanNumeralsMajor = [
-        'I',
-        'bII',
-        'II',
-        'bIII',
-        'III',
-        'IV',
-        'bV',
-        'V',
-        'bVI',
-        'VI',
-        'bVII',
-        'VII'
-    ]
+// var root = key.split(" ")[0];
+// var scale = Scale.get(root + ' chromatic').notes
+// var romanNumeralsMajor = [
+//         'I',
+//         'bII',
+//         'II',
+//         'bIII',
+//         'III',
+//         'IV',
+//         'bV',
+//         'V',
+//         'bVI',
+//         'VI',
+//         'bVII',
+//         'VII'
+//     ]
 
-var romanNumeralsMinor = [
-    'i',
-    'bii',
-    'ii',
-    'biii',
-    'iii',
-    'iv',
-    'bv',
-    'v',
-    'bvi',
-    'vi',
-    'bvii',
-    'vii'
-    ]
-    var chordIndex;
-    if (scale.indexOf(chordRoot) === -1){
-        chordIndex = scale.indexOf(Note.enharmonic(chordRoot))
-    } else {
-        chordIndex = scale.indexOf(chordRoot)
-    }
-    if (chordType === 'major'){
-        return romanNumeralsMajor[chordIndex] + chordType;
-    } else {
-        return romanNumeralsMinor[chordIndex] + chordType;
-    }
-}
+// var romanNumeralsMinor = [
+//     'i',
+//     'bii',
+//     'ii',
+//     'biii',
+//     'iii',
+//     'iv',
+//     'bv',
+//     'v',
+//     'bvi',
+//     'vi',
+//     'bvii',
+//     'vii'
+//     ]
+//     var chordIndex;
+//     if (scale.indexOf(chordRoot) === -1){
+//         chordIndex = scale.indexOf(Note.enharmonic(chordRoot))
+//     } else {
+//         chordIndex = scale.indexOf(chordRoot)
+//     }
+//     if (chordType === 'major'){
+//         return romanNumeralsMajor[chordIndex] + chordType;
+//     } else {
+//         return romanNumeralsMinor[chordIndex] + chordType;
+//     }
+// }
 
-function defaultScaleAssigner(chord, key){
-var keyRoot = chordParser(key)[0]
-var keyType = chordParser(key)[1]
+// function defaultScaleAssigner(chord, key){
+// var keyRoot = chordParser(key)[0]
+// var keyType = chordParser(key)[1]
 
-var allNotes = Scale.get( keyRoot + ' chromatic').notes
+// var allNotes = Scale.get( keyRoot + ' chromatic').notes
 
-var chordDegreeAndTypeToScale = [
-    {major: 'ionian', minor: 'aeolian', dominant: 'mixolydian'},
-    {major: 'lydian #2 #6', minor: 'dorian', dominant: 'mixolydian b6'},
-    {major: 'lydian', minor: 'dorian', dominant: 'mixolydian'},
-    {major: 'lydian', minor: 'dorian', dominant: 'mixolydian b6'},
-    {major: 'double harmonic', minor: 'phrygian', dominant: 'phrygian dominant'},
-    {major: 'lydian', minor: 'melodic minor', dominant: 'mixolydian#11'},
-    {major: 'lydian', minor: 'dorian', dominant: 'altered'},
-    {major: 'mixolydian', minor: 'dorian', dominant: 'mixolydian'},
-    {major: 'lydian', minor: 'dorian', dominant: 'mixolydian b6'},
-    {major: 'lydian', minor: 'aeolian', dominant: 'mixolydian b6'},
-    {major: 'lydian', minor: 'dorian', dominant: 'mixolydian b6'},
-    {major: 'lydian', minor: 'dorian', dominant: 'mixolydian b6'},
-]
+// var chordDegreeAndTypeToScale = [
+//     {major: 'ionian', minor: 'aeolian', dominant: 'mixolydian'},
+//     {major: 'lydian #2 #6', minor: 'dorian', dominant: 'mixolydian b6'},
+//     {major: 'lydian', minor: 'dorian', dominant: 'mixolydian'},
+//     {major: 'lydian', minor: 'dorian', dominant: 'mixolydian b6'},
+//     {major: 'double harmonic', minor: 'phrygian', dominant: 'phrygian dominant'},
+//     {major: 'lydian', minor: 'melodic minor', dominant: 'mixolydian#11'},
+//     {major: 'lydian', minor: 'dorian', dominant: 'altered'},
+//     {major: 'mixolydian', minor: 'dorian', dominant: 'mixolydian'},
+//     {major: 'lydian', minor: 'dorian', dominant: 'mixolydian b6'},
+//     {major: 'lydian', minor: 'aeolian', dominant: 'mixolydian b6'},
+//     {major: 'lydian', minor: 'dorian', dominant: 'mixolydian b6'},
+//     {major: 'lydian', minor: 'dorian', dominant: 'mixolydian b6'},
+// ]
 
-var majorToMinorIndex = [
-    9,
-    10,
-    11,
-    0,
-    1,
-    2,
-    3,
-    4,
-    5,
-    6,
-    7,
-    8
-]
+// var majorToMinorIndex = [
+//     9,
+//     10,
+//     11,
+//     0,
+//     1,
+//     2,
+//     3,
+//     4,
+//     5,
+//     6,
+//     7,
+//     8
+// ]
 
-var chordRoot = chordParser(chord)[0];
-var chordType = chordParser(chord)[1];
+// var chordRoot = chordParser(chord)[0];
+// var chordType = chordParser(chord)[1];
 
-var chordIndex;
-if (allNotes.indexOf(chordRoot) === -1){
-    chordIndex = allNotes.indexOf(Note.enharmonic(chordRoot))
-} else {
-    chordIndex = allNotes.indexOf(chordRoot)
-}
+// var chordIndex;
+// if (allNotes.indexOf(chordRoot) === -1){
+//     chordIndex = allNotes.indexOf(Note.enharmonic(chordRoot))
+// } else {
+//     chordIndex = allNotes.indexOf(chordRoot)
+// }
 
-if (keyType === 'minor'){
-    console.log(chordRoot + " " + chordDegreeAndTypeToScale[majorToMinorIndex[chordIndex]][chordType]) 
-} else {
-    console.log(chordRoot + " " + chordDegreeAndTypeToScale[chordIndex][chordType]) 
-}
-}
+// if (keyType === 'minor'){
+//     console.log(chordRoot + " " + chordDegreeAndTypeToScale[majorToMinorIndex[chordIndex]][chordType]) 
+// } else {
+//     console.log(chordRoot + " " + chordDegreeAndTypeToScale[chordIndex][chordType]) 
+// }
+// }
 //====
 // function handleExport(){
 //     const user = JSON.parse(localStorage.getItem('userInfo'))
@@ -832,9 +832,37 @@ const handleExportDropdown = (e, {value}) => {
     setDescription(e.target.value)
   }
 
+  function handleSharpsOrFlats(){
+      if (options === 'sharps'){
+        setChromaticNotes(['C', 'Db', 'D', 'Eb', 'E', 'F', 'Gb', 'G', 'Ab', 'A', 'Bb', 'B'])
+          setOptions('flats')
+          let patternClone = JSON.parse(JSON.stringify(notes))
+              for (let j = 0; j < patternClone.length; j++){
+                  if (Note.accidentals(patternClone[j]) === '#'){
+                      let x = Note.enharmonic(patternClone[j])
+                      patternClone[j] = x
+                  }
+              }
+          setNotes(patternClone)
+      }
+      if (options === 'flats'){
+        setChromaticNotes(['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B'])
+          setOptions('sharps')
+          let patternClone = JSON.parse(JSON.stringify(notes))
+          for (let j = 0; j < patternClone.length; j++){
+              if (Note.accidentals(patternClone[j]) === 'b'){
+                  let x = Note.enharmonic(patternClone[j])
+                  patternClone[j] = x
+              }
+          }
+        setNotes(patternClone)
+      }
+  }
+
     return (
         <>
         <Menu>
+        <Menu.Item onClick={() => handleSharpsOrFlats()}>{options === 'sharps' ? '#' : 'b'}</Menu.Item>
          <Menu.Item onClick={() => playAll()}><Icon name='play'/></Menu.Item>
          <Button.Group>
          <Button basic onClick={()=> generateRandomMelody()}> Generate </Button>
