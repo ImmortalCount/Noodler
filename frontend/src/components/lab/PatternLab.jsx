@@ -7,6 +7,7 @@ import { toMidi, midiToNoteName } from '@tonaljs/midi';
 import { Note, Scale, Chord} from '@tonaljs/tonal';
 import { Menu, Button, Input, Icon, Dropdown, Form, TextArea} from 'semantic-ui-react';
 import { keySynth } from './synths';
+import { polySynth } from './synths';
 import { setLabData } from '../../store/actions/labDataActions';
 import { scaleHandler } from './utils';
 import { keyMap } from './keymap';
@@ -15,7 +16,7 @@ import ExportModal from '../modal/ExportModal';
 
 export default function PatternLab({importedPatternData}) {
 
-const [notes, setNotes] = useState(['A2', 'B2', 'C3', 'D3', 'E3', 'F3', 'G3', 'A3'])
+const [notes, setNotes] = useState([['A2'], ['B2'], ['C3'], ['D3'], ['E3'], ['F3'], ['G3'], ['A3']])
 const [pattern, setPattern] = useState(['0 1 2 4 7 4 2 1'])
 const [scaleLock, setScaleLock] = useState(true)
 const [playOnKeyPress, setPlayOnKeyPress] = useState(false)
@@ -23,7 +24,7 @@ const [name, setName] = useState('Pattern 1')
 const [options, setOptions] = useState('sharps')
 const [noteOptions, setNoteOptions] = useState('octave')
 const [allOptions, setAllOptions] = useState('octave')
-const [edit, setEdit] = useState('off')
+const [edit, setEdit] = useState(false)
 const [notesTruePatternFalse, setNotesTruePatternFalse] = useState(true)
 const [octave, setOctave] = useState(3)
 const [generatePatternLength, setGeneratePatternLength] = useState(8)
@@ -228,6 +229,21 @@ var keyUpEvent = (e) => {
 document.addEventListener('keydown', keydownEvent);
 document.addEventListener('keyup', keyUpEvent)
 
+function chordSequenceToNoteString(chords){
+    var returnArr = [];
+    for (var i = 0; i < chords.length; i++){
+        var thisChordString = ''
+        for (var j = 0; j < chords[i].length; j++){
+            if (j === chords[i].length - 1){
+                thisChordString += chords[i][j]
+            } else {
+                thisChordString += chords[i][j] + ' '
+            }
+        }
+        returnArr.push([thisChordString])
+    }
+    return returnArr;
+}
 
 function playAll(){
     if (isMuted){
@@ -237,17 +253,18 @@ function playAll(){
     Tone.Transport.cancel()
     Tone.Transport.stop()
     Tone.Transport.start();
+    const convertedChords = chordSequenceToNoteString(notes)
     var count = 0;
     const synthPart = new Tone.Sequence(
         function(time, note) {
-          keySynth.triggerAttackRelease(note, "10hz", time)
-          var highlightedChord = document.getElementById('pattern_' + count)
-            highlightedChord.className = 'active note'
-            setTimeout(() => {highlightedChord.className = 'inactive note'}, 250)
+          polySynth.triggerAttackRelease(noteStringHandler(note), "10hz", time)
+          var highlightedChord = document.getElementById('chord_' + count)
+            highlightedChord.className = 'active chord'
+            setTimeout(() => {highlightedChord.className = 'inactive chord'}, 500)
             count++
         },
-       notes,
-        "8n"
+       convertedChords,
+        "4n"
       );
       synthPart.start();
       synthPart.loop = 1;
@@ -259,9 +276,9 @@ function generateRandomMelody(){
         var upOctave = Math.random() < 0.5
         var randomIndex = Math.floor(Math.random() * scaleNotes.length);
         if (upOctave){
-            returnArr.push(scaleNotes[randomIndex] + (octave + 1))
+            returnArr.push([scaleNotes[randomIndex] + (octave + 1)])
         } else {
-            returnArr.push(scaleNotes[randomIndex] + octave)
+            returnArr.push([scaleNotes[randomIndex] + octave])
         }
     }
     
@@ -270,193 +287,215 @@ setNotes(returnArr);
 
 const handleClickUp = (e) => {
     var clone = [...notes]
-   const x = e.currentTarget.parentNode.parentNode.id
-   const idx = Number(x.split('_')[1])
-   if (noteOptions === 'scale'){
-        if (allScaleNotes.indexOf(notes[idx]) === -1){
-            var chromaIndex = allChromaticNotes.indexOf(notes[idx]);
+    var positionId = e.target.parentNode.parentNode.id;
+    var x = positionId.split('_')[1]
+    var y = positionId.split('_')[2]
+    if (noteOptions === 'scale'){
+        if (allScaleNotes.indexOf(notes[x][y]) === -1){
+            var chromaIndex = allChromaticNotes.indexOf(notes[x][y]);
             if (chromaIndex === -1){
-                chromaIndex = allChromaticNotes.indexOf(Note.enharmonic(notes[idx]));
+                chromaIndex = allChromaticNotes.indexOf(Note.enharmonic(notes[x][y]));
             }
             var matched = false;
             var count = 0;
             while (matched === false){
                 if (allScaleNotes.indexOf(allChromaticNotes[chromaIndex + count]) !== -1){
-                    clone[idx] = allScaleNotes[allScaleNotes.indexOf(allChromaticNotes[chromaIndex + count])];
+                    clone[x][y] = allScaleNotes[allScaleNotes.indexOf(allChromaticNotes[chromaIndex + count])];
                     matched = true;
                 } else {
                     count++;
                 }
             }
         } else {
-        clone[idx] = allScaleNotes[allScaleNotes.indexOf(clone[idx]) + 1];
+        clone[x][y] = allScaleNotes[allScaleNotes.indexOf(notes[x][y]) + 1];
         }
-        setNotes(clone)
-   } else if (noteOptions === 'octave'){
-        var note = Note.pitchClass(notes[idx])
-        var octave = Note.octave(notes[idx])
-        clone[idx] = note + (octave + 1)
-        setNotes(clone)
-   } else if (noteOptions === 'chromatic'){
-    var chromaIndex = allChromaticNotes.indexOf(notes[idx])
-    if (allChromaticNotes.indexOf(notes[idx]) === -1){
-        chromaIndex = allChromaticNotes.indexOf(Note.enharmonic(notes[idx]))
-    }
-    clone[idx] = allChromaticNotes[chromaIndex + 1];
     setNotes(clone)
-   } else if (noteOptions === 'insert'){
-       var newNote = clone[idx]
-       clone.splice(idx, 0, newNote)
-       setNotes(clone)
-   } else {
-       return
-   }
+    }
+    if (noteOptions === 'octave'){
+    var note = Note.pitchClass(notes[x][y])
+    var octave = Note.octave(notes[x][y])
+    clone[x][y] = note + (octave + 1)
+    setNotes(clone)
+    }
+    if (noteOptions === 'chromatic'){
+    let chromaIndex = allChromaticNotes.indexOf(notes[x][y])
+    if (allChromaticNotes.indexOf(notes[x][y]) === -1){
+        chromaIndex = allChromaticNotes.indexOf(Note.enharmonic(notes[x][y]))
+    }
+    clone[x][y] = allChromaticNotes[chromaIndex + 1];
+    setNotes(clone)
+    }
+    if (noteOptions === 'insert'){
+        clone[x].splice(y + 1, 0, notes[x][y]);
+        setNotes(clone)
+        }
 }
 
 const handleClickDown = (e) => {
-   var clone = [...notes]
-   const x = e.currentTarget.parentNode.parentNode.id
-   const idx = Number(x.split('_')[1])
-   if (noteOptions === 'scale'){
-        if (allScaleNotes.indexOf(notes[idx]) === -1){
-            var chromaIndex = allChromaticNotes.indexOf(notes[idx]);
+    var clone = [...notes]
+    var positionId = e.target.parentNode.parentNode.id;
+    var x = positionId.split('_')[1]
+    var y = positionId.split('_')[2]
+    if (noteOptions === 'scale'){
+        if (allScaleNotes.indexOf(notes[x][y]) === -1){
+            var chromaIndex = allChromaticNotes.indexOf(notes[x][y]);
             if (chromaIndex === -1){
-                chromaIndex = allChromaticNotes.indexOf(Note.enharmonic(notes[idx]));
+                chromaIndex = allChromaticNotes.indexOf(Note.enharmonic(notes[x][y]));
             }
             var matched = false;
             var count = 0;
             while (matched === false){
                 if (allScaleNotes.indexOf(allChromaticNotes[chromaIndex + count]) !== -1){
-                    clone[idx] = allScaleNotes[allScaleNotes.indexOf(allChromaticNotes[chromaIndex + count])];
+                    clone[x][y] = allScaleNotes[allScaleNotes.indexOf(allChromaticNotes[chromaIndex + count])];
                     matched = true;
                 } else {
                     count--;
                 }
             }
         } else {
-        clone[idx] = allScaleNotes[allScaleNotes.indexOf(clone[idx]) - 1];
+        clone[x][y] = allScaleNotes[allScaleNotes.indexOf(notes[x][y]) - 1];
         }
-        setNotes(clone)
-   } else if (noteOptions === 'octave'){
-        var note = Note.pitchClass(notes[idx])
-        var octave = Note.octave(notes[idx])
-        clone[idx] = note + (octave + -1)
-        setNotes(clone)
-   } else if (noteOptions === 'chromatic'){
-        var chromaIndex = allChromaticNotes.indexOf(notes[idx])
-        if (allChromaticNotes.indexOf(notes[idx]) === -1){
-            chromaIndex = allChromaticNotes.indexOf(Note.enharmonic(notes[idx]))
-        }
-        clone[idx] = allChromaticNotes[chromaIndex - 1];
-        setNotes(clone)
-   } else if (noteOptions === 'insert'){
-    var newNote = clone[idx]
-    clone.splice(idx, 0, newNote)
     setNotes(clone)
-   } else {
-       return
-   }
+    }
+    if (noteOptions === 'octave'){
+    var note = Note.pitchClass(notes[x][y])
+    var octave = Note.octave(notes[x][y])
+    clone[x][y] = note + (octave - 1)
+    setNotes(clone)
+    }
+    if (noteOptions === 'chromatic'){
+    var chromaIndex = allChromaticNotes.indexOf(notes[x][y])
+    if (allChromaticNotes.indexOf(notes[x][y]) === -1){
+        chromaIndex = allChromaticNotes.indexOf(Note.enharmonic(notes[x][y]))
+    }
+    clone[x][y] = allChromaticNotes[chromaIndex - 1];
+    setNotes(clone)
+    }
+    if (noteOptions === 'insert'){
+    clone[x].splice(y, 0, notes[x][y]);
+    setNotes(clone)
+    }
 }
 
 const handleDeleteNote = (e) => {
     var clone = [...notes]
-    const x = e.currentTarget.parentNode.id
-    const idx = Number(x.split('_')[1])
-    clone.splice(idx, 1)
-    console.log(idx)
+    var positionId = e.target.parentNode.id;
+    var x = positionId.split('_')[1]
+    var y = positionId.split('_')[2]
+
+    clone[x].splice(y, 1)
     setNotes(clone)
 }
 
-const handleEditAllUp = () => {
-var clone = [...notes]
-if (noteOptions === 'scale'){
-    for (var i = 0; i < clone.length; i++){
-        if (allScaleNotes.indexOf(notes[i]) === -1){
-            var chromaIndex = allChromaticNotes.indexOf(notes[i]);
-            if (chromaIndex === -1){
-                chromaIndex = allChromaticNotes.indexOf(Note.enharmonic(notes[i]));
-            }
-            var matched = false;
-            var count = 0;
-            while (matched === false){
-                if (allScaleNotes.indexOf(allChromaticNotes[chromaIndex + count]) !== -1){
-                    clone[i] = allScaleNotes[allScaleNotes.indexOf(allChromaticNotes[chromaIndex + count])];
-                    matched = true;
-                } else {
-                    count++;
-                }
-            }
-        } else {
-        clone[i] = allScaleNotes[allScaleNotes.indexOf(clone[i]) + 1];
-        }
-    }
-    setNotes(clone)
-} else if (noteOptions === 'octave') {
-    for (var i = 0; i < clone.length; i++){
-        var note = Note.pitchClass(notes[i])
-        var octave = Note.octave(notes[i])
-        clone[i] = note + (octave + 1)
-        setNotes(clone)
-    }
-} else if (noteOptions === 'chromatic'){
-    for (var i = 0; i < clone.length; i++){
-        var chromaIndex = allChromaticNotes.indexOf(notes[i])
-        if (allChromaticNotes.indexOf(notes[i]) === -1){
-            chromaIndex = allChromaticNotes.indexOf(Note.enharmonic(notes[i]))
-        }
-        clone[i] = allChromaticNotes[chromaIndex + 1];
-    }
-        setNotes(clone)
-} else {
-    return
-}
-}
-
-
-const handleEditAllDown = () => {
+const handleClickUpAll = () =>{
     var clone = [...notes]
     if (noteOptions === 'scale'){
-        for (var i = 0; i < clone.length; i++){
-            if (allScaleNotes.indexOf(notes[i]) === -1){
-                var chromaIndex = allChromaticNotes.indexOf(notes[i]);
-                if (chromaIndex === -1){
-                    chromaIndex = allChromaticNotes.indexOf(Note.enharmonic(notes[i]));
-                }
-                var matched = false;
-                var count = 0;
-                while (matched === false){
-                    if (allScaleNotes.indexOf(allChromaticNotes[chromaIndex + count]) !== -1){
-                        clone[i] = allScaleNotes[allScaleNotes.indexOf(allChromaticNotes[chromaIndex + count])];
-                        matched = true;
-                    } else {
-                        count--;
+        for (let x = 0; x < notes.length; x++){
+            for (let y = 0; y < notes[x].length; y++){
+                if (allScaleNotes.indexOf(notes[x][y]) === -1){
+                    let chromaIndex = allChromaticNotes.indexOf(notes[x][y]);
+                    if (chromaIndex === -1){
+                        chromaIndex = allChromaticNotes.indexOf(Note.enharmonic(notes[x][y]));
                     }
+                    var matched = false;
+                    var count = 0;
+                    while (matched === false){
+                        if (allScaleNotes.indexOf(allChromaticNotes[chromaIndex + count]) !== -1){
+                            clone[x][y] = allScaleNotes[allScaleNotes.indexOf(allChromaticNotes[chromaIndex + count])];
+                            matched = true;
+                        } else {
+                            count++;
+                        }
+                    }
+                } else {
+                clone[x][y] = allScaleNotes[allScaleNotes.indexOf(notes[x][y]) + 1];
                 }
-            } else {
-            clone[i] = allScaleNotes[allScaleNotes.indexOf(clone[i]) - 1];
             }
         }
+    setNotes(clone)
+    }
+    if (noteOptions === 'octave'){
+        for (let x = 0; x < notes.length; x++){
+            for (let y = 0; y < notes[x].length; y++){
+                var note = Note.pitchClass(notes[x][y])
+                var octave = Note.octave(notes[x][y])
+                clone[x][y] = note + (octave + 1)
+            }
+            setNotes(clone)
+            }
+        }
+    if (noteOptions === 'chromatic'){
+        for (let x = 0; x < notes.length; x++){
+            for (let y = 0; y < notes[x].length; y++){
+                let chromaIndex = allChromaticNotes.indexOf(notes[x][y])
+                if (allChromaticNotes.indexOf(notes[x][y]) === -1){
+                    chromaIndex = allChromaticNotes.indexOf(Note.enharmonic(notes[x][y]))
+                }
+        clone[x][y] = allChromaticNotes[chromaIndex + 1];
+            }
         setNotes(clone)
-    } else if (noteOptions === 'octave') {
-        for (var i = 0; i < clone.length; i++){
-            var note = Note.pitchClass(notes[i])
-            var octave = Note.octave(notes[i])
-            clone[i] = note + (octave - 1)
-            setNotes(clone)
         }
-    } else if (noteOptions === 'chromatic'){
-        for (var i = 0; i < clone.length; i++){
-            var chromaIndex = allChromaticNotes.indexOf(notes[i])
-            if (allChromaticNotes.indexOf(notes[i]) === -1){
-                chromaIndex = allChromaticNotes.indexOf(Note.enharmonic(notes[i]))
-            }
-            clone[i] = allChromaticNotes[chromaIndex - 1];
-        }
-            setNotes(clone)
-    } else {
+    }
+    if (noteOptions === 'insert'){
         return
     }
+}
+
+const handleClickDownAll = () =>{
+    var clone = [...notes]
+    if (noteOptions === 'scale'){
+        for (let x = 0; x < notes.length; x++){
+            for (let y = 0; y < notes[x].length; y++){
+                if (allScaleNotes.indexOf(notes[x][y]) === -1){
+                    var chromaIndex = allChromaticNotes.indexOf(notes[x][y]);
+                    if (chromaIndex === -1){
+                        chromaIndex = allChromaticNotes.indexOf(Note.enharmonic(notes[x][y]));
+                    }
+                    var matched = false;
+                    var count = 0;
+                    while (matched === false){
+                        if (allScaleNotes.indexOf(allChromaticNotes[chromaIndex + count]) !== -1){
+                            clone[x][y] = allScaleNotes[allScaleNotes.indexOf(allChromaticNotes[chromaIndex + count])];
+                            matched = true;
+                        } else {
+                            count--;
+                        }
+                    }
+                } else {
+                clone[x][y] = allScaleNotes[allScaleNotes.indexOf(notes[x][y]) - 1];
+                }
+            }
+        }
+
+    setNotes(clone)
     }
+    if (noteOptions === 'octave'){
+        for (let x = 0; x < notes.length; x++){
+            for (let y = 0; y < notes[x].length; y++){
+                const note = Note.pitchClass(notes[x][y])
+                const octave = Note.octave(notes[x][y])
+                clone[x][y] = note + (octave - 1)
+            }
+            setNotes(clone)
+            }
+        }
+    if (noteOptions === 'chromatic'){
+        for (let x = 0; x < notes.length; x++){
+            for (let y = 0; y < notes[x].length; y++){
+                let chromaIndex = allChromaticNotes.indexOf(notes[x][y])
+                if (allChromaticNotes.indexOf(notes[x][y]) === -1){
+                    chromaIndex = allChromaticNotes.indexOf(Note.enharmonic(notes[x][y]))
+                }
+        clone[x][y] = allChromaticNotes[chromaIndex - 1];
+            }
+        setNotes(clone)
+        }
+        }
+    if (noteOptions === 'insert'){
+        return
+    }
+}
+
 
 const handleDeleteAll = () => {
     setNotes([])
@@ -466,7 +505,7 @@ const handleDeleteAll = () => {
 const handleAddNoteToEnd = () => {
     const clone = [...notes]
     if (clone.length === 0){
-        clone.push('C3')
+        clone.push(['C3'])
     } else {
         const lastNote = clone[clone.length - 1]
         clone.push(lastNote)
@@ -480,36 +519,195 @@ const handleRemoveNoteFromEnd = () => {
     setNotes(clone)
 }
 
-const handlePlayThis = (e) => {
-    if (playNoteOnClick){
-        var elementClicked = e.target.id
-        var r = elementClicked.split('_')[0]
-        if (r === 'clickup' || r === 'clickdown' || r === 'delete'){
-            return
-        }
-        var parentID = e.currentTarget.id;
-        var x = parentID.split('_')[1]
-        keySynth.triggerAttackRelease(notes[x], '8n');
-        var thisNote = document.getElementById(parentID)
-        thisNote.className = 'active note'
-        setTimeout(() => {thisNote.className ='inactive note'}, 250)
+const handlePlayThis = (e, x) => {
+    if (!playNoteOnClick){
+        return
+    }
+    let parentID;
+    if (x){
+        parentID = e.target.parentNode.id
+    } else {
+        parentID = e.target.id;
+    }
+
+    if (parentID.split('_').length === 2){
+        const x = parentID.split('_')[1]
+        polySynth.triggerAttackRelease(notes[x], '8n');
+    } else if (parentID.split('_').length === 3) {
+        const x = parentID.split('_')[1]
+        const y = parentID.split('_')[2]
+        polySynth.triggerAttackRelease(notes[x][y], '8n')
     } else {
         return
     }
+    var thisChord = document.getElementById(parentID)
+    thisChord.className = 'active chord'
+    setTimeout(() => {thisChord.className ='inactive chord'}, 250)
+}
+
+var handleClickUpChord = (e) =>{
+    var clone = [...notes]
+    var parentID = e.currentTarget.parentNode.parentNode.parentNode.id;
+    var x = parentID.split('_')[1]
+
+
+    if (noteOptions === 'scaler'){
+        console.log('scaling up')
+        for (var y = 0; y < notes[x].length; y++){
+            if (allScaleNotes.indexOf(notes[x][y]) === -1){
+                var chromaIndex = allChromaticNotes.indexOf(notes[x][y]);
+                if (chromaIndex === -1){
+                    chromaIndex = allChromaticNotes.indexOf(Note.enharmonic(notes[x][y]));
+                }
+                var matched = false;
+                var count = 0;
+                while (matched === false){
+                    if (allScaleNotes.indexOf(allChromaticNotes[chromaIndex + count]) !== -1){
+                        clone[x][y] = allScaleNotes[allScaleNotes.indexOf(allChromaticNotes[chromaIndex + count])];
+                        matched = true;
+
+                    } else {
+                        count++;
+                    }
+                }
+            } else {
+            clone[x][y] = allScaleNotes[allScaleNotes.indexOf(notes[x][y]) + 1];
+            }
+        }
+    setNotes(clone)
+    }
+    if (noteOptions === 'octave'){
+        for (var y = 0; y < notes[x].length; y++){
+            var note = Note.pitchClass(notes[x][y])
+            var octave = Note.octave(notes[x][y])
+            clone[x][y] = note + (octave + 1)
+        }
+        setNotes(clone)
+        }
+    if (noteOptions === 'chromatic'){
+        for (var y = 0; y < notes[x].length; y++){
+            var chromaIndex = allChromaticNotes.indexOf(notes[x][y])
+            if (allChromaticNotes.indexOf(notes[x][y]) === -1){
+                chromaIndex = allChromaticNotes.indexOf(Note.enharmonic(notes[x][y]))
+            }
+    clone[x][y] = allChromaticNotes[chromaIndex + 1];
+        }
+    setNotes(clone)
+    }
+    if (noteOptions === 'insert'){
+        var newChord = [...clone[x]]
+        clone.splice(x, 0, newChord);
+        setNotes(clone)
+    }
+}
+
+var handleClickDownChord = (e) =>{
+    var clone = [...notes]
+    var parentID = e.currentTarget.parentNode.parentNode.parentNode.id;
+    var x = parentID.split('_')[1]
+
+    if (noteOptions === 'scaler'){
+        for (var y = 0; y < notes[x].length; y++){
+            if (allScaleNotes.indexOf(notes[x][y]) === -1){
+                var chromaIndex = allChromaticNotes.indexOf(notes[x][y]);
+                if (chromaIndex === -1){
+                    chromaIndex = allChromaticNotes.indexOf(Note.enharmonic(notes[x][y]));
+                }
+                var matched = false;
+                var count = 0;
+                while (matched === false){
+                    if (allScaleNotes.indexOf(allChromaticNotes[chromaIndex + count]) !== -1){
+                        clone[x][y] = allScaleNotes[allScaleNotes.indexOf(allChromaticNotes[chromaIndex + count])];
+                        matched = true;
+                    } else {
+                        count--;
+                    }
+                }
+            } else {
+            clone[x][y] = allScaleNotes[allScaleNotes.indexOf(notes[x][y]) - 1];
+            }
+        }
+    setNotes(clone)
+    }
+    if (noteOptions === 'octave'){
+        for (var y = 0; y < notes[x].length; y++){
+            var note = Note.pitchClass(notes[x][y])
+            var octave = Note.octave(notes[x][y])
+            clone[x][y] = note + (octave - 1)
+        }
+        setNotes(clone)
+        }
+    if (noteOptions === 'chromatic'){
+        for (var y = 0; y < notes[x].length; y++){
+            var chromaIndex = allChromaticNotes.indexOf(notes[x][y])
+            if (allChromaticNotes.indexOf(notes[x][y]) === -1){
+                chromaIndex = allChromaticNotes.indexOf(Note.enharmonic(notes[x][y]))
+            }
+    clone[x][y] = allChromaticNotes[chromaIndex - 1];
+        }
+    setNotes(clone)
+    }
+    if (noteOptions === 'insert'){
+        var newChord = [...clone[x]]
+        clone.splice(x, 0, newChord);
+        setNotes(clone)
+    }
+}
+
+
+
+const handleDeleteChord = (e) => {
+    var clone = [...notes]
+    var parentID = e.currentTarget.parentNode.parentNode.id;
+    var x = parentID.split('_')[1]
+    clone.splice(x, 1)
+    setNotes(clone);
+}
+
+function noteStringHandler(notes){
+    var returnArr = []
+    if (notes.indexOf(' ') === -1){
+        returnArr.push(notes)
+    } else {
+        returnArr = notes.split(' ')
+    }
+    return returnArr
 }
 
 function mapNotes(notes){
-    return (
-        notes.map((note, idx) =>
-        <div id={'pattern_' + idx} onClick={handlePlayThis} key={'pattern_' + idx} draggable onDragStart = {dragStartHandler} onDrag = {dragHandler} onDragOver = {dragOverHandler} onDragLeave={dragLeaveHandler} onDrop = {dropHandler}  className='inactive note' style={{display: 'flex', flexDirection: 'row', height: '50px', width: '50px', backgroundColor: 'wheat', margin: '1px'}}>
-                        {note}
-                        {(edit === 'on' && noteOptions !== 'delete') && <div style={{display: 'flex', flexDirection: (noteOptions === 'insert') ? 'row' : 'column'}}>
-                        <Icon id={'clickup_' + idx} onClick={handleClickUp} name={(noteOptions === 'insert') ? "caret square left" : "caret square up"}/><Icon onClick={handleClickDown} id={'clickdown_' + idx} name={(noteOptions === 'insert') ? "caret square right" : "caret square down"}/>
-                        </div>}
-                        {(edit === 'on' && noteOptions === 'delete') &&<Icon id={'delete_' + idx} onClick={handleDeleteNote} name= 'trash alternate outline' />}
-                    </div>
+    var returnArr = [];
+    if (notes.length === 0){
+        return <div></div>
+    }
+    for (var i = 0; i < notes.length; i++){
+        var returnChord = [];
+        var pitchClasses = [];
+        for (var j = 0; j < notes[i].length; j++){
+            pitchClasses.push(Note.pitchClass(notes[i][j]))
+            returnChord.push(
+                <div id={'chord_' + i + '_' + j} style={{display: 'flex', flexDirection: 'row', height: '50px', width: '50px', backgroundColor: 'wheat', margin: '1px'}}>
+                    {notes[i][j]}
+                    {(edit && noteOptions !== 'delete') && <div style={{display: 'flex', flexDirection: 'column'}}>
+                    <Icon onClick={handleClickUp} name={(noteOptions === 'insert') ? "plus" : "caret square up" }/><Icon onClick={handleClickDown} name={(noteOptions === 'insert') ? "" : "caret square up" }/>
+                    </div>}
+                    {(edit && noteOptions === 'delete') &&<Icon onClick={handleDeleteNote} name= 'trash alternate outline' />}
+                </div>
+            )
+        }
+
+        returnArr.push(
+            <div  id={'chord_' + i} onClick={handlePlayThis} draggable onDragStart = {dragStartHandler} onDrag = {dragHandler} onDragOver = {dragOverHandler} onDragLeave={dragLeaveHandler} onDrop = {dropHandler}className='inactive chord' style={{display: 'flex', flexDirection: 'column-reverse', margin: '1px', marginBottom: '5px'}}>
+            <div onClick={(e) => (handlePlayThis(e, true))} style={{display: 'flex', flexDirection: 'row', marginBottom: '18px'}}>
+            { (edit && noteOptions !== 'delete') && <div  style={{display: 'flex', flexDirection: (noteOptions === 'insert') ? 'row' : 'column'}}>
+            <Icon onClick={handleClickUpChord} name= {(noteOptions === 'insert') ? "plus" : "caret square up" }/><Icon onClick={handleClickDownChord}name= {(noteOptions === 'insert') ? "" : "caret square down" }/>
+            </div>}
+            {(edit && noteOptions === 'delete') && <Icon onClick={handleDeleteChord} name= 'trash alternate outline' /> }
+            </div>
+            {returnChord} 
+            </div>
         )
-    )
+    }
+    return returnArr;
 }
 
 
@@ -604,20 +802,23 @@ function patternExtraction(){
             allChromaticNotes.push(chromaticNotes[n] + m)
         }
     }
- 
+    
     var rootIndex = allNotes.indexOf(root);
     var rootChromaticIndex = allChromaticNotes.indexOf(root);
     for (var k = 0; k < notes.length; k++){
-        if (allNotes.indexOf(notes[k]) === -1){
-            if (allChromaticNotes.indexOf(notes[k]) === -1){
-            patternExport.push( "*" + (allChromaticNotes.indexOf(Note.enharmonic(notes[k])) - rootChromaticIndex))
+        let patternChord = [];
+        for (var l = 0; l < notes[k].length; l++){
+            if (allNotes.indexOf(notes[k][l]) === -1){
+                if (allChromaticNotes.indexOf(notes[k][l]) === -1){
+                patternChord.push( "*" + (allChromaticNotes.indexOf(Note.enharmonic(notes[k][l])) - rootChromaticIndex))
+                } else {
+                patternChord.push((allChromaticNotes.indexOf(notes[k][l]) - rootChromaticIndex));
+                }
             } else {
-            patternExport.push((allChromaticNotes.indexOf(notes[k]) - rootChromaticIndex));
+                patternChord.push(allNotes.indexOf(notes[k][l]) - rootIndex)
             }
-        } else {
-            patternExport.push(allNotes.indexOf(notes[k]) - rootIndex)
         }
-        
+        patternExport.push(patternChord)
     }
     setPattern(patternExport);
 }
@@ -801,11 +1002,7 @@ const exportObj = {
 
 const handleEditOptions = () => {
     setManipulate(false)
-    if (edit === 'off'){
-        setEdit('on')
-    } else {
-        setEdit('off')
-    } 
+    setEdit(!edit)
 }
 
 const handleManipulateOptions = () => {
@@ -857,6 +1054,15 @@ const handleExportDropdown = (e, {value}) => {
           }
         setNotes(patternClone)
       }
+  }
+
+  const importChordsFromChordLab = () => {
+      if (labData?.labInfo?.chordLab?.chords){
+        setNotes(labData['labInfo']['chordLab']['chords'])
+      } else {
+          setNotes([['C3', 'E3', 'G3']])
+      }
+
   }
 
     return (
@@ -916,6 +1122,7 @@ const handleExportDropdown = (e, {value}) => {
         </Dropdown.Menu>
         </Dropdown>
         <Menu.Item onClick={() => setShowDescription(!showDescription)}> Desc </Menu.Item>
+        <Menu.Item onClick={importChordsFromChordLab}> Import </Menu.Item>
         <Button.Group>
         {/* <Button basic disabled={localStorage.getItem('userInfo') === null} onClick={()=> handleExport()}>Export</Button>
         <Dropdown
@@ -932,7 +1139,7 @@ const handleExportDropdown = (e, {value}) => {
         exportObj={exportObj}/>
         </Button.Group>
         </Menu>
-        {(edit === 'on' && !manipulate) && 
+        {(edit && !manipulate) && 
         <Button.Group>
             <Button  compact basic active={noteOptions === 'octave'} onClick ={() => setNoteOptions('octave')}>Octave</Button>
             <Button compact basic active={noteOptions === 'scale'} onClick ={() => setNoteOptions('scale')}> Scale</Button>
@@ -942,8 +1149,8 @@ const handleExportDropdown = (e, {value}) => {
             <Button compact basic onClick={() => handleRemoveNoteFromEnd()}>Note-- </Button>
             <Button compact basic onClick={() => handleAddNoteToEnd()}>Note++ </Button>
             {noteOptions === 'delete' && <Button  compact basic onClick ={handleDeleteAll}>Delete All</Button>}
-            {noteOptions !== 'delete' && noteOptions !== 'insert' && <Button  compact basic onClick ={() => handleEditAllUp('up')}>All Up</Button>}
-            {noteOptions !== 'delete' && noteOptions !== 'insert' && <Button  compact basic onClick ={() => handleEditAllDown('down')}>All Down</Button>}
+            {noteOptions !== 'delete' && noteOptions !== 'insert' && <Button  compact basic onClick ={handleClickUpAll}>All Up</Button>}
+            {noteOptions !== 'delete' && noteOptions !== 'insert' && <Button  compact basic onClick ={handleClickDownAll}>All Down</Button>}
             <Button  compact basic onClick ={() => setManipulate(!manipulate)}>Advanced</Button>
 
         </Button.Group>
@@ -966,7 +1173,7 @@ const handleExportDropdown = (e, {value}) => {
         </div>}
         <div>{notes.length} {notes.length > 1 ? 'notes' : 'note'}</div>
         <div>
-            <div draggable onClick={() => setInputFocus(!inputFocus)} onDragStart={dragStartHandlerSpecial} style={{height: '25px', width: '125px', backgroundColor: 'lightblue', display: !inputFocus ? '': 'none' }}>{name}</div>
+            <div draggable onClick={() => setInputFocus(!inputFocus)} onDragStart={dragStartHandlerSpecial} style={{height: '25px', width: '125px', backgroundColor: 'wheat', display: !inputFocus ? '': 'none' }}>{name}</div>
             <Input type='text'
             value={name}
             id={'input_patternLab'}

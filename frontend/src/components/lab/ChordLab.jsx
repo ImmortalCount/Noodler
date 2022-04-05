@@ -64,6 +64,7 @@ export default function ChordLab({importedChordData, masterInstrumentArray}) {
             chordName: chords.length !==0 ? Chord.detect(chords[0])[0] : 'N/A',
             desc: '',
             chord: chords.length !==0 ? chords[0] : [],
+            chords: chords,
             position: [],
             author: '',
             authorId: '',
