@@ -11,7 +11,7 @@ import * as Tone from 'tone';
 import { setSongImportData } from '../../store/actions/songImportDataActions';
 import ExportModal from '../modal/ExportModal';
 
-export default function Player ({masterInstrumentArray}) {
+export default function Player ({masterInstrumentArray, display}) {
     const [instrumentFocus, setInstrumentFocus] = useState(0);
     const [mainModule, setMainModule] = useState(0)
     const [data, setData] = useState([{mode: 'melody', highlight: [], data: initialDataType2}])
@@ -731,7 +731,7 @@ const distanceFromChordRootToKeyRoot = () => {
 
     return (
         <>
-        <div onDrop={dropHandlerBackground}>
+        <div style={{display: display ? '' : 'none'}} onDrop={dropHandlerBackground} >
         <Menu>
         <Button.Group>
         {mapMenuItems()}

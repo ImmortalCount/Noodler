@@ -173,22 +173,20 @@ function Midbar() {
         </div>
         <div className="bottomhalf" style={{display: 'flex', flexDirection: 'row', backgroundColor: 'white'}}>
             <div className="bottomleft" style={{display: 'flex', flexDirection: 'row', backgroundColor: 'white'}}> 
-            <div style={{display: activeTabs.includes('explorer') ? '' : 'none'}}>
-            {/* <Explorer/> */}
-            </div>
-            <div style={{display: activeTabs.includes('lab') ? '' : 'none'}}>
+            <Explorer
+            display = {activeTabs.includes('explorer')}
+            />
             <Lab
             masterInstrumentArray = {masterInstrumentArray}
+            display = {activeTabs.includes('lab') }
             />
-            </div>
             <Palette display= {activeTabs.includes('palette')} />
             </div>
             <div className="bottomright"> 
-            <div style={{display: activeTabs.includes('player') ? '' : 'none'}}>
             <Player
             masterInstrumentArray = {masterInstrumentArray}
+            display = {activeTabs.includes('player')}
             />
-            </div>
             </div>
         </div>
         </>

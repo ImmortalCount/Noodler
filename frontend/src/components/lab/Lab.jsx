@@ -9,7 +9,7 @@ import { useDispatch, useSelector} from 'react-redux';
 import { setLabData } from '../../store/actions/labDataActions';
 
 
-export default function Lab({masterInstrumentArray}) {
+export default function Lab({masterInstrumentArray, display}) {
     const [activeLabIndices, setActiveLabIndices] = useState([2])
     const [importedScaleData, setImportedScaleData] = useState({})
     const [importedChordData, setImportedChordData] = useState({})
@@ -98,7 +98,7 @@ export default function Lab({masterInstrumentArray}) {
   }
 
     return (
-        <>
+        <div style={{display: display ? '' : 'none'}}>
         <div onDragOver={dragOverHandler} onDrop={dropHandler} style={{minWidth: '800px', margin: "2px"}}>
         <Accordion fluid styled>
         <Accordion.Title
@@ -171,6 +171,6 @@ export default function Lab({masterInstrumentArray}) {
         </Accordion.Content>
       </Accordion>
       </div>
-        </>
+        </div>
     )
 }

@@ -4,7 +4,7 @@ import { useDispatch, useSelector} from 'react-redux';
 import { getMusicData } from '../../store/actions/dataPoolActions';
 
 
-export default function Explorer() {
+export default function Explorer({display}) {
   const [scope, setScope] = useState('global')
   const [subData, setSubData] = useState('all')
   const [keyword, setKeyword] = useState('')
@@ -131,7 +131,7 @@ const onDragStart = (e) => {
     
 
     return (
-        <div>
+        <div style={{display: display ? '' : 'none'}}>
             <Menu>
             <Input type='text' placeholder='Search...' icon='search' onChange={(e, {value}) => setKeyword(value)} />
             {userID !== null  && <Select compact options={scopeOptions} onChange={handleScopeOptions} defaultValue='global'/>}
