@@ -697,16 +697,17 @@ for (let g = 0; g < rootNotes.length;g++ ){
         var k = 0;
         while (!condition){
             if (noteCounter > 0){
-                var total = 0;
-                for(let i = 0; i < previousFretPositions.length; i++) {
-                    total += previousFretPositions[i];
-                    }
-                let centerOfGravity = total/previousFretPositions.length
+                // var total = 0;
+                // for(let i = 0; i < previousFretPositions.length; i++) {
+                //     total += previousFretPositions[i];
+                //     }
+                // let centerOfGravity = total/previousFretPositions.length
+
                 //if you run into another note
                 if (fretboard[j][i + k] === notesArr[noteCounter - 1]){
                     let x = j + 1
                     let y = i + k
-                    if (Math.abs(y - centerOfGravity) < Math.abs(previousFretPositions[previousFretPositions.length - 1] - centerOfGravity)){
+                    if (Math.abs(y - i) < Math.abs(previousFretPositions[previousFretPositions.length - 1] - i)){
                         tempArr.pop()
                         tempArr.push(x + '_' + y)
                         break;
@@ -716,7 +717,7 @@ for (let g = 0; g < rootNotes.length;g++ ){
                 if (fretboard[j][i - k] === notesArr[noteCounter - 1]){
                     let x = j + 1
                     let y = i - k
-                    if (Math.abs(y - centerOfGravity) < Math.abs(previousFretPositions[previousFretPositions.length - 1] - centerOfGravity)){
+                    if (Math.abs(y - i) < Math.abs(previousFretPositions[previousFretPositions.length - 1] - i)){
                         tempArr.pop()
                         tempArr.push(x + '_' + y)
                         break;
