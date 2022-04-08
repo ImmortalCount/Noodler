@@ -23,15 +23,16 @@ const [playOnKeyPress, setPlayOnKeyPress] = useState(false)
 const [name, setName] = useState('Pattern 1')
 const [options, setOptions] = useState('sharps')
 const [noteOptions, setNoteOptions] = useState('octave')
-const [allOptions, setAllOptions] = useState('octave')
 const [edit, setEdit] = useState(false)
 const [notesTruePatternFalse, setNotesTruePatternFalse] = useState(true)
 const [octave, setOctave] = useState(3)
 const [generatePatternLength, setGeneratePatternLength] = useState(8)
 const [manipulate, setManipulate] = useState(false)
 const [playNoteOnClick, setPlayNoteOnClick] = useState(true)
+const [positionLock, setPositionLock] = useState(false)
 const [startOnScaleDegree, setStartOnScaleDegree] = useState(true)
 const [generateScaleDegree, setGenerateScaleDegree] = useState(1)
+const [patternType, setPatternType] = useState('fluid')
 const [exportPool, setExportPool] = useState('global')
 const [inputFocus, setInputFocus] = useState(false)
 const [chromaticNotes, setChromaticNotes] = useState(['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B'])
@@ -65,6 +66,7 @@ for (var o = 0; o < 10; o++){
     }
 
     function patternAndScaleToNotes2(patternArr){
+        console.log('running PatternAndScaleToNotes2 69')
         var notesExport = [];
         var root = scaleNotes[0] + 3
         const allNotes = Note.sortedNames(allScaleNotes);
@@ -106,7 +108,7 @@ useEffect(() => {
 
 useEffect(() => {
     patternExtraction()
-}, [notes])
+}, [notes, patternType])
 
 // useEffect(() => {
 //     // patternAndScaleToNotes()
@@ -118,15 +120,16 @@ useEffect(() => {
             name: name,
             patternName: name,
             desc: '',
-            type: 'pattern',
+            type: patternType,
             length: notes.length,
-            pattern: pattern,
+            pattern: patternType === 'fixed' ? notes : pattern,
             position: [],
             author: '',
             authorId: '',
             dataType: 'pattern',
             pool: '',
         }
+        console.log(patternDataPrototype['pattern'], 'dataPrototype')
         newInfo['patternLab'] = patternDataPrototype
         dispatch(setLabData(newInfo))
     }, [notes, name, pattern])
@@ -155,8 +158,9 @@ const dragStartHandler = e => {
 const dragStartHandlerSpecial = e => {
     var obj = {id: 'special', className: 'patternData', message: {
         patternName: name,
-        pattern: pattern,
-        position: []
+        pattern: patternType === 'fixed'? notes : pattern,
+        position: [],
+        type: patternType,
     }, type: 'patternLabExport'}
     e.dataTransfer.setData('text', JSON.stringify(obj));
 }
@@ -202,15 +206,15 @@ var keydownEvent = (e) => {
                     return
                 } else if (obj && obj.note !== undefined) {
                 const now = Tone.now();
-                var playNote = (obj.note + (Number(obj.octave) + Number(octave)));
+                let playNote = (obj.note + (Number(obj.octave) + Number(octave)));
                 keySynth.triggerAttackRelease(playNote, "8n", now);
                 document.removeEventListener('keydown', keydownEvent);
-                newNotes.push(playNote)
+                newNotes.push([playNote])
                 setNotes(newNotes)
                 }
             } else if (obj !== undefined){
                 const now = Tone.now();
-                var playNote = (obj.note + (Number(obj.octave) + Number(octave)));
+                let playNote = (obj.note + (Number(obj.octave) + Number(octave)));
                 keySynth.triggerAttackRelease(playNote, "8n", now);
                 document.removeEventListener('keydown', keydownEvent);
                 newNotes.push(playNote)
@@ -264,7 +268,7 @@ function playAll(){
             count++
         },
        convertedChords,
-        "4n"
+        "8n"
       );
       synthPart.start();
       synthPart.loop = 1;
@@ -552,7 +556,6 @@ var handleClickUpChord = (e) =>{
 
 
     if (noteOptions === 'scaler'){
-        console.log('scaling up')
         for (var y = 0; y < notes[x].length; y++){
             if (allScaleNotes.indexOf(notes[x][y]) === -1){
                 var chromaIndex = allChromaticNotes.indexOf(notes[x][y]);
@@ -784,22 +787,24 @@ const shuffleNotes = () => {
 }
 
 function patternExtraction(){
-
     var root = scaleNotes[0] + 3
-    
-    var chromaticNotes = Scale.get('c chromatic').notes
     var allNotes = [];
     var allChromaticNotes = [];
     var patternExport = [];
-    for (var i = 0; i < 10; i++){
-        for (var j = 0; j < scaleNotes.length; j++){
-            allNotes.push(scaleNotes[j] + i)
-        }
-    }
 
     for (var m = 0; m < 10; m++){
         for (var n = 0; n < chromaticNotes.length; n++){
-            allChromaticNotes.push(chromaticNotes[n] + m)
+                allChromaticNotes.push(chromaticNotes[n] + m)
+        }
+    }
+
+    for (let j = 0; j < allChromaticNotes.length; j++){
+        if (!scaleNotes.includes(Note.pitchClass(allChromaticNotes[j]))){
+            if (scaleNotes.includes(Note.pitchClass(Note.enharmonic(allChromaticNotes[j])))){
+                allNotes.push(allChromaticNotes[j])
+            }
+        } else {
+            allNotes.push(allChromaticNotes[j])
         }
     }
     
@@ -808,11 +813,11 @@ function patternExtraction(){
     for (var k = 0; k < notes.length; k++){
         let patternChord = [];
         for (var l = 0; l < notes[k].length; l++){
-            if (allNotes.indexOf(notes[k][l]) === -1){
+            if (allNotes.indexOf(notes[k][l]) === -1 || patternType === 'floating'){
                 if (allChromaticNotes.indexOf(notes[k][l]) === -1){
                 patternChord.push( "*" + (allChromaticNotes.indexOf(Note.enharmonic(notes[k][l])) - rootChromaticIndex))
                 } else {
-                patternChord.push((allChromaticNotes.indexOf(notes[k][l]) - rootChromaticIndex));
+                patternChord.push("*" + (allChromaticNotes.indexOf(notes[k][l]) - rootChromaticIndex));
                 }
             } else {
                 patternChord.push(allNotes.indexOf(notes[k][l]) - rootIndex)
@@ -990,7 +995,7 @@ const exportObj = {
         name: name,
         patternName: name,
         desc: '',
-        type: 'normal',
+        type: 'fluid',
         length: notes.length,
         dataType: 'pattern',
         pattern: pattern,
@@ -1035,9 +1040,11 @@ const handleExportDropdown = (e, {value}) => {
           setOptions('flats')
           let patternClone = JSON.parse(JSON.stringify(notes))
               for (let j = 0; j < patternClone.length; j++){
-                  if (Note.accidentals(patternClone[j]) === '#'){
-                      let x = Note.enharmonic(patternClone[j])
-                      patternClone[j] = x
+                  for (let k = 0; k < patternClone[j].length; k++){
+                    if (Note.accidentals(patternClone[j][k]) === '#'){
+                        let x = Note.enharmonic(patternClone[j][k])
+                        patternClone[j] = x
+                    }
                   }
               }
           setNotes(patternClone)
@@ -1046,13 +1053,15 @@ const handleExportDropdown = (e, {value}) => {
         setChromaticNotes(['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B'])
           setOptions('sharps')
           let patternClone = JSON.parse(JSON.stringify(notes))
-          for (let j = 0; j < patternClone.length; j++){
-              if (Note.accidentals(patternClone[j]) === 'b'){
-                  let x = Note.enharmonic(patternClone[j])
-                  patternClone[j] = x
+              for (let j = 0; j < patternClone.length; j++){
+                  for (let k = 0; k < patternClone[j].length; k++){
+                    if (Note.accidentals(patternClone[j][k]) === 'b'){
+                        let x = Note.enharmonic(patternClone[j][k])
+                        patternClone[j] = x
+                    }
+                  }
               }
-          }
-        setNotes(patternClone)
+          setNotes(patternClone)
       }
   }
 
@@ -1100,7 +1109,11 @@ const handleExportDropdown = (e, {value}) => {
             </Dropdown.Menu> 
         </Dropdown> 
         </Button.Group> 
+         <Menu.Item onClick={() => console.log(allScaleNotes, ' notes test', Note.sortedNames(allScaleNotes), 'sorted notes test')}> Test</Menu.Item>   
          <Menu.Item onClick={handleEditOptions}> Edit</Menu.Item>       
+         <Menu.Item onClick={() => setPatternType('fluid')}> Fluid</Menu.Item> 
+         <Menu.Item onClick={() => setPatternType('fixed')}> Fixed <Icon name='anchor'/></Menu.Item>       
+         <Menu.Item onClick={() => setPatternType('floating')}> Floating <Icon name='fly'/></Menu.Item>       
          <Dropdown
          simple
          item

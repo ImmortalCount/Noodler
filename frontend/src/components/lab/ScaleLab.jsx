@@ -811,19 +811,18 @@ const handleScaleDescriptionChange = e => {
       <Button basic compact > Mode </Button>
       <Button basic compact onClick={() => toggleModes('next', notes)}><Icon name='caret right'/></Button>
       </Button.Group>
-      <Menu.Item>
-      <Dropdown
+        <Menu.Item onClick={() => setShowDescription(!showDescription)}>Desc</Menu.Item>
+        <Dropdown
        simple 
+       item
        text = 'Display   ' 
        >
-          <Dropdown.Menu>
+        <Dropdown.Menu>
             <Dropdown.Item selected={instrumentDisplay === -2} onClick={() => setInstrumentDisplay(-2)}> None </Dropdown.Item>
             <Dropdown.Item selected={instrumentDisplay === -1} onClick={() => setInstrumentDisplay(-1)}> All </Dropdown.Item>
              {mapMenuItems()}
           </Dropdown.Menu>
         </Dropdown>
-        </Menu.Item>
-        <Menu.Item onClick={() => setShowDescription(!showDescription)}>Desc</Menu.Item>
         <Button.Group>
         <ExportModal
         dataType={'Scale'}

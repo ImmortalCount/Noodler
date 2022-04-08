@@ -109,13 +109,16 @@ function setRomanNumeralsByKey(chord, root){
 }
 
     //generate notes from patternData using scaleData
-function patternAndScaleToNotes(pattern, scale, root){
+function patternAndScaleToNotes(pattern, patternType, scale, root){
         var allNotes = [];
         var allChromaticNotes = [];
         var chromaticScale = Scale.get('c chromatic').notes
         var notesExport = [];
         if (root === undefined){
             root = scale[0] + 3;
+        }
+        if (patternType === 'fixed'){
+            return pattern
         }
         var simplifiedScale = [];
         for (var h = 0; h < scale.length; h++){
@@ -237,13 +240,14 @@ function convertModuleDataIntoPlayableSequence(musicData){
             data: []};
             if (musicData[h]['mode'] === 'melody'){
                 returnObject['displayOnly'] = false;
-                for (var i = 0; i < musicData[h]['data'].length; i++){
-                    var innerObject = {speed:1, notes:[]}
-                    var rhythm = musicData[h]['data'][i]['data']['rhythmData']['rhythm'];
-                    var pattern = musicData[h]['data'][i]['data']['patternData']['pattern']
-                    var scale = musicData[h]['data'][i]['data']['scaleData']['scale']
-                    var notes = patternAndScaleToNotes(pattern, scale)
-                    var sequence = notesIntoRhythm(notes, rhythm)
+                for (let i = 0; i < musicData[h]['data'].length; i++){
+                    let innerObject = {speed:1, notes:[]}
+                    let rhythm = musicData[h]['data'][i]['data']['rhythmData']['rhythm'];
+                    let pattern = musicData[h]['data'][i]['data']['patternData']['pattern']
+                    let patternType = musicData[h]['data'][i]['data']['patternData']['type']
+                    let scale = musicData[h]['data'][i]['data']['scaleData']['scale']
+                    let notes = patternAndScaleToNotes(pattern, patternType, scale)
+                    let sequence = notesIntoRhythm(notes, rhythm)
                     innerObject['speed'] = musicData[h]['data'][i]['data']['rhythmData']['speed']
                     innerObject['notes'] = sequence
                     returnObject['data'].push(innerObject)
@@ -251,14 +255,14 @@ function convertModuleDataIntoPlayableSequence(musicData){
                 returnArr.push(returnObject)
             } else if (musicData[h]['mode'] === 'chord'){
                 returnObject['displayOnly'] = false;
-                for (var i = 0; i < musicData[h]['data'].length; i++){
+                for (let i = 0; i < musicData[h]['data'].length; i++){
                     
-                    var innerObject = {speed:1, notes:[]}
-                    var rhythm = musicData[h]['data'][i]['data']['rhythmData']['rhythm'];
-                    var numberOfNotes = musicData[h]['data'][i]['data']['rhythmData']['notes']
-                    var scale = musicData[h]['data'][i]['data']['scaleData']['scale']
-                    var thisChord = musicData[h]['data'][i]['data']['chordData']['chord']
-                    var sequence = chordIntoRhythm(thisChord, rhythm, numberOfNotes )
+                    let innerObject = {speed:1, notes:[]}
+                    let rhythm = musicData[h]['data'][i]['data']['rhythmData']['rhythm'];
+                    let numberOfNotes = musicData[h]['data'][i]['data']['rhythmData']['notes']
+                    let scale = musicData[h]['data'][i]['data']['scaleData']['scale']
+                    let thisChord = musicData[h]['data'][i]['data']['chordData']['chord']
+                    let sequence = chordIntoRhythm(thisChord, rhythm, numberOfNotes )
                     innerObject['speed'] = musicData[h]['data'][i]['data']['rhythmData']['speed']
                     innerObject['notes'] = sequence
                     returnObject['data'].push(innerObject)
@@ -266,8 +270,8 @@ function convertModuleDataIntoPlayableSequence(musicData){
                 returnArr.push(returnObject)
             } else if (musicData[h]['mode'] === 'off'){
                 returnObject['displayOnly'] = true;
-                for (var i = 0; i < musicData[h]['data'].length; i++){
-                    var innerObject = {speed:'', notes:[]}
+                for (let i = 0; i < musicData[h]['data'].length; i++){
+                    let innerObject = {speed:'', notes:[]}
                     innerObject['speed'] = musicData[h]['data'][i]['data']['rhythmData']['speed']
                     innerObject['notes'] = handleOffMode();
                     returnObject['data'].push(innerObject)
@@ -275,10 +279,10 @@ function convertModuleDataIntoPlayableSequence(musicData){
                 returnArr.push(returnObject)
             } else if (musicData[h]['mode'] === 'scale'){
                 returnObject['displayOnly'] = true;
-                for (var i = 0; i < musicData[h]['data'].length; i++){
-                    var innerObject = {speed:'', notes:[]}
-                    var scale = musicData[h]['data'][i]['data']['scaleData']['scale']
-                    var sequence = scaleIntoScaleDisplayNotes(scale)
+                for (let i = 0; i < musicData[h]['data'].length; i++){
+                    let innerObject = {speed:'', notes:[]}
+                    let scale = musicData[h]['data'][i]['data']['scaleData']['scale']
+                    let sequence = scaleIntoScaleDisplayNotes(scale)
                     innerObject['speed'] = musicData[h]['data'][i]['data']['rhythmData']['speed']
                     innerObject['notes'] = sequence
                     returnObject['data'].push(innerObject)
@@ -286,10 +290,10 @@ function convertModuleDataIntoPlayableSequence(musicData){
                 returnArr.push(returnObject)
             } else if (musicData[h]['mode'] === 'chordTones'){
                 returnObject['displayOnly'] = true;
-                for (var i = 0; i < musicData[h]['data'].length; i++){
-                    var innerObject = {speed:'', notes:[]}
-                    var chord = musicData[h]['data'][i]['data']['chordData']['chord']
-                    var sequence = scaleIntoScaleDisplayNotes(chord)
+                for (let i = 0; i < musicData[h]['data'].length; i++){
+                    let innerObject = {speed:'', notes:[]}
+                    let chord = musicData[h]['data'][i]['data']['chordData']['chord']
+                    let sequence = scaleIntoScaleDisplayNotes(chord)
                     innerObject['speed'] = musicData[h]['data'][i]['data']['rhythmData']['speed']
                     innerObject['notes'] = sequence
                     returnObject['data'].push(innerObject)

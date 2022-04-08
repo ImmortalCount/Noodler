@@ -11,6 +11,7 @@ import { data1, data2 } from './dummyData';
 import { Note } from '@tonaljs/tonal';
 import { setSongData } from '../../store/actions/songDataActions';
 import { setInstrumentNames } from '../../store/actions/instrumentNameActions';
+import './guitar.css'
 
 
 export default function GuitarSVG({masterInstrumentArray, activelyDisplayedInstruments}) {
@@ -126,7 +127,7 @@ export default function GuitarSVG({masterInstrumentArray, activelyDisplayedInstr
     }, [songImport])
 
     useEffect(() => {
-        if (noteDisplay){
+        if (noteDisplay && (Tone.Time(Tone.Transport.position).toSeconds() === 0 && Tone.Transport.state === 'stopped')){
             displayNotes(noteDisplay)
             setLabDisplay(true)
         } else {
@@ -676,16 +677,18 @@ function positionNamer(notesArr, tuning){
     if (notesArr.length < 2){
         return rootPositions
     }
-
+//trying out the wightin
 var allPositions = []
-for (var g = 0; g < rootNotes.length; g++ ){
+//run twice algorithm
+for (let g = 0; g < rootNotes.length;g++ ){
     //starting string
-    var j = rootNotes[g]['string'] 
+    let j = rootNotes[g]['string'] 
     //starting fret
-    var i = rootNotes[g]['fret']
+    let i = rootNotes[g]['fret']
 
     var tempArr = []
-    var previousNoteFretPosition = 0;
+    var previousFretPositions = [];
+
     tempArr.push(rootPositions[g][0])
 
     var noteCounter = 1;
@@ -694,30 +697,39 @@ for (var g = 0; g < rootNotes.length; g++ ){
         var k = 0;
         while (!condition){
             if (noteCounter > 0){
+                var total = 0;
+                for(let i = 0; i < previousFretPositions.length; i++) {
+                    total += previousFretPositions[i];
+                    }
+                let centerOfGravity = total/previousFretPositions.length
+                //if you run into another note
                 if (fretboard[j][i + k] === notesArr[noteCounter - 1]){
                     let x = j + 1
                     let y = i + k
-                    if (Math.abs(y - i) < Math.abs(previousNoteFretPosition - i)){
+                    if (Math.abs(y - centerOfGravity) < Math.abs(previousFretPositions[previousFretPositions.length - 1] - centerOfGravity)){
                         tempArr.pop()
                         tempArr.push(x + '_' + y)
+                        break;
                     }
-                    condition = true;
+                    
                 }
                 if (fretboard[j][i - k] === notesArr[noteCounter - 1]){
                     let x = j + 1
                     let y = i - k
-                    if (Math.abs(y - i) < Math.abs(previousNoteFretPosition - i)){
+                    if (Math.abs(y - centerOfGravity) < Math.abs(previousFretPositions[previousFretPositions.length - 1] - centerOfGravity)){
                         tempArr.pop()
                         tempArr.push(x + '_' + y)
+                        break;
                     }
-                    condition = true;
+                    
                 }
             }
             if (i + k < 25){
                 if (fretboard[j][i + k] === notesArr[noteCounter]){
+                    
                     let x = j + 1
                     let y = i + k
-                    previousNoteFretPosition = y;
+                    previousFretPositions.push(y) ;
                     tempArr.push(x + '_' + y)
                     noteCounter++
                     condition = true
@@ -727,13 +739,13 @@ for (var g = 0; g < rootNotes.length; g++ ){
                 if (fretboard[j][i - k] === notesArr[noteCounter]){
                     let x = j + 1
                     let y = i - k
-                    previousNoteFretPosition = y;
+                    previousFretPositions.push(y)
                     tempArr.push(x + '_' + y)
                     noteCounter++
                     condition = true
                 }
             }
-            if (k > 25){
+            if (k > 4){
                 condition = true
             }
 
@@ -860,7 +872,6 @@ function loadNoteSequenceAndVisualDataOntoTimeline(data){
                 //If the instrument is set to display only
                 if (displayOnly){
                     for (let i = 0; i < currentArray.length; i++){
-                        console.log(currentArray[i])
                         let findNote = currentArray[i]
                         let flat = false
                         if (Note.accidentals(currentArray[i]) === 'b'){
@@ -1159,7 +1170,7 @@ function handlePreviousNextModulePlay(direction){
     if (direction === 'current'){
         Tone.Transport.position = findBetween(currentTime, moduleMarkers)['current']
     }
-    // displayNotes()
+    displayNotes()
 }
 
 function handleStringChange(direction, instrumentNumber){
@@ -1312,7 +1323,7 @@ function mapGuitarSVGContainers(instruments){
             <Button compact basic onClick={()=> handleFretChange('up', idx)} > <Icon name ='right arrow'/></Button>
         </Button.Group>
         </>}
-        <div id={`divGuitar${idx}`}></div>
+        <div className='guitarDiv' id={`divGuitar${idx}`}></div>
         </div>
         )
     )
@@ -1344,12 +1355,11 @@ function handleSeeAllPositions(){
     } else if (globalPosition.current === -1) {
         globalPosition.current = 0
     }
-    // if (labDisplay){
-    //     displayNotes(noteDisplay)
-    // } else {
-    //     displayNotes()
-    // }
-    displayNotes()
+    if (labDisplay){
+        displayNotes(noteDisplay)
+    } else {
+        displayNotes()
+    }
 
 }
 
@@ -1363,12 +1373,11 @@ function globalPositionChange(direction){
             globalPosition.current--
         }
     }
-    // if (labDisplay){
-    //     displayNotes(noteDisplay)
-    // } else {
-    //     displayNotes()
-    // }
-    displayNotes()
+    if (labDisplay){
+        displayNotes(noteDisplay)
+    } else {
+        displayNotes()
+    }
     
 }
 

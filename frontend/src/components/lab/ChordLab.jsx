@@ -84,12 +84,14 @@ export default function ChordLab({importedChordData, masterInstrumentArray}) {
         var arrOfObj = []
         var dispatchObj = {data: [{speed: 1, notes: [['']]}], displayOnly: false, highlight: []}
         var scaleString = ''
-      
-        for (let i= 0; i < chords[0].length; i++){
-            if (i === chords[0].length - 1){
-                scaleString += chords[0][i] 
+
+        let clone = sortAllChordsByPitch(chords)
+        
+        for (let i= 0; i < clone[0].length; i++){
+            if (i === clone[0].length - 1){
+                scaleString += clone[0][i] 
             } else {
-                scaleString += chords[0][i] + ' '
+                scaleString += clone[0][i] + ' '
             }
             scaleString = [scaleString]
         }
@@ -109,7 +111,6 @@ export default function ChordLab({importedChordData, masterInstrumentArray}) {
           return arrOfObj
         } else {
           arrOfObj[instrumentDisplay - 1]['data'][0]['notes'][0] = scaleString
-          console.log(arrOfObj, 'arr of obj', scaleString, 'scale string')
           return arrOfObj
         }
       
@@ -137,7 +138,7 @@ export default function ChordLab({importedChordData, masterInstrumentArray}) {
 
     
 
-    function generateChordStack(limit){
+    function generateChordStack(limit, progression, progressionType){
         var chordStack = [];
         var nullStack = [];
         let numberOfChords;
@@ -147,7 +148,6 @@ export default function ChordLab({importedChordData, masterInstrumentArray}) {
         } else {
             numberOfChords = scaleNotes.length
         }
-        console.log(numberOfChords)
             var interval = generateChordOptions['intervals'];
             var stackHeight = generateChordOptions['number'];
             var root = scaleNotes[0] + '3';
@@ -163,9 +163,50 @@ export default function ChordLab({importedChordData, masterInstrumentArray}) {
         for (var k = 0; k < chordStack.length; k++){
             nullStack.push(null)
         }
+        //I IV 
+        if (progression !== undefined && progressionType !== undefined){
+            if (progressionType === 'number'){
+                const sortedChords = sortChordsByNumber(progression, chordStack)
+                setExportNames(nullStack)
+                setChords(sortedChords)
+            }
+            if (progressionType === 'manual'){
+                const sortedChords = sortChordsManual(progression, chordStack)
+                setExportNames(nullStack)
+                setChords(sortedChords)
+            }
+        } else {
+            setChords(chordStack)
+            setExportNames(nullStack)
+        }
 
-        setExportNames(nullStack)
-        setChords(chordStack)
+    }
+
+    function sortChordsByNumber(num, chords){
+        let count = 0;
+        let tempArr = [];
+        let l = 0;
+        while (count < chords.length){
+            tempArr.push(chords[l])
+            l += num;
+            count++
+            if (l >= chords.length){
+                l = l - chords.length
+            }
+        }
+        return tempArr;
+    }
+
+    function sortChordsManual(arr, chords){
+        let tempArr = [];
+        for (let i = 0; i < arr.length; i++){
+            tempArr.push(chords[arr[i]])
+        }
+        return tempArr;
+    }
+
+    function changeVoicings(){
+        //for drop 2, send the second note up an octave
     }
 
 
@@ -227,6 +268,14 @@ export default function ChordLab({importedChordData, masterInstrumentArray}) {
           synthPart.loop = 1;
       }
 
+    function sortAllChordsByPitch(chords){
+        let tempArr = []
+        for (let i = 0; i < chords.length; i++){
+            tempArr.push(Note.sortedNames(chords[i]))
+        }
+        return tempArr
+    }
+
     function organizeChords(interval){
         var cloneChords = [...chords];
         if (interval === undefined){
@@ -278,12 +327,14 @@ export default function ChordLab({importedChordData, masterInstrumentArray}) {
             } else {
             clone[x][y] = allScaleNotes[allScaleNotes.indexOf(chords[x][y]) + 1];
             }
+        // clone = sortAllChordsByPitch(clone)
         setChords(clone)
         }
         if (noteOptions === 'octave'){
         var note = Note.pitchClass(chords[x][y])
         var octave = Note.octave(chords[x][y])
         clone[x][y] = note + (octave + 1)
+        // clone = sortAllChordsByPitch(clone)
         setChords(clone)
         }
         if (noteOptions === 'chromatic'){
@@ -292,10 +343,12 @@ export default function ChordLab({importedChordData, masterInstrumentArray}) {
             chromaIndex = allChromaticNotes.indexOf(Note.enharmonic(chords[x][y]))
         }
         clone[x][y] = allChromaticNotes[chromaIndex + 1];
+        // clone = sortAllChordsByPitch(clone)
         setChords(clone)
         }
         if (noteOptions === 'insert'){
             clone[x].splice(y + 1, 0, chords[x][y]);
+            // clone = sortAllChordsByPitch(clone)
             setChords(clone)
             }
     }
@@ -328,12 +381,14 @@ export default function ChordLab({importedChordData, masterInstrumentArray}) {
             } else {
             clone[x][y] = allScaleNotes[allScaleNotes.indexOf(chords[x][y]) - 1];
             }
+        // clone = sortAllChordsByPitch(clone)
         setChords(clone)
         }
         if (noteOptions === 'octave'){
         var note = Note.pitchClass(chords[x][y])
         var octave = Note.octave(chords[x][y])
         clone[x][y] = note + (octave - 1)
+        // clone = sortAllChordsByPitch(clone)
         setChords(clone)
         }
         if (noteOptions === 'chromatic'){
@@ -342,10 +397,12 @@ export default function ChordLab({importedChordData, masterInstrumentArray}) {
             chromaIndex = allChromaticNotes.indexOf(Note.enharmonic(chords[x][y]))
         }
         clone[x][y] = allChromaticNotes[chromaIndex - 1];
+        // clone = sortAllChordsByPitch(clone)
         setChords(clone)
         }
         if (noteOptions === 'insert'){
         clone[x].splice(y, 0, chords[x][y]);
+        // clone = sortAllChordsByPitch(clone)
         setChords(clone)
         }
     }
@@ -379,6 +436,7 @@ export default function ChordLab({importedChordData, masterInstrumentArray}) {
                 clone[x][y] = allScaleNotes[allScaleNotes.indexOf(chords[x][y]) + 1];
                 }
             }
+        // clone = sortAllChordsByPitch(clone)
         setChords(clone)
         }
         if (noteOptions === 'octave'){
@@ -397,6 +455,7 @@ export default function ChordLab({importedChordData, masterInstrumentArray}) {
                 }
         clone[x][y] = allChromaticNotes[chromaIndex + 1];
             }
+        // clone = sortAllChordsByPitch(clone)
         setChords(clone)
         }
         if (noteOptions === 'insert'){
@@ -435,6 +494,7 @@ export default function ChordLab({importedChordData, masterInstrumentArray}) {
                 clone[x][y] = allScaleNotes[allScaleNotes.indexOf(chords[x][y]) - 1];
                 }
             }
+        // clone = sortAllChordsByPitch(clone)
         setChords(clone)
         }
         if (noteOptions === 'octave'){
@@ -443,6 +503,7 @@ export default function ChordLab({importedChordData, masterInstrumentArray}) {
                 var octave = Note.octave(chords[x][y])
                 clone[x][y] = note + (octave - 1)
             }
+            // clone = sortAllChordsByPitch(clone)
             setChords(clone)
             }
         if (noteOptions === 'chromatic'){
@@ -453,11 +514,13 @@ export default function ChordLab({importedChordData, masterInstrumentArray}) {
                 }
         clone[x][y] = allChromaticNotes[chromaIndex - 1];
             }
+        // clone = sortAllChordsByPitch(clone)
         setChords(clone)
         }
         if (noteOptions === 'insert'){
             var newChord = [...clone[x]]
             clone.splice(x, 0, newChord);
+            // clone = sortAllChordsByPitch(clone)
             setChords(clone)
         }
     }
@@ -489,6 +552,7 @@ export default function ChordLab({importedChordData, masterInstrumentArray}) {
                     }
                 }
             }
+        // clone = sortAllChordsByPitch(clone)
         setChords(clone)
         }
         if (noteOptions === 'octave'){
@@ -510,6 +574,7 @@ export default function ChordLab({importedChordData, masterInstrumentArray}) {
                     }
             clone[x][y] = allChromaticNotes[chromaIndex + 1];
                 }
+            // clone = sortAllChordsByPitch(clone)
             setChords(clone)
             }
         }
@@ -545,7 +610,7 @@ export default function ChordLab({importedChordData, masterInstrumentArray}) {
                     }
                 }
             }
-
+        // clone = sortAllChordsByPitch(clone)
         setChords(clone)
         }
         if (noteOptions === 'octave'){
@@ -555,6 +620,7 @@ export default function ChordLab({importedChordData, masterInstrumentArray}) {
                     const octave = Note.octave(chords[x][y])
                     clone[x][y] = note + (octave - 1)
                 }
+                // clone = sortAllChordsByPitch(clone)
                 setChords(clone)
                 }
             }
@@ -567,6 +633,7 @@ export default function ChordLab({importedChordData, masterInstrumentArray}) {
                     }
             clone[x][y] = allChromaticNotes[chromaIndex - 1];
                 }
+            // clone = sortAllChordsByPitch(clone)
             setChords(clone)
             }
             }
@@ -591,6 +658,7 @@ export default function ChordLab({importedChordData, masterInstrumentArray}) {
         setExportNames(cloneNames)
 
         clone[x].splice(y, 1)
+        // clone = sortAllChordsByPitch(clone)
         setChords(clone)
 
     }
@@ -605,6 +673,7 @@ export default function ChordLab({importedChordData, masterInstrumentArray}) {
         setExportNames(cloneNames)
 
         clone.splice(x, 1)
+        // clone = sortAllChordsByPitch(clone)
         setChords(clone);
     }
 
@@ -961,29 +1030,58 @@ export default function ChordLab({importedChordData, masterInstrumentArray}) {
                 value={generateChordOptions['number']}
                 />
                 </Dropdown.Item>
-            <Dropdown.Divider/>
-            <Dropdown.Header>voicing</Dropdown.Header>
-                <Dropdown.Item>Basic</Dropdown.Item>
-                <Dropdown.Item>Drop 2</Dropdown.Item>
-                <Dropdown.Item>{`Drop 2 & 4`}</Dropdown.Item>
-                <Dropdown.Item>4 Chord Pop</Dropdown.Item>
-            <Dropdown.Divider/>
-            <Dropdown.Header>common progressions</Dropdown.Header>
-                <Dropdown.Item>Circle of 5ths</Dropdown.Item>
-                <Dropdown.Item>Circle of 4ths</Dropdown.Item>
-                <Dropdown.Item>Canon Progression</Dropdown.Item>
-                <Dropdown.Item>4 Chord Pop</Dropdown.Item>
               </Dropdown.Menu>
             
           </Dropdown>
           </Button.Group> 
-         <Menu.Item onClick={() => setEdit(!edit)}> Voicing </Menu.Item>    
-         <Menu.Item onClick={() => setEdit(!edit)}> Progression </Menu.Item> 
+          <Dropdown
+            simple 
+            item
+            text = 'Voicing   ' 
+       >    
+            <Dropdown.Menu>
+            <Dropdown.Item onClick={() => changeVoicings()}>Closed</Dropdown.Item>
+            <Dropdown.Item>Barre</Dropdown.Item>
+            <Dropdown.Item>Drop 2</Dropdown.Item>
+            <Dropdown.Item>Drop 3</Dropdown.Item>
+            <Dropdown.Item>{`Drop 2 & 4`}</Dropdown.Item>
+            </Dropdown.Menu>
+           </Dropdown>
+           <Dropdown
+            simple 
+            item
+            text = 'Progression   ' 
+       >    
+            <Dropdown.Menu>
+            <Dropdown.Item>Logical
+                <Dropdown.Menu>
+                <Dropdown.Item onClick={() => generateChordStack(undefined, 1, 'number')}>Default (2nds)</Dropdown.Item>
+            <Dropdown.Item onClick={() => generateChordStack(undefined, 2, 'number')}>3rds</Dropdown.Item>
+            <Dropdown.Item onClick={() => generateChordStack(undefined, 3, 'number')}>4ths</Dropdown.Item>
+            <Dropdown.Item onClick={() => generateChordStack(undefined, 4, 'number')}>5ths</Dropdown.Item>
+            <Dropdown.Item onClick={() => generateChordStack(undefined, 5, 'number')}>6ths</Dropdown.Item>
+            <Dropdown.Item onClick={() => generateChordStack(undefined, 6, 'number')}>7ths</Dropdown.Item>
+            </Dropdown.Menu>
+            </Dropdown.Item>
+
+            <Dropdown.Item>Popular
+            <Dropdown.Menu>
+            <Dropdown.Item onClick={() => generateChordStack(undefined, [0, 4, 5, 3], 'manual')}>I V vi IV </Dropdown.Item>
+            <Dropdown.Item onClick={() => generateChordStack(undefined, [0, 5, 3, 4], 'manual')}>I vi IV V</Dropdown.Item>
+            <Dropdown.Item onClick={() => generateChordStack(undefined, [0, 3, 4], 'manual')}>I IV V</Dropdown.Item>
+            <Dropdown.Item onClick={() => generateChordStack(undefined, [1, 4, 0], 'manual')}>ii V I</Dropdown.Item>
+            <Dropdown.Item onClick={() => generateChordStack(undefined, [0,0,0,0,3,3,0,0,4,3,0,4], 'manual')}>Blues</Dropdown.Item>
+            <Dropdown.Item onClick={() => generateChordStack(undefined, [0, 4, 5, 2, 3, 0, 3, 4], 'manual')}>Canon</Dropdown.Item>
+            </Dropdown.Menu>
+            </Dropdown.Item>
+
+            </Dropdown.Menu>
+           </Dropdown>
          <Menu.Item onClick={() => setEdit(!edit)}> Edit </Menu.Item>     
          <Menu.Item onClick={() => setShowDescription(!showDescription)}> Desc </Menu.Item>
-         <Menu.Item>
             <Dropdown
             simple 
+            item
             text = 'Display   ' 
        >
           <Dropdown.Menu>
@@ -992,7 +1090,6 @@ export default function ChordLab({importedChordData, masterInstrumentArray}) {
              {mapMenuItems()}
           </Dropdown.Menu>
         </Dropdown>
-        </Menu.Item>   
          <Menu.Item onClick={() => generateChordStack(1)}> Map </Menu.Item>  
          <Button.Group>
          <ExportModal
@@ -1005,13 +1102,18 @@ export default function ChordLab({importedChordData, masterInstrumentArray}) {
             <Button basic compact active={noteOptions === 'scaler'} onClick={() => setNoteOptions('scaler')}>Scale</Button>
             <Button basic compact active={noteOptions === 'chromatic'} onClick={() => setNoteOptions('chromatic')}>Chromatic</Button>
             <Button basic compact active={noteOptions === 'insert'} onClick={() => setNoteOptions('insert')}>Insert</Button>
+            <Button basic compact active={noteOptions === 'invert'} onClick={() => setNoteOptions('invert')}>Invert</Button>
             <Button basic compact active={noteOptions === 'delete'} onClick={() => setNoteOptions('delete')}>Delete</Button>
             <Button basic compact onClick={handleRemoveChord}>Chord--</Button>
             <Button basic compact onClick={handleAddChord}>Chord++</Button>
+
             {noteOptions === 'delete' && <Button basic compact onClick={handleDeleteAll}>Delete All</Button>}
             <Button basic compact onClick={handleClickUpAll}>All Up</Button>
             <Button basic compact onClick={handleClickDownAll}>All Down</Button>
         </Button.Group>}
+        {showDescription && <Form>
+        <TextArea onInput={handleDescriptionChange} id={'desc_chordLab'} ref={input => input && input.focus()} placeholder='Description...' value={description} />
+        </Form>}
         <div style={{display: 'flex', flexDirection: 'row'}}>
             {mapChords()}
         </div>
@@ -1025,9 +1127,6 @@ export default function ChordLab({importedChordData, masterInstrumentArray}) {
             style={{display: inputFocus ? '': 'none' }}
             />
         </div>
-        {showDescription && <Form>
-        <TextArea onInput={handleDescriptionChange} id={'desc_chordLab'} ref={input => input && input.focus()} placeholder='Description...' value={description} />
-        </Form>}
         </>
     ) 
 }
