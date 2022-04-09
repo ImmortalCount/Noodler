@@ -1003,11 +1003,45 @@ function displayNotes(input){
             if (data[i]['data'][currentModuleIndex] === undefined){
                 return
             }
-            let currentArray = noteStringHandler(data[i]['data'][currentModuleIndex]['notes'][0][0])
             let displayOnly = data[i]['displayOnly'];
+            let currentArray;
+            if (displayOnly === 'special'){
+                currentArray = data[i]['data'][0]['notes'][0]
+            } else {
+                currentArray = noteStringHandler(data[i]['data'][currentModuleIndex]['notes'][0][0])
+            }
             // let highlights = data[i]['highlight']
             let highlights = [1];
-            if (displayOnly){
+            if (displayOnly === 'special'){
+                //I've got to translate these notes into any fretboard
+                let highlight = data[i]['specialHighlight'][0]
+                for (let j = 0; j < currentArray.length; j++){
+                let nameArray = noteStringHandler(currentArray[j])
+                var pos = returnPosition(currentArray[j], instruments[i]['tuning']);
+                if (pos !== undefined){
+                    for (let w = 0; w < pos.length; w++){
+                        let findNote = pos[w]
+                        if (Note.accidentals(pos[w]) === 'b'){
+                            findNote = Note.enharmonic(pos[w])
+                        }
+                        let x = document.getElementById(findNote + '_' + i);
+                        let y = document.getElementById(findNote + '_' + i + '_name');
+                        if (highlight === j){
+                            x = document.getElementById(findNote + '_' + i + 'special')
+                        }
+                        if (x !== null && y !== null){
+                            x.setAttribute('visibility', '');
+                            y.setAttribute('visibility', '');
+                            y.textContent = nameArray[w]
+                            
+                        }
+                    }
+                } else {
+                    console.log('off Model!')
+                }
+                }
+                
+            } else if (displayOnly){
                 for (let q = 0; q < currentArray.length; q++){
                     let findNote = currentArray[q]
                     let flat = false
@@ -1035,7 +1069,7 @@ function displayNotes(input){
                 }
                 //if the globalPosition is set to -1 'show all notes'
             } else if (globalPosition.current < 0){
-
+                console.log('global? no plaz')
                 for (let w = 0; w < currentArray.length; w++){
                     let findNote = currentArray[w]
                     let flat = false
@@ -1059,6 +1093,7 @@ function displayNotes(input){
                     }
                 }
             } else {
+                console.log('not this either')
                 let nameArray = noteStringHandler(data[i]['data'][currentModuleIndex]['notes'][0][0])
                 var pos = returnPosition(data[i]['data'][currentModuleIndex]['notes'][0][0], instruments[i]['tuning']);
                 // var tabArray = []
