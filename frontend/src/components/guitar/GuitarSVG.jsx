@@ -1013,8 +1013,8 @@ function displayNotes(input){
             // let highlights = data[i]['highlight']
             let highlights = [1];
             if (displayOnly === 'special'){
-                //I've got to translate these notes into any fretboard
                 let highlight = data[i]['specialHighlight'][0]
+                if (globalPosition.current !== -1){
                 for (let j = 0; j < currentArray.length; j++){
                 let nameArray = noteStringHandler(currentArray[j])
                 var pos = returnPosition(currentArray[j], instruments[i]['tuning']);
@@ -1040,6 +1040,38 @@ function displayNotes(input){
                     console.log('off Model!')
                 }
                 }
+                } else {
+                for (let j = 0; j < currentArray.length; j++){
+                    let nameArray = noteStringHandler(currentArray[j])
+                    for (let w = 0; w < nameArray.length; w++){
+                        let findNote = nameArray[w]
+                        let flat = false
+                        if (Note.accidentals(findNote) === 'b'){
+                            findNote = Note.enharmonic(findNote)
+                            flat = true
+                        }
+                        let x = document.getElementsByClassName(findNote + '_' + i);
+                        let y = document.getElementsByClassName(findNote + '_' + i + '_name');
+                        if (highlight === j){
+                            x = document.getElementsByClassName(findNote + '_' + i + '_special')
+                        }
+                        if (x !== null && y !== null && x !== undefined && y !== undefined){
+                            for (let j = 0; j < x.length; j++){
+                                x[j].setAttribute('visibility', '');
+                                y[j].setAttribute('visibility', '');
+                                if (flat){
+                                    const previousTextContent = y[j].textContent 
+                                    y[j].textContent = Note.enharmonic(previousTextContent)
+                                }
+                            }
+                        } else {
+                            console.log('off Model!')
+                        }
+                    }
+                }
+                
+                }
+                
                 
             } else if (displayOnly){
                 for (let q = 0; q < currentArray.length; q++){
