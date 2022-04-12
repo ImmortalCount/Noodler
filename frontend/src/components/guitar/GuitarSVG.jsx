@@ -43,6 +43,12 @@ export default function GuitarSVG({masterInstrumentArray, activelyDisplayedInstr
 
     const noteDisplayData = useSelector(state => state.noteDisplay)
     const {noteDisplay} = noteDisplayData
+
+    const playImportData = useSelector(state => state.playImport)
+    const {playImport} = playImportData
+
+    var initialLoad = useRef(true)
+
     //=====Consts
     const guitarInstruments = [
         "acoustic_guitar_nylon",
@@ -75,7 +81,6 @@ export default function GuitarSVG({masterInstrumentArray, activelyDisplayedInstr
     }, [data, instruments])
 
     //===if position has changed while paused
-
 
     useEffect(() => {
         const thisInterval = setInterval(function () {
@@ -134,6 +139,18 @@ export default function GuitarSVG({masterInstrumentArray, activelyDisplayedInstr
             return
         }
     }, [noteDisplay])
+
+    useEffect(() => {
+        if (initialLoad.current === false){
+            loadNoteSequenceAndVisualDataOntoTimeline(playImport)
+            console.log(playImport, 'playImport')
+            console.log(data, 'data')
+        }
+    }, [playImport])
+
+    useEffect(() => {
+        initialLoad.current = false;
+    }, [])
 
 
 
@@ -1472,7 +1489,7 @@ const handlePause = () => {
         <Button compact basic onClick={() => globalPositionChange('down')}><Icon name='arrow down'/></Button>
         <Button compact basic onClick={() => globalPositionChange('up')}><Icon name='arrow up'/></Button>
         <Button compact basic onClick={() => handleSeeAllPositions()}><Icon name='arrows alternate vertical'/></Button>
-        {/* <Button compact basic onClick={() => getChangeNoteToFlat()}>Test</Button> */}
+        <Button compact basic onClick={() => loadNoteSequenceAndVisualDataOntoTimeline(data)}>Test</Button>
         </>
     )
 }

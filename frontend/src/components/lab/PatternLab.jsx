@@ -11,6 +11,7 @@ import { polySynth } from './synths';
 import { setLabData } from '../../store/actions/labDataActions';
 import { scaleHandler } from './utils';
 import { keyMap } from './keymap';
+import { setPlayImport } from '../../store/actions/playImportActions';
 import ExportModal from '../modal/ExportModal';
 
 
@@ -29,6 +30,7 @@ const [octave, setOctave] = useState(3)
 const [generatePatternLength, setGeneratePatternLength] = useState(8)
 const [manipulate, setManipulate] = useState(false)
 const [playNoteOnClick, setPlayNoteOnClick] = useState(true)
+const [instrumentDisplay, setInstrumentDisplay] = useState(-2) 
 const [positionLock, setPositionLock] = useState(false)
 const [startOnScaleDegree, setStartOnScaleDegree] = useState(true)
 const [generateScaleDegree, setGenerateScaleDegree] = useState(1)
@@ -253,6 +255,7 @@ function playAll(){
     if (isMuted){
         return
     }
+    if (instrumentDisplay === -500){
     Tone.start()
     Tone.Transport.cancel()
     Tone.Transport.stop()
@@ -272,6 +275,43 @@ function playAll(){
       );
       synthPart.start();
       synthPart.loop = 1;
+    } else {
+        let noteArr = [];
+        let tempArr = [];
+
+        for (let i = 0; i < notes.length; i++){
+            let strChord = ''
+            for (let j = 0; j < notes[i].length; j++){
+                if (j === notes[i].length - 1){
+                    strChord += notes[i][j]
+                } else {
+                    strChord += notes[i][j] + ' '
+                }
+            }
+                if ((i > 1 && i % 2 === 0) || (i === notes.length - 1)){
+                noteArr.push(tempArr)
+                tempArr = []
+            }
+                tempArr.push(strChord)
+        }
+
+        let returnObj = {
+            displayOnly: false,
+            highlight: 1,
+            data: [{speed: 1, notes: noteArr}]
+        }
+
+        console.log(noteArr, 'noteArr chord lab')
+        Tone.start()
+        Tone.Transport.cancel()
+        dispatch(setPlayImport([returnObj]))
+        Tone.Transport.start()
+
+        setTimeout(() => setInstrumentDisplay(-2), 1900)
+        setTimeout(() => setInstrumentDisplay(1), 2000)
+        setTimeout(() => Tone.Transport.stop(), 2000);
+    }
+    
 }
 
 function generateRandomMelody(){

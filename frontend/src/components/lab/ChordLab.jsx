@@ -9,6 +9,7 @@ import { Icon, Menu, Dropdown, Button, Input, Form, TextArea, DropdownDivider } 
 import { polySynth } from './synths';
 import { scaleHandler } from './utils';
 import { setNoteDisplay } from '../../store/actions/noteDisplayActions';
+import { setPlayImport } from '../../store/actions/playImportActions';
 import ExportModal from '../modal/ExportModal'
 
 export default function ChordLab({importedChordData, masterInstrumentArray}) {
@@ -296,27 +297,66 @@ export default function ChordLab({importedChordData, masterInstrumentArray}) {
         if (isMuted){
             return
         }
-        setDisplayAll(false)
-        Tone.start()
-        Tone.Transport.cancel()
-        Tone.Transport.stop()
-        Tone.Transport.start();
-        const convertedChords = chordSequenceToNoteString(chords)
-        var count = 0;
-        const synthPart = new Tone.Sequence(
-            function(time, note) {
-              polySynth.triggerAttackRelease(noteStringHandler(note), "10hz", time)
-              var highlightedChord = document.getElementById('chord_' + count)
-                highlightedChord.className = 'active chord'
-                setTimeout(() => {highlightedChord.className = 'inactive chord'}, 500)
-                setDisplayFocus(count)
-                count++
-            },
-           convertedChords,
-            "4n"
-          );
-          synthPart.start();
-          synthPart.loop = 1;
+
+        if (instrumentDisplay === -500){
+            setDisplayAll(false)
+            Tone.start()
+            Tone.Transport.cancel()
+            Tone.Transport.stop()
+            Tone.Transport.start();
+            const convertedChords = chordSequenceToNoteString(chords)
+            var count = 0;
+            const synthPart = new Tone.Sequence(
+                function(time, note) {
+                  polySynth.triggerAttackRelease(noteStringHandler(note), "10hz", time)
+                  var highlightedChord = document.getElementById('chord_' + count)
+                    highlightedChord.className = 'active chord'
+                    setTimeout(() => {highlightedChord.className = 'inactive chord'}, 500)
+                    setDisplayFocus(count)
+                    count++
+                },
+               convertedChords,
+                "4n"
+              );
+              synthPart.start();
+              synthPart.loop = 1;
+        } else {
+            let noteArr = [];
+            let tempArr = [];
+
+            for (let i = 0; i < chords.length; i++){
+                let strChord = ''
+                for (let j = 0; j < chords[i].length; j++){
+                    if (j === chords[i].length - 1){
+                        strChord += chords[i][j]
+                    } else {
+                        strChord += chords[i][j] + ' '
+                    }
+                }
+                    if ((i > 1 && i % 2 === 0) || (i === chords.length - 1)){
+                    noteArr.push(tempArr)
+                    tempArr = []
+                }
+                    tempArr.push(strChord)
+            }
+
+            let returnObj = {
+                displayOnly: false,
+                highlight: 1,
+                data: [{speed: 1, notes: noteArr}]
+            }
+
+            console.log(noteArr, 'noteArr chord lab')
+            Tone.start()
+            Tone.Transport.cancel()
+            dispatch(setPlayImport([returnObj]))
+            Tone.Transport.start()
+
+            setTimeout(() => setInstrumentDisplay(-2), 1900)
+            setTimeout(() => setInstrumentDisplay(1), 2000)
+            setTimeout(() => Tone.Transport.stop(), 2000);
+        }
+
       }
 
     function sortAllChordsByPitch(chords){

@@ -8,6 +8,7 @@ import { songDataReducer } from "./songDataReducer.js";
 import { songImportDataReducer } from "./songImportDataReducer.js";
 import { instrumentNameReducer } from "./instrumentNameReducer.js";
 import {noteDisplayReducer} from './noteDisplayReducer.js'
+import { playImportReducer } from "./playImportReducer.js";
 
 const reducers = combineReducers({
     module: moduleDataReducer,
@@ -21,6 +22,7 @@ const reducers = combineReducers({
     instrumentNames: instrumentNameReducer,
     dataInsert: dataInsertReducer,
     noteDisplay: noteDisplayReducer,
+    playImport: playImportReducer,
 })
 
 export default reducers

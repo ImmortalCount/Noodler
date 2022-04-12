@@ -10,6 +10,7 @@ import ExportModal from '../modal/ExportModal';
 import '../../../public/Do_Mayor_armadura.svg'
 import { keySynth } from './synths';
 import { setNoteDisplay } from '../../store/actions/noteDisplayActions';
+import { setPlayImport } from '../../store/actions/playImportActions';
 
 export default function ScaleLab({importedScaleData, masterInstrumentArray}) {
     const [scaleDataBinary, setScaleDataBinary] = useState([1,0,1,0,1,1,0,1,0,1,0,1])
@@ -179,13 +180,22 @@ useEffect(() => {
   dispatch(setNoteDisplay(convertScaleForDispatch()))
 }, [instrumentDisplay, notes])
 
-function convertScaleForDispatch(){
+function convertScaleForDispatch(data){
   var arrOfObj = []
   var dispatchObj = {data: [{speed: 1, notes: [['']]}], displayOnly: true, highlight: []}
   var scaleString = ''
 
-  for (let i= 0; i < notes.length; i++){
-    scaleString += notes[i] + ' '
+  let localNotes;
+
+  if (data === undefined){
+    localNotes = notes
+  } else {
+    localNotes = data
+  }
+
+
+  for (let i= 0; i < localNotes.length; i++){
+    scaleString += localNotes[i] + ' '
   }
 
 
@@ -424,105 +434,150 @@ function convertScaleForDispatch(){
     if (isMuted){
       return
     }
-    Tone.start()
-    Tone.Transport.cancel()
-    Tone.Transport.stop()
-    Tone.Transport.start();
-    var position = 0;
+
     function handleNotes(){
-    var returnValues = [];
-    var noteValues =
-    [
-    'C3', 
-    'C#3', 
-    'D3', 
-    'D#3', 
-    'E3', 
-    'F3', 
-    'F#3', 
-    'G3', 
-    'G#3', 
-    'A3', 
-    'A#3', 
-    'B3',
-    'C4', 
-    'C#4', 
-    'D4', 
-    'D#4', 
-    'E4', 
-    'F4', 
-    'F#4', 
-    'G4', 
-    'G#4', 
-    'A4', 
-    'A#4', 
-    'B4',
-  ]
-
-  var rootIndex;
-  if (noteValues.indexOf(notes[0] + 3) === -1){
-    rootIndex = noteValues.indexOf((Note.enharmonic(notes[0]) + 3))
-  } else {
-    rootIndex = noteValues.indexOf(notes[0] + 3)
-  }
-
-  for (var i = 0; i < 13; i++){
-    if (i === 12){
-      returnValues.push(noteValues[rootIndex + i])
+      var returnValues = [];
+      var noteValues =
+      [
+      'C3', 
+      'C#3', 
+      'D3', 
+      'D#3', 
+      'E3', 
+      'F3', 
+      'F#3', 
+      'G3', 
+      'G#3', 
+      'A3', 
+      'A#3', 
+      'B3',
+      'C4', 
+      'C#4', 
+      'D4', 
+      'D#4', 
+      'E4', 
+      'F4', 
+      'F#4', 
+      'G4', 
+      'G#4', 
+      'A4', 
+      'A#4', 
+      'B4',
+    ]
+  
+    var rootIndex;
+    if (noteValues.indexOf(notes[0] + 3) === -1){
+      rootIndex = noteValues.indexOf((Note.enharmonic(notes[0]) + 3))
     } else {
-      if (scaleDataBinary[i] === 1){
+      rootIndex = noteValues.indexOf(notes[0] + 3)
+    }
+  
+    for (var i = 0; i < 13; i++){
+      if (i === 12){
         returnValues.push(noteValues[rootIndex + i])
+      } else {
+        if (scaleDataBinary[i] === 1){
+          returnValues.push(noteValues[rootIndex + i])
+        }
       }
     }
-  }
+  
+    if (playOptions === 'forward'){
+      return returnValues;
+    }
+    if (playOptions === 'reverse'){
+      return returnValues.reverse();
+    }
+    if (playOptions === 'random'){
+      var returnArr = [];
+      const startArr = returnValues.shift();
+      const endArr = returnValues.pop();
+          var j = 1;
+          while (j < returnValues.length + 1){
+              var randomIndex = (Math.floor(Math.random() * returnValues.length));
+              if (returnArr.includes(returnValues[randomIndex]) === false){
+                  returnArr.push(returnValues[randomIndex])
+                  j += 1;
+              }
+          }
+      returnArr.unshift(startArr)
+      returnArr.push(endArr)
+      return returnArr
+    }
+  
+      }
+    
+    let newNotes = handleNotes()
 
-  if (playOptions === 'forward'){
-    return returnValues;
-  }
-  if (playOptions === 'reverse'){
-    return returnValues.reverse();
-  }
-  if (playOptions === 'random'){
-    var returnArr = [];
-    const startArr = returnValues.shift();
-    const endArr = returnValues.pop();
-        var j = 1;
-        while (j < returnValues.length + 1){
-            var randomIndex = (Math.floor(Math.random() * returnValues.length));
-            if (returnArr.includes(returnValues[randomIndex]) === false){
-                returnArr.push(returnValues[randomIndex])
-                j += 1;
-            }
-        }
-    returnArr.unshift(startArr)
-    returnArr.push(endArr)
-    return returnArr
-  }
+    if (instrumentDisplay === -100){
+      Tone.start()
+      Tone.Transport.cancel()
+      Tone.Transport.stop()
+      Tone.Transport.start();
+      var position = 0;
+
+      dispatch(setNoteDisplay())
+
+    
+      var notePositions = getNotePositions();
+      
+  //---Synthpart function 
+          const synthPart = new Tone.Sequence(
+            function(time, note) {
+              keySynth.triggerAttackRelease(note, "10hz", time)
+              
+              var highlightedCircle = document.getElementById(notePositions[Note.pitchClass(note)])
+              highlightedCircle.setAttribute('r', 29)
+              setTimeout(() => {highlightedCircle.setAttribute('r', 23)}, 250)
+              //position
+              if (position < notes.length -1){
+                  position += 1;
+              } else {
+                  position = 0;
+              }
+              //memory
+  
+            },
+           newNotes,
+            "8n"
+          );
+          synthPart.start();
+          synthPart.loop = 1;
+
+
+    } else {
+      
+      let noteArr = [];
+      let tempArr = [];
+
+      for (let i = 0; i < newNotes.length; i++){
+          if ((i > 1 && i % 2 === 0) || (i === newNotes.length - 1)){
+            noteArr.push(tempArr)
+            tempArr = []
+          }
+          tempArr.push(newNotes[i])
+      }
+
+      let returnObj = {
+        displayOnly: false,
+        highlight: 1,
+        data: [{speed: 1, notes: noteArr}]
+      }
+
+
+      Tone.start()
+      Tone.Transport.cancel()
+      dispatch(setPlayImport([returnObj]))
+      Tone.Transport.start()
+
+      setTimeout(() => setInstrumentDisplay(-2), 1900)
+      setTimeout(() => setInstrumentDisplay(1), 2000)
+      setTimeout(() => Tone.Transport.stop(), 2000);
 
     }
-    var notePositions = getNotePositions();
-    var newNotes = handleNotes();
-//---Synthpart function 
-        const synthPart = new Tone.Sequence(
-          function(time, note) {
-            keySynth.triggerAttackRelease(note, "10hz", time)
-            var highlightedCircle = document.getElementById(notePositions[Note.pitchClass(note)])
-            highlightedCircle.setAttribute('r', 29)
-            setTimeout(() => {highlightedCircle.setAttribute('r', 23)}, 250)
-            //position
-            if (position < notes.length -1){
-                position += 1;
-            } else {
-                position = 0;
-            }
-            //memory
 
-          },
-         newNotes,
-          "8n"
-        );
-        synthPart.start();
-        synthPart.loop = 1;
+
+    
     }
       const dropdownOptionsSharp = [
         { key: 1, text: 'C', value: 'C'},
