@@ -173,9 +173,9 @@ function Midbar() {
         </div>
         <div className="bottomhalf" style={{display: 'flex', flexDirection: 'row', backgroundColor: 'white'}}>
             <div className="bottomleft" style={{display: 'flex', flexDirection: 'row', backgroundColor: 'white'}}> 
-            <Explorer
+            {/* <Explorer
             display = {activeTabs.includes('explorer')}
-            />
+            /> */}
             <Lab
             masterInstrumentArray = {masterInstrumentArray}
             display = {activeTabs.includes('lab') }

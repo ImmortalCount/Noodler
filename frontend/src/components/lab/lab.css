@@ -10,11 +10,11 @@
     background-color: salmon !important
 }
 
-.inactive.note{
+.inactive.pattern{
     background-color: orange;
 }
 
-.active.note {
+.active.pattern {
     background-color: lightblue !important
 }
 

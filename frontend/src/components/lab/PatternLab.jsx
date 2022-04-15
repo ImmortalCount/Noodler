@@ -12,11 +12,12 @@ import { setLabData } from '../../store/actions/labDataActions';
 import { scaleHandler } from './utils';
 import { keyMap } from './keymap';
 import { setPlayImport } from '../../store/actions/playImportActions';
+import { setNoteDisplay } from '../../store/actions/noteDisplayActions';
 import ExportModal from '../modal/ExportModal';
 
 
-export default function PatternLab({importedPatternData}) {
-
+export default function PatternLab({importedPatternData, masterInstrumentArray}) {
+const [playing, setPlaying] = useState(false)
 const [notes, setNotes] = useState([['A2'], ['B2'], ['C3'], ['D3'], ['E3'], ['F3'], ['G3'], ['A3']])
 const [pattern, setPattern] = useState(['0 1 2 4 7 4 2 1'])
 const [scaleLock, setScaleLock] = useState(true)
@@ -31,6 +32,8 @@ const [generatePatternLength, setGeneratePatternLength] = useState(8)
 const [manipulate, setManipulate] = useState(false)
 const [playNoteOnClick, setPlayNoteOnClick] = useState(true)
 const [instrumentDisplay, setInstrumentDisplay] = useState(-2) 
+const [displayFocus, setDisplayFocus] = useState(0)
+const [displayAll, setDisplayAll] = useState(false)
 const [positionLock, setPositionLock] = useState(false)
 const [startOnScaleDegree, setStartOnScaleDegree] = useState(true)
 const [generateScaleDegree, setGenerateScaleDegree] = useState(1)
@@ -68,7 +71,6 @@ for (var o = 0; o < 10; o++){
     }
 
     function patternAndScaleToNotes2(patternArr){
-        console.log('running PatternAndScaleToNotes2 69')
         var notesExport = [];
         var root = scaleNotes[0] + 3
         const allNotes = Note.sortedNames(allScaleNotes);
@@ -131,7 +133,6 @@ useEffect(() => {
             dataType: 'pattern',
             pool: '',
         }
-        console.log(patternDataPrototype['pattern'], 'dataPrototype')
         newInfo['patternLab'] = patternDataPrototype
         dispatch(setLabData(newInfo))
     }, [notes, name, pattern])
@@ -139,6 +140,95 @@ useEffect(() => {
 // useEffect(() => {
 //     patternAndScaleToNotes()
 // }, [scaleNotes])
+
+useEffect(() => {
+    dispatch(setNoteDisplay(convertScaleForDispatch()))
+  }, [instrumentDisplay, notes, displayFocus, displayAll])
+
+function convertScaleForDispatch(){
+    let displayStyle;
+    if (displayAll){
+        displayStyle = 'special'
+    } else {
+        displayStyle = false;
+    }
+    var arrOfObj = []
+    var dispatchObj = {data: [{speed: 1, notes: [['C']]}], displayOnly: displayStyle, highlight: [], specialHighlight: [displayFocus]}
+    var scaleString = ''
+
+    let clone = sortAllChordsByPitch(notes)
+    let focus;
+
+    if (clone[displayFocus] === undefined){
+        focus = 0;
+    } else {
+        focus = displayFocus
+    }
+    
+    if (!displayAll){
+        for (let i= 0; i < clone[focus].length; i++){
+            if (i === clone[focus].length - 1){
+                scaleString += clone[focus][i] 
+            } else {
+                scaleString += clone[focus][i] + ' '
+            }
+        }
+        scaleString = [scaleString]
+    } else {
+        let tempArr = []
+        
+        for (let i = 0; i < clone.length; i++){
+            let tempString = ''
+            for (let j = 0; j < clone[i].length; j++){
+                tempString += clone[i][j] + ' '
+            }
+            tempArr.push(tempString)
+        }
+        scaleString = tempArr;
+    }
+
+    for (let h = 0; h < masterInstrumentArray.length; h++){
+      arrOfObj.push(JSON.parse(JSON.stringify(dispatchObj)))
+    }
+  
+    if (instrumentDisplay === -2){
+      return arrOfObj
+    } else if (instrumentDisplay === -1){
+      for (let j = 0; j < arrOfObj.length; j++){
+        arrOfObj[j]['data'][0]['notes'][0] = scaleString
+      }
+      return arrOfObj
+    } else {
+      arrOfObj[instrumentDisplay - 1]['data'][0]['notes'][0] = scaleString
+      return arrOfObj
+    }
+}
+
+function sortAllChordsByPitch(chords){
+    let tempArr = []
+    for (let i = 0; i < chords.length; i++){
+        tempArr.push(Note.sortedNames(chords[i]))
+    }
+    return tempArr
+}
+
+// function chordToNoteString(chord){
+//     let returnStr = ''
+//     for (let i = 0; i < chord.length; i++){
+//         if (i === chord.length - 1){
+//             returnStr += chord[i]
+//         } else {
+//             returnStr += chord[i] + ' '
+//         }
+//     }
+//     return [returnStr]
+// }
+// function allChordsToNoteStrings(){
+//     let returnArr = []
+//     for (let i = 0; i < notes.length; i++){
+//         chordToNoteString()
+//     }
+// }
 
 //=======Drag and drop functionality
 function changePositionsUsingIDs(startingID, endingID){
@@ -160,7 +250,7 @@ const dragStartHandler = e => {
 const dragStartHandlerSpecial = e => {
     var obj = {id: 'special', className: 'patternData', message: {
         patternName: name,
-        pattern: patternType === 'fixed'? notes : pattern,
+        pattern: patternType === 'fixed'? chordSequenceToNoteString(notes) : pattern,
         position: [],
         type: patternType,
     }, type: 'patternLabExport'}
@@ -171,18 +261,18 @@ const dragHandler = e => {
 };
 
 const dragOverHandler = e => {
-    e.currentTarget.className = 'active note'
+    e.currentTarget.className = 'active pattern'
     e.preventDefault();
 };
 
 const dragLeaveHandler = e => {
-    e.currentTarget.className = 'inactive note'
+    e.currentTarget.className = 'inactive pattern'
     e.preventDefault();
 }
 
 //---------------------
 const dropHandler = e => {
-    e.currentTarget.className = 'inactive note'
+    e.currentTarget.className = 'inactive pattern'
     e.stopPropagation();
     e.nativeEvent.stopImmediatePropagation();
     e.preventDefault();
@@ -251,23 +341,42 @@ function chordSequenceToNoteString(chords){
     return returnArr;
 }
 
+var intervals = useRef([])
+
 function playAll(){
     if (isMuted){
         return
     }
-    if (instrumentDisplay === -500){
+
+    let previousInstrumentDisplay = instrumentDisplay
+    let gap = Tone.Time('8n').toMilliseconds()
+    let totalTime = gap * notes.length;
+
+    if (playing){
+        intervals.current.forEach(clearInterval)
+        let pattern = document.getElementsByClassName('pattern')
+        for (let i = 0; i < pattern.length; i++){
+            pattern[i].className = 'inactive pattern'
+        }
+        Tone.Transport.cancel()
+        Tone.Transport.stop()
+        setInstrumentDisplay(-2)
+        setTimeout(() => setPlaying(false), 0)
+        setTimeout(() => setInstrumentDisplay(previousInstrumentDisplay), 50)
+    } else if (instrumentDisplay === -2){
     Tone.start()
     Tone.Transport.cancel()
     Tone.Transport.stop()
     Tone.Transport.start();
     const convertedChords = chordSequenceToNoteString(notes)
+    console.log(convertedChords, 'converted chords pattern lab 338')
     var count = 0;
     const synthPart = new Tone.Sequence(
         function(time, note) {
           polySynth.triggerAttackRelease(noteStringHandler(note), "10hz", time)
-          var highlightedChord = document.getElementById('chord_' + count)
-            highlightedChord.className = 'active chord'
-            setTimeout(() => {highlightedChord.className = 'inactive chord'}, 500)
+          var highlightedChord = document.getElementById('pattern_' + count)
+            highlightedChord.className = 'active pattern'
+            setTimeout(() => {highlightedChord.className = 'inactive pattern'}, 250)
             count++
         },
        convertedChords,
@@ -275,6 +384,8 @@ function playAll(){
       );
       synthPart.start();
       synthPart.loop = 1;
+      intervals.current.push(setTimeout(() => Tone.Transport.stop(), totalTime));
+      intervals.current.push(setTimeout(() => setPlaying(false), totalTime));
     } else {
         let noteArr = [];
         let tempArr = [];
@@ -287,12 +398,13 @@ function playAll(){
                 } else {
                     strChord += notes[i][j] + ' '
                 }
+            }   
+            tempArr.push(strChord)
+
+            if (((i + 1) % 2 === 0) || (i === notes.length - 1)){
+                    noteArr.push(tempArr)
+                    tempArr = []
             }
-                if ((i > 1 && i % 2 === 0) || (i === notes.length - 1)){
-                noteArr.push(tempArr)
-                tempArr = []
-            }
-                tempArr.push(strChord)
         }
 
         let returnObj = {
@@ -301,15 +413,21 @@ function playAll(){
             data: [{speed: 1, notes: noteArr}]
         }
 
-        console.log(noteArr, 'noteArr chord lab')
         Tone.start()
         Tone.Transport.cancel()
         dispatch(setPlayImport([returnObj]))
+        //Manual animation for pattern lab
+        for (let i = 0; i < notes.length; i++){
+            let highlightedPattern = document.getElementById('pattern_' + i)
+            intervals.current.push(setTimeout(() => {highlightedPattern.className = 'active pattern'}, (i) * gap))
+            intervals.current.push(setTimeout(() => {highlightedPattern.className = 'inactive pattern'}, (i + 1) * gap))
+        }
         Tone.Transport.start()
 
-        setTimeout(() => setInstrumentDisplay(-2), 1900)
-        setTimeout(() => setInstrumentDisplay(1), 2000)
-        setTimeout(() => Tone.Transport.stop(), 2000);
+        intervals.current.push(setTimeout(() => setInstrumentDisplay(-2), totalTime - 100))
+        intervals.current.push(setTimeout(() => setInstrumentDisplay(previousInstrumentDisplay), totalTime))
+        intervals.current.push(setTimeout(() => Tone.Transport.stop(), totalTime));
+        intervals.current.push(setTimeout(() => setPlaying(false), totalTime));
     }
     
 }
@@ -424,10 +542,16 @@ const handleClickDown = (e) => {
 const handleDeleteNote = (e) => {
     var clone = [...notes]
     var positionId = e.target.parentNode.id;
+    var nOfSiblings = e.target.parentNode.parentNode.childNodes.length - 1
     var x = positionId.split('_')[1]
     var y = positionId.split('_')[2]
 
-    clone[x].splice(y, 1)
+    if (nOfSiblings === 1){
+        clone.splice(x, 1)
+    } else {
+        clone[x].splice(y, 1)
+    }
+
     setNotes(clone)
 }
 
@@ -547,7 +671,7 @@ const handleDeleteAll = () => {
 }
 
 const handleAddNoteToEnd = () => {
-    const clone = [...notes]
+    const clone = JSON.parse(JSON.stringify(notes))
     if (clone.length === 0){
         clone.push(['C3'])
     } else {
@@ -558,7 +682,7 @@ const handleAddNoteToEnd = () => {
 }
 
 const handleRemoveNoteFromEnd = () => {
-    const clone =  [...notes]
+    const clone =  JSON.parse(JSON.stringify(notes))
     clone.pop()
     setNotes(clone)
 }
@@ -585,8 +709,8 @@ const handlePlayThis = (e, x) => {
         return
     }
     var thisChord = document.getElementById(parentID)
-    thisChord.className = 'active chord'
-    setTimeout(() => {thisChord.className ='inactive chord'}, 250)
+    thisChord.className = 'active pattern'
+    setTimeout(() => {thisChord.className ='inactive pattern'}, 250)
 }
 
 var handleClickUpChord = (e) =>{
@@ -728,7 +852,7 @@ function mapNotes(notes){
         for (var j = 0; j < notes[i].length; j++){
             pitchClasses.push(Note.pitchClass(notes[i][j]))
             returnChord.push(
-                <div id={'chord_' + i + '_' + j} style={{display: 'flex', flexDirection: 'row', height: '50px', width: '50px', backgroundColor: 'wheat', margin: '1px'}}>
+                <div id={'pattern_' + i + '_' + j} style={{display: 'flex', flexDirection: 'row', height: '50px', width: '50px', backgroundColor: 'wheat', margin: '1px'}}>
                     {notes[i][j]}
                     {(edit && noteOptions !== 'delete') && <div style={{display: 'flex', flexDirection: 'column'}}>
                     <Icon onClick={handleClickUp} name={(noteOptions === 'insert') ? "plus" : "caret square up" }/><Icon onClick={handleClickDown} name={(noteOptions === 'insert') ? "" : "caret square up" }/>
@@ -739,7 +863,7 @@ function mapNotes(notes){
         }
 
         returnArr.push(
-            <div  id={'chord_' + i} onClick={handlePlayThis} draggable onDragStart = {dragStartHandler} onDrag = {dragHandler} onDragOver = {dragOverHandler} onDragLeave={dragLeaveHandler} onDrop = {dropHandler}className='inactive chord' style={{display: 'flex', flexDirection: 'column-reverse', margin: '1px', marginBottom: '5px'}}>
+            <div  id={'pattern_' + i} onClick={handlePlayThis} draggable onDragStart = {dragStartHandler} onDrag = {dragHandler} onDragOver = {dragOverHandler} onDragLeave={dragLeaveHandler} onDrop = {dropHandler}className='inactive chord' style={{display: 'flex', flexDirection: 'column-reverse', margin: '1px', marginBottom: '5px'}}>
             <div onClick={(e) => (handlePlayThis(e, true))} style={{display: 'flex', flexDirection: 'row', marginBottom: '18px'}}>
             { (edit && noteOptions !== 'delete') && <div  style={{display: 'flex', flexDirection: (noteOptions === 'insert') ? 'row' : 'column'}}>
             <Icon onClick={handleClickUpChord} name= {(noteOptions === 'insert') ? "plus" : "caret square up" }/><Icon onClick={handleClickDownChord}name= {(noteOptions === 'insert') ? "" : "caret square down" }/>
@@ -752,6 +876,19 @@ function mapNotes(notes){
     }
     return returnArr;
 }
+
+function mapMenuItems(){
+    return (
+        masterInstrumentArray.map((instrument, idx) => 
+        <Dropdown.Item
+        text={instrument}
+        key={'mappedInstr' + idx}
+        selected={instrumentDisplay === idx + 1}
+        onClick={() => setInstrumentDisplay(idx + 1)}
+        />
+        )
+    )
+}   
 
 
 const reverseMelody = () => {
@@ -1114,11 +1251,23 @@ const handleExportDropdown = (e, {value}) => {
 
   }
 
+  const handlePatternType = () => {
+      if (patternType === 'fluid'){
+          return 'map'
+      }
+      if (patternType === 'fixed'){
+          return 'anchor'
+      }
+      if (patternType === 'floating'){
+          return 'fly'
+      }
+  }
+
     return (
         <>
         <Menu>
         <Menu.Item onClick={() => handleSharpsOrFlats()}>{options === 'sharps' ? '#' : 'b'}</Menu.Item>
-         <Menu.Item onClick={() => playAll()}><Icon name='play'/></Menu.Item>
+         <Menu.Item onClick={() => {playAll(); setPlaying(true)}}><Icon name={playing ? 'stop': 'play'}/></Menu.Item>
          <Button.Group>
          <Button basic onClick={()=> generateRandomMelody()}> Generate </Button>
          <Dropdown
@@ -1149,11 +1298,18 @@ const handleExportDropdown = (e, {value}) => {
             </Dropdown.Menu> 
         </Dropdown> 
         </Button.Group> 
-         <Menu.Item onClick={() => console.log(allScaleNotes, ' notes test', Note.sortedNames(allScaleNotes), 'sorted notes test')}> Test</Menu.Item>   
          <Menu.Item onClick={handleEditOptions}> Edit</Menu.Item>       
-         <Menu.Item onClick={() => setPatternType('fluid')}> Fluid</Menu.Item> 
-         <Menu.Item onClick={() => setPatternType('fixed')}> Fixed <Icon name='anchor'/></Menu.Item>       
-         <Menu.Item onClick={() => setPatternType('floating')}> Floating <Icon name='fly'/></Menu.Item>       
+         <Dropdown
+         simple
+         item
+         text='Type'
+         >
+        <Dropdown.Menu>
+        <Dropdown.Item active={patternType === 'fluid'} onClick={() => setPatternType('fluid')}> Fluid <Icon name='map'/></Dropdown.Item> 
+         <Dropdown.Item active={patternType === 'fixed'} onClick={() => setPatternType('fixed')}> Fixed <Icon name='anchor'/></Dropdown.Item>       
+         <Dropdown.Item active={patternType === 'floating'} onClick={() => setPatternType('floating')}> Floating <Icon name='fly'/></Dropdown.Item> 
+        </Dropdown.Menu>
+        </Dropdown>      
          <Dropdown
          simple
          item
@@ -1173,6 +1329,23 @@ const handleExportDropdown = (e, {value}) => {
             Play Note on Click:{playNoteOnClick ? 'on': 'off'} 
             </Dropdown.Item>
         </Dropdown.Menu>
+        </Dropdown>
+        <Dropdown
+            simple 
+            item
+            text = 'Display   ' 
+       >
+          <Dropdown.Menu>
+          <Dropdown.Header>Display Options</Dropdown.Header>
+              <Dropdown.Divider/>
+                <Dropdown.Item selected={!displayAll} onClick={() => setDisplayAll(false)}> Single Notes </Dropdown.Item>
+                <Dropdown.Item selected={displayAll} onClick={() => setDisplayAll(true)}> Full Pattern </Dropdown.Item>
+              <Dropdown.Header>Instruments</Dropdown.Header>
+              <Dropdown.Divider/>
+            <Dropdown.Item selected={instrumentDisplay === -2} onClick={() => setInstrumentDisplay(-2)}> None </Dropdown.Item>
+            <Dropdown.Item selected={instrumentDisplay === -1} onClick={() => setInstrumentDisplay(-1)}> All </Dropdown.Item>
+             {mapMenuItems()}
+          </Dropdown.Menu>
         </Dropdown>
         <Menu.Item onClick={() => setShowDescription(!showDescription)}> Desc </Menu.Item>
         <Menu.Item onClick={importChordsFromChordLab}> Import </Menu.Item>
@@ -1218,15 +1391,15 @@ const handleExportDropdown = (e, {value}) => {
         </Button.Group>
         }
   
-        { notesTruePatternFalse && <div id='display' style={{display: 'flex', flexDirection: 'row'}}>
+        {notesTruePatternFalse && <div id='display' style={{display: 'flex', flexDirection: 'row', width: '900px', flexWrap: 'wrap'}}>
             {mapNotes(notes)}
         </div>}
-        {!notesTruePatternFalse && <div id='display' style={{display: 'flex', flexDirection: 'row'}}>
+        {!notesTruePatternFalse && <div id='display' style={{display: 'flex', flexDirection: 'row', width: '900px', flexWrap: 'wrap'}}>
             {mapNotes(pattern)}
         </div>}
         <div>{notes.length} {notes.length > 1 ? 'notes' : 'note'}</div>
         <div>
-            <div draggable onClick={() => setInputFocus(!inputFocus)} onDragStart={dragStartHandlerSpecial} style={{height: '25px', width: '125px', backgroundColor: 'wheat', display: !inputFocus ? '': 'none' }}>{name}</div>
+            <div draggable onClick={() => setInputFocus(!inputFocus)} onDragStart={dragStartHandlerSpecial} style={{height: '25px', width:'125px', backgroundColor: 'lightblue', display: !inputFocus ? '': 'none' }}>{name}{' '}<Icon name={handlePatternType()} /></div>
             <Input type='text'
             value={name}
             id={'input_patternLab'}

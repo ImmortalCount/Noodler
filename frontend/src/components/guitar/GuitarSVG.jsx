@@ -143,8 +143,8 @@ export default function GuitarSVG({masterInstrumentArray, activelyDisplayedInstr
     useEffect(() => {
         if (initialLoad.current === false){
             loadNoteSequenceAndVisualDataOntoTimeline(playImport)
-            console.log(playImport, 'playImport')
-            console.log(data, 'data')
+            // console.log(playImport, 'playImport')
+            // console.log(data, 'data')
         }
     }, [playImport])
 
@@ -1142,7 +1142,6 @@ function displayNotes(input){
                     }
                 }
             } else {
-                console.log('not this either')
                 let nameArray = noteStringHandler(data[i]['data'][currentModuleIndex]['notes'][0][0])
                 var pos = returnPosition(data[i]['data'][currentModuleIndex]['notes'][0][0], instruments[i]['tuning']);
                 // var tabArray = []

@@ -1,5 +1,5 @@
 /* eslint-disable react-hooks/exhaustive-deps */
-import {React, useState, useEffect} from 'react'
+import {React, useState, useEffect, useRef} from 'react'
 import * as Tone from 'tone';
 import {Scale, Chord, Note} from '@tonaljs/tonal';
 import { useDispatch, useSelector} from 'react-redux';
@@ -13,6 +13,7 @@ import { setPlayImport } from '../../store/actions/playImportActions';
 import ExportModal from '../modal/ExportModal'
 
 export default function ChordLab({importedChordData, masterInstrumentArray}) {
+    const [playing, setPlaying] = useState(false)
     const [chords, setChords] = useState([['C3', 'E3', 'G3']])
     const [exportNames, setExportNames] = useState([null])
     const [noteOptions, setNoteOptions] = useState("octave")
@@ -291,15 +292,30 @@ export default function ChordLab({importedChordData, masterInstrumentArray}) {
     //============
 
     //voicing drop 2 - second note goes up an octave
-    
+    var intervals = useRef([])
 
     function playChords(){
         if (isMuted){
             return
         }
 
-        if (instrumentDisplay === -500){
-            setDisplayAll(false)
+        let previousInstrumentDisplay = instrumentDisplay
+        let gap = Tone.Time('4n').toMilliseconds()
+        let totalTime = gap * chords.length;
+
+        if (playing){
+            intervals.current.forEach(clearInterval)
+            let chords = document.getElementsByClassName('chord')
+            for (let i = 0; i < chords.length; i++){
+                chords[i].className = 'inactive chord'
+            }
+            Tone.Transport.cancel()
+            Tone.Transport.stop()
+            setInstrumentDisplay(-2)
+            setTimeout(() => setPlaying(false), 0)
+            setTimeout(() => setInstrumentDisplay(previousInstrumentDisplay), 50)
+        } else if (instrumentDisplay === -2){
+            // setDisplayAll(false)
             Tone.start()
             Tone.Transport.cancel()
             Tone.Transport.stop()
@@ -311,7 +327,7 @@ export default function ChordLab({importedChordData, masterInstrumentArray}) {
                   polySynth.triggerAttackRelease(noteStringHandler(note), "10hz", time)
                   var highlightedChord = document.getElementById('chord_' + count)
                     highlightedChord.className = 'active chord'
-                    setTimeout(() => {highlightedChord.className = 'inactive chord'}, 500)
+                    setTimeout(() => {highlightedChord.className = 'inactive chord'}, gap)
                     setDisplayFocus(count)
                     count++
                 },
@@ -320,6 +336,10 @@ export default function ChordLab({importedChordData, masterInstrumentArray}) {
               );
               synthPart.start();
               synthPart.loop = 1;
+              
+            intervals.current.push(setTimeout(() => Tone.Transport.stop(), totalTime));
+            intervals.current.push(setTimeout(() => setPlaying(false), totalTime));
+
         } else {
             let noteArr = [];
             let tempArr = [];
@@ -333,28 +353,35 @@ export default function ChordLab({importedChordData, masterInstrumentArray}) {
                         strChord += chords[i][j] + ' '
                     }
                 }
-                    if ((i > 1 && i % 2 === 0) || (i === chords.length - 1)){
+                tempArr.push(strChord)
+
+                if (((i + 1) % 2 === 0) || (i === chords.length - 1)){
                     noteArr.push(tempArr)
                     tempArr = []
                 }
-                    tempArr.push(strChord)
             }
 
             let returnObj = {
                 displayOnly: false,
                 highlight: 1,
-                data: [{speed: 1, notes: noteArr}]
+                data: [{speed: 0.5, notes: noteArr}]
             }
-
-            console.log(noteArr, 'noteArr chord lab')
+            
             Tone.start()
             Tone.Transport.cancel()
             dispatch(setPlayImport([returnObj]))
-            Tone.Transport.start()
+            //Manual animation for chord lab
+            for (let i = 0; i < chords.length; i++){
+                let highlightedChord = document.getElementById('chord_' + i)
+                intervals.current.push(setTimeout(() => {highlightedChord.className = 'active chord'}, (i) * gap))
+                intervals.current.push(setTimeout(() => {highlightedChord.className = 'inactive chord'}, (i + 1) * gap))
+            }
 
-            setTimeout(() => setInstrumentDisplay(-2), 1900)
-            setTimeout(() => setInstrumentDisplay(1), 2000)
-            setTimeout(() => Tone.Transport.stop(), 2000);
+            Tone.Transport.start()
+            intervals.current.push(setTimeout(() => setInstrumentDisplay(-2), totalTime - 100))
+            intervals.current.push(setTimeout(() => setInstrumentDisplay(previousInstrumentDisplay), totalTime))
+            intervals.current.push(setTimeout(() => Tone.Transport.stop(), totalTime));
+            intervals.current.push(setTimeout(() => setPlaying(false), totalTime));
         }
 
       }
@@ -720,18 +747,20 @@ export default function ChordLab({importedChordData, masterInstrumentArray}) {
     const handleDeleteNote = (e) =>{
         var clone = [...chords]
         var positionId = e.target.parentNode.id;
+        var nOfSiblings = e.target.parentNode.parentNode.childNodes.length - 2
+        var cloneNames = [...exportNames]
         var x = positionId.split('_')[1]
         var y = positionId.split('_')[2]
-
-        var cloneNames = [...exportNames]
+        
+        if (nOfSiblings === 1){
+            clone.splice(x, 1)
+        } else {
+            clone[x].splice(y, 1)
+        }
+        
         cloneNames[x] = null
         setExportNames(cloneNames)
-
-        clone[x].splice(y, 1)
-        // var clone = [...chords]
-        // clone = sortAllChordsByPitch(clone)
         handleSetChords(clone)
-
     }
 
     const handleDeleteChord =(e) => {
@@ -1036,27 +1065,6 @@ export default function ChordLab({importedChordData, masterInstrumentArray}) {
         pool: exportPool,
   }
 
-    const exportDropdownOptions = [
-        { key: 'global', text: 'global', value: 'global'},
-        { key: 'local', text: 'local', value: 'local'},
-    ]
-    
-    const handleExportDropdown = (e, {value}) => {
-        const user = JSON.parse(localStorage.getItem('userInfo'))
-        if (value === 'local'){
-            const user = JSON.parse(localStorage.getItem('userInfo'))
-            setExportPool(user['_id'])
-        } else {
-            setExportPool(value)
-        }
-      }
-    
-    //   const handleChangeName = e => {
-    //     const cloneNames = [...exportNames]
-    //     cloneNames[0] = e.target.value
-    //     setExportNames(cloneNames)
-    //   }
-
       function handleChangeName(e, x){
         const cloneNames = [...exportNames]
         cloneNames[x] = e.target.value
@@ -1102,7 +1110,7 @@ export default function ChordLab({importedChordData, masterInstrumentArray}) {
         <>
         <Menu>
         <Menu.Item onClick={() => handleSharpsOrFlats()}>{options === 'sharps' ? '#' : 'b'}</Menu.Item>
-         <Menu.Item onClick={() => playChords()}> <Icon name='play'/> </Menu.Item> 
+         <Menu.Item onClick={() => {playChords(); setPlaying(true)}}> <Icon name={playing ? 'stop' : 'play'}/> </Menu.Item> 
          <Button.Group> 
          <Button basic onClick={()=> generateChordStack()}> Generate </Button>   
          <Dropdown
@@ -1226,7 +1234,7 @@ export default function ChordLab({importedChordData, masterInstrumentArray}) {
         {showDescription && <Form>
         <TextArea onInput={handleDescriptionChange} id={'desc_chordLab'} ref={input => input && input.focus()} placeholder='Description...' value={description} />
         </Form>}
-        <div style={{display: 'flex', flexDirection: 'row'}}>
+        <div style={{display: 'flex', flexDirection: 'row', width: '900px', flexWrap: 'wrap'}}>
             {mapChords()}
         </div>
         <div>

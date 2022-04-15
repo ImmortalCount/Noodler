@@ -11,6 +11,7 @@ import './lab.css'
 
 
 export default function RhythmLab({importedRhythmData}) {
+    const [playing, setPlaying] = useState(false)
     const initialNotes = [['O', 'O'], ['O', 'O'], ['O', 'O'], ['O', 'O']]
     const [name, setName] = useState('Rhythm 1')
     const [notes, setNotes] = useState(initialNotes)
@@ -26,6 +27,9 @@ export default function RhythmLab({importedRhythmData}) {
     const [inputFocus, setInputFocus] = useState(false)
     const [description, setDescription] = useState('')
     const [showDescription, setShowDescription] = useState(false)
+    const [barLength, setBarLength] = useState(4)
+    const [nestingDepth, setNestingDepth] = useState(0)
+    const [depth, setDepth] = useState(0)
     const user = JSON.parse(localStorage.getItem('userInfo'))
     const isMuted = false;
     const dispatch = useDispatch()
@@ -71,23 +75,6 @@ useEffect(() => {
         newInfo['rhythmLab'] = rhythmDataPrototype
         dispatch(setLabData(newInfo))
 }, [notes, name, moduleLengthDisplay])
-
-
-// function loopOn(){
-//     Tone.Transport.loopStart = 0;
-//     Tone.Transport.loopEnd = 2;
-
-//     // console.log(Tone.Transport.loopEnd)
-//     if (Tone.Transport.loop !== true){
-//         Tone.Transport.loop = true;
-//         setLoop(true)
-//     } else {
-//         Tone.Transport.loop = false;
-//         setLoop(false)
-//     }
-    
-    
-// }
 
 function generateMetronomeNotes(){
     var returnArr = [];
@@ -141,29 +128,6 @@ function getAllChildElementsById(id){
     innerGetAllChildElementsById(a)
     return els;
 }
-
-
-// function getPositionInNestedArrayByID(id, notes){
-//         var ex = id.split('_')
-//         var returnArr = []
-//         for (var i = 2; i < ex.length; i++){
-//           returnArr.push(ex[i])
-//         } 
-//         if (returnArr.length === 1){
-//             return JSON.stringify(notes[returnArr[0]])
-//         } else if (returnArr.length === 2){
-//             return JSON.stringify(notes[returnArr[0]][returnArr[1]])
-//         } else if (returnArr.length === 3){
-//             return JSON.stringify(notes[returnArr[0]][returnArr[1]][returnArr[2]])
-//         } else if (returnArr.length === 4){
-//             return JSON.stringify(notes[returnArr[0]][returnArr[1]][returnArr[2]][returnArr[3]])
-//         } else if (returnArr.length === 5){
-//             return JSON.stringify(notes[returnArr[0]][returnArr[1]][returnArr[2]][returnArr[3]][returnArr[4]])
-//         } else {
-//             return undefined;
-//         }
-        
-//     }
 
 //---Interactive Functionality
 function changePositionsUsingIDs(startingID, endingID, notes){
@@ -721,43 +685,45 @@ function randomInteger(min, max) {
     return Math.floor(Math.random() * (max - min + 1)) + min;
   }
 //---random rhythm generator
-function randomRhythmGenerator(depth, length){
+function randomRhythmGenerator(maxDepth, length){
 
-    if (depth === undefined){
-        depth = 1;
+    console.log(maxDepth, length)
+
+    if (maxDepth === undefined){
+        maxDepth = 0;
     }
     if (length === undefined){
         length = 4;
     }
 
-    var returnArr = [];
-    for (var i = 0; i < length; i++){
-        var level0Array = [];
-        for (var j = 0; j < randomInteger(1, 4); j++){
-            var rand = randomInteger(0,2)
+
+    function recursiveRandomRhythmFunction(currentDepth){
+        if (currentDepth === undefined){
+            currentDepth = 0;
+        }
+        var thisLevelArray = [];
+        for (let j = 0; j < randomInteger(1, 4); j++){
+            let rand = randomInteger(0,2)
             if (rand === 0){
-                level0Array.push('X')
+                thisLevelArray.push('X')
             }
             if (rand === 1){
-                level0Array.push('O')
+                thisLevelArray.push('O')
             }
-            else {
-            var level1Array = [];
-                for (var k = 0; k < randomInteger(1, 4); k++){
-                    var rand2 = randomInteger(0,2)
-                    if (rand2 === 0){
-                        level1Array.push('X')
-                    }
-                    if (rand2 === 1){
-                        level1Array.push('O')
-                    } else {
-                        level1Array.push('O')
-                    }
+            if (rand === 2){
+                if (currentDepth >= maxDepth){
+                    thisLevelArray.push('X')
+                } else {
+                    thisLevelArray.push(recursiveRandomRhythmFunction(currentDepth + 1))
                 }
-                level0Array.push(level1Array)
             }
         }
-        returnArr.push(level0Array)
+        return thisLevelArray;
+    }
+
+    let returnArr = [];
+    for (let i = 0; i < length; i++){
+        returnArr.push(recursiveRandomRhythmFunction())
     }
 setNotes(returnArr)
 }
@@ -774,6 +740,18 @@ function playSynth(){
     if (isMuted){
         return
     }
+
+    let gap = Tone.Time('4n').toMilliseconds()
+    let totalTime = gap * moduleLengthDisplay;
+    if (playing){
+        let rhythmNotes = document.getElementsByClassName('rhythmNote')
+        for (let i = 0; i < rhythmNotes.length; i++){
+            rhythmNotes[i].className = 'inactive rhythmNote'
+        }
+        Tone.Transport.cancel()
+        Tone.Transport.stop()
+        setTimeout(() => setPlaying(false), 0)
+    } else {
     Tone.start()
     Tone.Transport.cancel();
     Tone.Transport.stop();
@@ -827,6 +805,10 @@ function playSynth(){
           synthPart.loop = 1;
           metronome.start();
           metronome.loop = 1;
+
+          setTimeout(() => Tone.Transport.stop(), totalTime + gap)
+          setTimeout(() => setPlaying(false), totalTime)
+    }
 }
 
 function squishTiming(notesLength, barLength){
@@ -892,13 +874,59 @@ const handleExportDropdown = (e, {value}) => {
 const handleDescriptionChange = e => {
     setDescription(e.target.value)
   }
+const fourFourQuarterNotes = [['O'], ['O'], ['O'], ['O']]
+const fourFourEighthNotes = [['O', 'O'], ['O', 'O'], ['O', 'O'], ['O', 'O']]
+const threeFourQuarterNotes = [['O'], ['O'], ['O']]
+const threeFourEighthNotes = [['O', 'O'], ['O', 'O'], ['O', 'O']]
 
 
     return (
         <>
         <Menu>
-         <Menu.Item onClick={() => playSynth()}><Icon name='play'/></Menu.Item>  
-         <Menu.Item onClick={()=> randomRhythmGenerator()}> Generate </Menu.Item>   
+         <Menu.Item onClick={() => {playSynth(); setPlaying(true)}}><Icon name={playing ? 'stop' : 'play'}/></Menu.Item>  
+         <Button.Group>
+         <Button basic onClick={()=> randomRhythmGenerator(nestingDepth, barLength)}> Generate </Button>
+         <Dropdown
+          simple
+          item
+          className='button icon'
+        > 
+            <Dropdown.Menu>
+                <Dropdown.Header>Generate Options</Dropdown.Header>
+                <Dropdown.Item>
+                Bar Length:
+                <Input type='number' 
+                onKeyDown={(e) => {e.preventDefault();}}
+                onChange={(e, {value}) => setBarLength(value)}
+                id='setBarLength'
+                min='1'
+                max='12'
+                style={{cursor: 'none'}}
+                value={barLength}
+                />
+                </Dropdown.Item>
+                <Dropdown.Item>
+                Nesting Depth:
+                <Input type='number' 
+                onKeyDown={(e) => {e.preventDefault();}}
+                onChange={(e, {value}) => setNestingDepth(value)}
+                id='setNestingDepth'
+                min='0'
+                max='3'
+                style={{cursor: 'none'}}
+                value={nestingDepth}
+                />
+                </Dropdown.Item>
+                <Dropdown.Item>Bar Length</Dropdown.Item>
+                <Dropdown.Item>Nesting Depth</Dropdown.Item>
+                <Dropdown.Header>Common Rhythms</Dropdown.Header>
+                <Dropdown.Item onClick={() => setNotes(fourFourQuarterNotes)}>4/4 Quarter Notes</Dropdown.Item>
+                <Dropdown.Item onClick={() => setNotes(fourFourEighthNotes)}>4/4 Eighth Notes</Dropdown.Item>
+                <Dropdown.Item onClick={() => setNotes(threeFourQuarterNotes)}>3/4 Quarter Notes</Dropdown.Item>
+                <Dropdown.Item onClick={() => setNotes(threeFourEighthNotes)}>3/4 Eighth Notes</Dropdown.Item>
+            </Dropdown.Menu> 
+        </Dropdown> 
+        </Button.Group> 
          <Menu.Item onClick={()=> setEdit(!edit)}> Edit</Menu.Item>   
          <Menu.Item onClick={()=> setStretchCompress(!stretchCompress)}>  Stretch/Compress </Menu.Item>      
          <Menu.Item onClick={() => setShowDescription(!showDescription)}> Desc </Menu.Item>
@@ -922,7 +950,7 @@ const handleDescriptionChange = e => {
             <Button compact basic onClick={()=> shortenPattern(notes)}>Notes--</Button>
             <Button compact basic onClick ={() => lengthenPattern(notes)}>Notes++</Button>
         </Button.Group>}
-       <div style={{display: 'flex', flexDirection: 'row', width: '500px'}} >
+       <div style={{display: 'flex', flexDirection: 'row', width: '900px', flexWrap: 'wrap'}} >
            {mappedNotes}
        </div>
        { stretchCompress && <div>{playConstant}x speed </div>}

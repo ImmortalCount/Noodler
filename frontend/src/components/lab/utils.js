@@ -1,4 +1,5 @@
 import { Note} from '@tonaljs/tonal';
+import * as Tone from 'tone';
 
 export function scaleHandler(scale, options){
     //options = sharps, flats, situational, classical
@@ -29,3 +30,5 @@ export function scaleHandler(scale, options){
         return returnArr;
       }
   }
+
+ 

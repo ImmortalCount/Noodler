@@ -1,4 +1,4 @@
-import {React, useState, useEffect} from 'react'
+import {React, useState, useEffect, useRef} from 'react'
 import { Form, Checkbox , Icon, Dropdown, Menu, Button, TextArea, Input} from 'semantic-ui-react'
 import {Scale, ScaleType, Note} from '@tonaljs/tonal';
 import * as Tone from 'tone';
@@ -13,12 +13,12 @@ import { setNoteDisplay } from '../../store/actions/noteDisplayActions';
 import { setPlayImport } from '../../store/actions/playImportActions';
 
 export default function ScaleLab({importedScaleData, masterInstrumentArray}) {
+    const [playing, setPlaying] = useState(false);
     const [scaleDataBinary, setScaleDataBinary] = useState([1,0,1,0,1,1,0,1,0,1,0,1])
     const [scaleName, setScaleName] = useState('major');
     const [notes, setNotes] = useState(["C", "D", "E", "F", "G", "A", "B"]);
     const [scaleNumber, setScaleNumber] = useState(2773);
     const [randomRange, setRandomRange] = useState({only: 7, min: 7, max: 7})
-    const [display, setDisplay] = useState('off')
     const [description, setDescription] = useState('')
     const [showDescription, setShowDescription] = useState(false)
     const [options, setOptions] = useState('sharps')
@@ -28,6 +28,7 @@ export default function ScaleLab({importedScaleData, masterInstrumentArray}) {
     const [inputFocus, setInputFocus] = useState(false)
     const [displayName, setDisplayName] = useState('C major')
     const [instrumentDisplay, setInstrumentDisplay] = useState(-2)
+    const [localDisplay, setLocalDisplay] = useState(true)
     const isMuted = false;
     const user = JSON.parse(localStorage.getItem('userInfo'))
 
@@ -106,6 +107,7 @@ function createScaleSVG(){
         circle.setAttribute("fill", fill);
         circle.setAttribute("stroke", 'black');
         circle.setAttribute("stroke-width", '2');
+        circle.setAttribute("class", "scale_circle")
         circle.setAttribute("id", 'scale_' + i)
         var noteName = document.createElementNS("http://www.w3.org/2000/svg", 'text');
         noteName.setAttribute('x', xCenter + (radius * Math.cos(angle)));
@@ -212,7 +214,6 @@ function convertScaleForDispatch(data){
     return arrOfObj
   } else {
     arrOfObj[instrumentDisplay - 1]['data'][0]['notes'][0] = [scaleString]
-    console.log(arrOfObj, 'arr of obj', scaleString, 'scale string')
     return arrOfObj
   }
 
@@ -429,12 +430,15 @@ function convertScaleForDispatch(data){
         setNotes(scaleHandler(returnScale, options));
     }
 
+    //this is where you store all of the setTimout
+    var intervals = useRef([])
+
     //---Play notes:
     function playNoteSequence(){
+    //if muted
     if (isMuted){
       return
     }
-
     function handleNotes(){
       var returnValues = [];
       var noteValues =
@@ -506,56 +510,70 @@ function convertScaleForDispatch(data){
     }
   
       }
-    
+    let previousInstrumentDisplay = instrumentDisplay
+    let notePositions = getNotePositions();
     let newNotes = handleNotes()
+    let gap = Tone.Time('8n').toMilliseconds()
+    let totalTime = gap * newNotes.length;
 
-    if (instrumentDisplay === -100){
-      Tone.start()
+    //if playing, stop it
+    if (playing){
+      intervals.current.forEach(clearInterval)
+      let circles = document.getElementsByClassName('scale_circle')
+      for (let i = 0; i < circles.length; i++){
+        circles[i].setAttribute('r', 23)
+      }
       Tone.Transport.cancel()
       Tone.Transport.stop()
-      Tone.Transport.start();
-      var position = 0;
-
-      dispatch(setNoteDisplay())
-
-    
-      var notePositions = getNotePositions();
-      
-  //---Synthpart function 
-          const synthPart = new Tone.Sequence(
-            function(time, note) {
-              keySynth.triggerAttackRelease(note, "10hz", time)
-              
-              var highlightedCircle = document.getElementById(notePositions[Note.pitchClass(note)])
-              highlightedCircle.setAttribute('r', 29)
-              setTimeout(() => {highlightedCircle.setAttribute('r', 23)}, 250)
-              //position
-              if (position < notes.length -1){
-                  position += 1;
-              } else {
-                  position = 0;
-              }
-              //memory
+      setInstrumentDisplay(-2)
+      setTimeout(() => setPlaying(false), 0)
+      setTimeout(() => setInstrumentDisplay(previousInstrumentDisplay), 50)
+    } else if (instrumentDisplay === -2){
+        Tone.start()
+        Tone.Transport.cancel()
+        Tone.Transport.stop()
+        Tone.Transport.start();
+        var position = 0;
   
-            },
-           newNotes,
-            "8n"
-          );
-          synthPart.start();
-          synthPart.loop = 1;
+        dispatch(setNoteDisplay())
+        
+    //---Synthpart function 
+            const synthPart = new Tone.Sequence(
+              function(time, note) {
+                  keySynth.triggerAttackRelease(note, "10hz", time)
+                var highlightedCircle = document.getElementById(notePositions[Note.pitchClass(note)])
+                highlightedCircle.setAttribute('r', 29)
+                intervals.current.push(setTimeout(() => {highlightedCircle.setAttribute('r', 23)}, gap))
+                //position
+                if (position < notes.length -1){
+                    position += 1;
+                } else {
+                    position = 0;
+                }
+                //memory
+    
+              },
+             newNotes,
+              "8n"
+            );
+            synthPart.start();
+            synthPart.loop = 1;
 
+            intervals.current.push(setTimeout(() => Tone.Transport.stop(), totalTime));
+            intervals.current.push(setTimeout(() => setPlaying(false), totalTime));
+            
 
-    } else {
-      
+      } else {
       let noteArr = [];
       let tempArr = [];
 
       for (let i = 0; i < newNotes.length; i++){
-          if ((i > 1 && i % 2 === 0) || (i === newNotes.length - 1)){
+          tempArr.push(newNotes[i])
+
+          if ((i + 1) % 2 === 0 || (i === newNotes.length - 1)){
             noteArr.push(tempArr)
             tempArr = []
           }
-          tempArr.push(newNotes[i])
       }
 
       let returnObj = {
@@ -564,20 +582,22 @@ function convertScaleForDispatch(data){
         data: [{speed: 1, notes: noteArr}]
       }
 
-
       Tone.start()
       Tone.Transport.cancel()
       dispatch(setPlayImport([returnObj]))
+      //Manual animation for scale lab
+      for (let i = 0; i < newNotes.length; i++){
+        let highlightedCircle = document.getElementById(notePositions[Note.pitchClass(newNotes[i])])
+        intervals.current.push(setTimeout(() => {highlightedCircle.setAttribute('r', 29)}, (i) * gap))
+        intervals.current.push(setTimeout(() => {highlightedCircle.setAttribute('r', 23)}, (i + 1) * gap))
+      }
+
       Tone.Transport.start()
-
-      setTimeout(() => setInstrumentDisplay(-2), 1900)
-      setTimeout(() => setInstrumentDisplay(1), 2000)
-      setTimeout(() => Tone.Transport.stop(), 2000);
-
-    }
-
-
-    
+      intervals.current.push(setTimeout(() => setInstrumentDisplay(-2), totalTime - 100))
+      intervals.current.push(setTimeout(() => setInstrumentDisplay(previousInstrumentDisplay), totalTime))
+      intervals.current.push(setTimeout(() => Tone.Transport.stop(), totalTime));
+      intervals.current.push(setTimeout(() => setPlaying(false), totalTime));
+      }
     }
       const dropdownOptionsSharp = [
         { key: 1, text: 'C', value: 'C'},
@@ -613,12 +633,6 @@ function convertScaleForDispatch(data){
         { key: 'forward', text: 'forward', value: 'forward'},
         { key: 'reverse', text: 'reverse', value: 'reverse'},
         { key: 'random', text: 'random', value: 'random'},
-      ]
-
-      const displayDropdownOptions = [
-        { key: 'Guitar 1', text: 'Guitar 1', value: 'Guitar 1'},
-        { key: 'Guitar 2', text: 'Guitar 2', value: 'Guitar 2'},
-        { key: 'Guitar 3', text: 'Guitar 3', value: 'Guitar 3'},
       ]
   
       const dragStartHandler = e => {
@@ -711,30 +725,6 @@ function convertScaleForDispatch(data){
         )
 }
 
-const handleInstrumentDisplay = () => {
-  
-}
-
-// function handleExport(){
-//   const user = JSON.parse(localStorage.getItem('userInfo'))
-
-//   const scaleDataPrototype = {
-//       name: rootNote + ' ' + scaleName,
-//       scaleName: rootNote + ' ' + scaleName,
-//       binary: scaleDataBinary,
-//       desc: '',
-//       number: scaleNumber,
-//       scale: notes,
-//       type: 'normal',
-//       length: notes.length,
-//       dataType: 'scale',
-//       author: user['name'],
-//       authorId: user['_id'],
-//       pool: exportPool,
-//   }
-//   dispatch(insertData(scaleDataPrototype))
-// }
-
 const exportObj = {
       name: rootNote + ' ' + scaleName,
       scaleName: rootNote + ' ' + scaleName,
@@ -750,21 +740,6 @@ const exportObj = {
       pool: exportPool,
 }
 
-// const exportDropdownOptions = [
-//   { key: 'global', text: 'global', value: 'global'},
-//   { key: 'local', text: 'local', value: 'local'},
-// ]
-
-// const handleExportDropdown = (e, {value}) => {
-//   const user = JSON.parse(localStorage.getItem('userInfo'))
-//   if (value === 'local'){
-//       const user = JSON.parse(localStorage.getItem('userInfo'))
-//       setExportPool(user['_id'])
-//   } else {
-//       setExportPool(value)
-//   }
-// }
-
 const handleScaleNameChange = e => {
   setScaleName(e.target.value)
 }
@@ -779,7 +754,7 @@ const handleScaleDescriptionChange = e => {
         <Menu.Item onClick={() => handleSharpsOrFlats()}>{options === 'sharps' ? '#' : 'b'}</Menu.Item>
         <Dropdown onChange={onChangeDropdown} options={options === 'sharps' ? dropdownOptionsSharp : dropdownOptionsFlat} text = {`Root: ${rootNote}`} simple item/>
         <Button.Group>
-        <Button basic compact onClick={()=> playNoteSequence()}><Icon name='play'/></Button>
+        <Button basic compact onClick={()=> {playNoteSequence(); setPlaying(true)}}><Icon name={playing ? 'stop' : 'play'}/></Button>
         <Dropdown
           simple
           item
@@ -873,9 +848,15 @@ const handleScaleDescriptionChange = e => {
        text = 'Display   ' 
        >
         <Dropdown.Menu>
+            <Dropdown.Header>Local Display</Dropdown.Header>
+            <Dropdown.Item selected={localDisplay} onClick={() => setLocalDisplay(true)}> Show Scale Graphic </Dropdown.Item>
+            <Dropdown.Item selected={!localDisplay} onClick={() => setLocalDisplay(false)}> Hide Scale Graphic </Dropdown.Item>
+            <Dropdown.Divider/>
+            <Dropdown.Header>Instrument Display</Dropdown.Header>
             <Dropdown.Item selected={instrumentDisplay === -2} onClick={() => setInstrumentDisplay(-2)}> None </Dropdown.Item>
             <Dropdown.Item selected={instrumentDisplay === -1} onClick={() => setInstrumentDisplay(-1)}> All </Dropdown.Item>
              {mapMenuItems()}
+             <Dropdown.Divider/>
           </Dropdown.Menu>
         </Dropdown>
         <Button.Group>
@@ -893,8 +874,8 @@ const handleScaleDescriptionChange = e => {
         </Form>}
         <p>{noteMapper(notes)}</p>
         </div>
-        <div id="divScaleInteractive"></div>
-        <div className='binaryRadioSelector' style={{display: 'flex', flexDirection: 'row'}}>
+        <div style={{display: localDisplay ? '' : 'none'}} id="divScaleInteractive"></div>
+        <div className='binaryRadioSelector' style={{flexDirection: 'row', display: localDisplay ? 'flex' : 'none'}}>
         <Form>
         <Form.Field>
          R
