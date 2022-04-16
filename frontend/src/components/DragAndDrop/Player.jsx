@@ -37,7 +37,18 @@ export default function Player ({masterInstrumentArray, display}) {
     const songImportData = useSelector(state => state.songImport)
     const {songImport} = songImportData
 
+    const playHighlightData = useSelector(state => state.playHighlight)
+    const {playHighlight} = playHighlightData
+
+    var highlight = useRef(false)
+
     const {sendModuleData, receiveModuleData} = bindActionCreators(actionCreators, dispatch);
+
+    useEffect(() => {
+        if (playHighlight !== highlight.current){
+            highlight.current = playHighlight
+        } 
+    }, [playHighlight])
 
     useEffect(() => {
         if (songImport){
@@ -445,6 +456,7 @@ const cardClickHandler = e => {
         setData(clone)
         }
     } 
+    highlight.current = true
 }
 
 function moduleAdd(){
@@ -545,17 +557,16 @@ function moduleSubtract(){
         setMarkers(markers)
     }
 
+    
+
     var currentlyPlayingValue = useRef([])
 
     useEffect(() => {
         const thisInterval = setInterval(function checkCurrentTimeAndSetCurrentlyPlaying() {
             let state = Tone.Transport.state
             let startingPos = Tone.Time(Tone.Transport.position).toSeconds() === 0
-        if (state === 'stopped' && startingPos){
-            setCurrentlyPlaying([])
-            currentlyPlayingValue.current = []
-            return
-        } else {
+        
+         if (highlight.current) {
             let currentTime = Tone.Time(Tone.Transport.position).toSeconds()
             var playingArr = [];
             for (var i = 0; i < markerValue.current.length; i++){
@@ -572,7 +583,11 @@ function moduleSubtract(){
                 currentlyPlayingValue.current = playingArr
                 setCurrentlyPlaying(playingArr)
             }
-        } 
+        } else {
+            setCurrentlyPlaying([])
+            currentlyPlayingValue.current = []
+            return
+        }
     }, 50)
         return () => {
           clearInterval(thisInterval);
@@ -742,6 +757,7 @@ const distanceFromChordRootToKeyRoot = () => {
         </Button.Group>
         {mapDropdowns()}
         <Menu.Item basic active={edit} onClick={()=> setEdit(!edit)}>Edit</Menu.Item>
+        <Menu.Item basic active={edit} onClick={()=> console.log(playHighlight)}>Test</Menu.Item>
         <Menu.Item basic active={songOptions} onClick={()=> setSongOptions(!songOptions)}>Bpm </Menu.Item>
         <Menu.Item basic active={showDescription} onClick={() => setShowDescription(!showDescription)}> Desc</Menu.Item>
         <Menu.Item basic active={showDescription} onClick={setRecommendedScales}> Set Recommended Scales</Menu.Item>

@@ -4,7 +4,7 @@ import { allSynths } from './allSynths';
 import { useSelector, useDispatch} from 'react-redux';
 import { Dropdown, Button, Icon, Segment, Input } from 'semantic-ui-react';
 import {moduleMarkerCreator, moduleMarkerCreatorAll, moduleMarkerCreatorCompact, loopLengthCreator, findBetween} from './timeFunctions'
-import { shadeHexColor, showAll } from './guitarDisplayFunctions';
+import { invisAll, shadeHexColor, showAll } from './guitarDisplayFunctions';
 import {noteValues, romanNumerals} from './guitarSVGConstants';
 import { guitarPrototype, bassPrototype } from './instrumentPrototypes';
 import { data1, data2 } from './dummyData';
@@ -12,6 +12,7 @@ import { Note } from '@tonaljs/tonal';
 import { setSongData } from '../../store/actions/songDataActions';
 import { setInstrumentNames } from '../../store/actions/instrumentNameActions';
 import './guitar.css'
+import { setPlayHighlight } from '../../store/actions/playHighlightActions';
 
 
 export default function GuitarSVG({masterInstrumentArray, activelyDisplayedInstruments}) {
@@ -833,6 +834,7 @@ function handleInstrumentUpdate(){
 //======
 
 function playHandler(){
+    dispatch(setPlayHighlight(true))
     Tone.start();
     Tone.Transport.cancel();
     loadNoteSequenceAndVisualDataOntoTimeline(data)
@@ -1468,6 +1470,9 @@ function globalPositionChange(direction){
 const handleStop = () => {
     Tone.Transport.stop()
     lastPosition.current = 0
+    dispatch(setPlayHighlight(true))
+    dispatch(setPlayHighlight(false))
+    invisAll()
 }
 
 const handlePause = () => {

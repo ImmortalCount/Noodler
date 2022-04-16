@@ -3,13 +3,14 @@ import { Scale, Note, Chord } from '@tonaljs/tonal';
 import DragAndFillCard from '../DragAndDrop/DragAndFillCard'
 import { Menu , Input, Dropdown, Button, Form, TextArea, Icon} from 'semantic-ui-react';
 import { useSelector, useDispatch } from 'react-redux';
-import { insertData } from '../../store/actions/dataPoolActions';
 import { scaleHandler } from './utils';
 import * as Tone from 'tone';
-import { keySynth, polySynth } from './synths';
+import { polySynth } from './synths';
+import { setNoteDisplay } from '../../store/actions/noteDisplayActions';
+import { setPlayImport } from '../../store/actions/playImportActions';
 import ExportModal from '../modal/ExportModal'
 
-export default function ModuleLab({importedModuleData}) {
+export default function ModuleLab({importedModuleData, masterInstrumentArray}) {
     const [name, setName] = useState('Module 1')
     const [keyName, setKeyName] = useState('Key: C')
     const [key, setKey] = useState('C')
@@ -18,10 +19,47 @@ export default function ModuleLab({importedModuleData}) {
     const [inputFocus, setInputFocus] = useState(false)
     const [description, setDescription] = useState('')
     const [showDescription, setShowDescription] = useState(false)
+    const [instrumentDisplay, setInstrumentDisplay] = useState(-2)
+    const [displayAll, setDisplayAll] = useState(false)
+    const [displayFocus, setDisplayFocus] = useState(0)
+    const [playing, setPlaying] = useState(false)
     const user = JSON.parse(localStorage.getItem('userInfo'))
-    var sequence = useRef('')
 
     const dispatch = useDispatch()
+
+    useEffect(() => {
+        dispatch(setNoteDisplay(convertModuleForDispatch()))
+    }, [instrumentDisplay, displayAll])
+
+    function convertModuleForDispatch(){
+        let notes = patternAndScaleToNotes(pattern, patternType, scaleNotes)
+        let displayStyle;
+        if (displayAll){
+            displayStyle = 'special'
+        } else {
+            displayStyle = false;
+        }
+        
+        var arrOfObj = [];
+        var blankObj = {data: [{speed: 1, notes: [['']]}], displayOnly: displayStyle, highlight: [], specialHighlight: [0]}
+        var loadedObj = {data: [{speed: 1, notes: [notes]}], displayOnly: displayStyle, highlight: [], specialHighlight: [0]}
+
+        for (let h = 0; h < masterInstrumentArray.length; h++){
+            arrOfObj.push(JSON.parse(JSON.stringify(blankObj)))
+        }
+
+        if (instrumentDisplay === -2){
+            return arrOfObj
+        } else if (instrumentDisplay === -1){
+            for (let i = 0; i < arrOfObj.length; i++){
+                arrOfObj[i] = JSON.parse(JSON.stringify(loadedObj))
+            }
+        } else {
+            arrOfObj[instrumentDisplay - 1] = JSON.parse(JSON.stringify(loadedObj))
+        }
+        return arrOfObj
+        
+    }
 
     const initState = {
         lab: {activeLabIndices: [0]},
@@ -49,7 +87,7 @@ export default function ModuleLab({importedModuleData}) {
             name: 'Pattern 1',
             patternName: 'Pattern 1',
             desc: '',
-            type: 'pattern',
+            type: 'fluid',
             length: 0,
             pattern: [7, 8, 9, 18, 14, 13, 11, 12],
             position: [],
@@ -136,6 +174,7 @@ export default function ModuleLab({importedModuleData}) {
     var allChromaticNotes = [];
     var chromaticNotes = scaleHandler(Scale.get('c chromatic').notes, options);
     var pattern = labInfo && labInfo['patternLab'] && labInfo['patternLab']['pattern'] ? labInfo['patternLab']['pattern'] : initState['patternLab']['pattern']
+    var patternType = labInfo && labInfo['patternLab'] && labInfo['patternLab']['type'] ? labInfo['patternLab']['type'] : initState['patternLab']['type']
     var rhythm = labInfo && labInfo['rhythmLab'] && labInfo['rhythmLab']['rhythm'] ? labInfo['rhythmLab']['rhythm'] : initState['rhythmLab']['rhythm']
     var playConstant = labInfo && labInfo['rhythmLab'] && labInfo['rhythmLab']['speed'] ? labInfo['rhythmLab']['speed'] : initState['rhythmLab']['speed']
     var chord = labInfo && labInfo['chordLab'] && labInfo['chordLab']['chord'] ? labInfo['chordLab']['chord'] : initState['chordLab']['chord']
@@ -152,11 +191,32 @@ for (var o = 0; o < 10; o++){
             allScaleNotes.push(allChromaticNotes[n])
         }
     }
-    function patternAndScaleToNotes(patternX){
-        var clonePattern = patternX
+    function patternAndScaleToNotes(pattern, patternType, scale, root){
+        var allNotes = [];
+        var allChromaticNotes = [];
+        var chromaticScale = Scale.get('c chromatic').notes
         var notesExport = [];
-        var root = scaleNotes[0] + 3
-        const allNotes = Note.sortedNames(allScaleNotes);
+        if (root === undefined){
+            root = scale[0] + 3;
+        }
+        if (patternType === 'fixed'){
+            return pattern
+        }
+        var simplifiedScale = [];
+        for (var h = 0; h < scale.length; h++){
+            simplifiedScale.push(Note.simplify(scale[h]))
+        }
+        for (var i = 0; i < 10; i++){
+            for (var j = 0; j < simplifiedScale.length; j++){
+                allNotes.push(simplifiedScale[j] + i)
+            }
+        }
+        allNotes = Note.sortedNames(allNotes);
+        for (var m = 0; m < 10; m++){
+            for (var n = 0; n < chromaticScale.length; n++){
+                allChromaticNotes.push(chromaticScale[n] + m)
+            }
+        }
         //------------
         var startingIndex;
         if (allNotes.indexOf(root) === -1){
@@ -170,15 +230,26 @@ for (var o = 0; o < 10; o++){
         } else {
             startingChromaticIndex = allChromaticNotes.indexOf(root);
         }
-        for (var k = 0; k < clonePattern.length; k++){
-            //check if flag is added to clonePattern
-            if (typeof clonePattern[k] === 'string'){
-                notesExport.push(allChromaticNotes[startingChromaticIndex + Number(clonePattern[k].split("").slice(1).join(""))])
-            } else {
-                notesExport.push(allNotes[startingIndex + clonePattern[k]])
-            }
+        for (var k = 0; k < pattern.length; k++){
+                if (Array.isArray(pattern[k]) === true){
+                    var localReturn = [];
+                    for (var l = 0; l < pattern[k].length; l++){
+                        if (typeof pattern[k][l] === 'string'){
+                            localReturn.push(allChromaticNotes[startingChromaticIndex + Number(pattern[k][l].split("").slice(1).join(""))])
+                        } else {
+                            localReturn.push(allNotes[startingIndex + pattern[k][l]])
+                        }
+                    }
+                    notesExport.push(localReturn.join(' '))
+                } else {
+                    if (typeof pattern[k] === 'string'){
+                        notesExport.push(allChromaticNotes[startingChromaticIndex + Number(pattern[k].split("").slice(1).join(""))])
+                    } else {
+                        notesExport.push(allNotes[startingIndex + pattern[k]])
+                    }
+                }
         }
-        return notesExport
+        return notesExport;
     }
 
     function mapNotesToRhythm(notes, rhythm){
@@ -206,27 +277,55 @@ for (var o = 0; o < 10; o++){
         return cloneRhythm;
     }
 
+    var intervals = useRef([])
+
     function playModule(){
         Tone.start()
         Tone.Transport.cancel();
         Tone.Transport.stop();
         Tone.Transport.start();
-        var notesToMap = patternAndScaleToNotes(pattern)
-        var sequence = mapNotesToRhythm(notesToMap, rhythm)
+        let notesToMap = patternAndScaleToNotes(pattern, patternType, scaleNotes)
+        let sequence = mapNotesToRhythm(notesToMap, rhythm)
+        let previousInstrumentDisplay = instrumentDisplay
+        let gap = Tone.Time('4n').toMilliseconds()
+        let totalTime = gap * sequence.length * playConstant
 
+        if (playing){
+            intervals.current.forEach(clearInterval)
+            Tone.Transport.cancel()
+            Tone.Transport.stop()
+            setInstrumentDisplay(-2)
+            setTimeout(() => setPlaying(false), 0)
+            setTimeout(() => setInstrumentDisplay(previousInstrumentDisplay), 50)
+        } else if (instrumentDisplay === -2){
             var synthPart = new Tone.Sequence(
-              function(time, note) {
-                if (note !== 'X'){
-                    polySynth.triggerAttackRelease(note, 0.2, time);
-                }
-               
-              },
-             sequence,
-              (playConstant * Tone.TransportTime('4n').toSeconds())
-            );
+                function(time, note) {
+                  if (note !== 'X'){
+                      polySynth.triggerAttackRelease(note, 0.2, time);
+                  }
+                 
+                },
+               sequence,
+                (playConstant * Tone.TransportTime('4n').toSeconds())
+              );
+              
+                synthPart.start();
+                synthPart.loop = 1;
+        } else {
+            let returnObj = {
+                displayOnly: false,
+                highlight: 1,
+                data: [{speed: 1, notes: sequence}]
+            }
+            console.log(totalTime)
+            Tone.start()
+            Tone.Transport.cancel()
+            dispatch(setPlayImport([returnObj]))
+            Tone.Transport.start()
+            intervals.current.push(setTimeout(() => Tone.Transport.stop(), totalTime));
+            intervals.current.push(setTimeout(() => setPlaying(false), totalTime));
+        }
             
-              synthPart.start();
-              synthPart.loop = 1;
     }
 
 
@@ -370,32 +469,47 @@ for (var o = 0; o < 10; o++){
       }
     }
 
-
-    const exportDropdownOptions = [
-        { key: 'global', text: 'global', value: 'global'},
-        { key: 'local', text: 'local', value: 'local'},
-    ]
-    
-    const handleExportDropdown = (e, {value}) => {
-        const user = JSON.parse(localStorage.getItem('userInfo'))
-        if (value === 'local'){
-            const user = JSON.parse(localStorage.getItem('userInfo'))
-            setExportPool(user['_id'])
-        } else {
-            setExportPool(value)
-        }
-      }
-    
     const handleDescriptionChange = e => {
         setDescription(e.target.value)
       }
 
+    function mapMenuItems(){
+        return (
+            masterInstrumentArray.map((instrument, idx) => 
+            <Dropdown.Item
+            text={instrument}
+            key={'mappedInstr' + idx}
+            selected={instrumentDisplay === idx + 1}
+            onClick={() => setInstrumentDisplay(idx + 1)}
+            />
+            )
+        )
+} 
+
     return (
         <>
         <Menu>
-         <Menu.Item onClick={() => playModule()} ><Icon name='play' /></Menu.Item>  
+         <Menu.Item onClick={() => {playModule(); setPlaying(true)}} ><Icon name={playing ? 'stop': 'play'}/></Menu.Item>  
          <Dropdown onChange={onChangeDropdown} options={options === 'sharps' ? dropdownOptionsKeySharp : dropdownOptionsKeyFlat} text = {`Key: ${key}`} simple item/>
          <Menu.Item onClick={() => setShowDescription(!showDescription)}> Desc </Menu.Item>
+         <Menu.Item onClick={() => console.log(convertModuleForDispatch(), '!!')}> Test </Menu.Item>
+         <Dropdown
+            simple 
+            item
+            text = 'Display   ' 
+       >
+          <Dropdown.Menu>
+          <Dropdown.Header>Display Options</Dropdown.Header>
+              <Dropdown.Divider/>
+                <Dropdown.Item selected={!displayAll} onClick={() => setDisplayAll(false)}> Single Notes </Dropdown.Item>
+                <Dropdown.Item selected={displayAll} onClick={() => setDisplayAll(true)}> Full Pattern </Dropdown.Item>
+              <Dropdown.Header>Instruments</Dropdown.Header>
+              <Dropdown.Divider/>
+            <Dropdown.Item selected={instrumentDisplay === -2} onClick={() => setInstrumentDisplay(-2)}> None </Dropdown.Item>
+            <Dropdown.Item selected={instrumentDisplay === -1} onClick={() => setInstrumentDisplay(-1)}> All </Dropdown.Item>
+             {mapMenuItems()}
+          </Dropdown.Menu>
+        </Dropdown>
          <Button.Group>
         <ExportModal
         dataType={'Module'}

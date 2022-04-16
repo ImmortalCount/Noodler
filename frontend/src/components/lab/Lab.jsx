@@ -167,7 +167,10 @@ export default function Lab({masterInstrumentArray, display}) {
           Module Lab
         </Accordion.Title>
         <Accordion.Content active={activeLabIndices.includes(4)}>
-          <ModuleLab importedModuleData={importedModuleData}/>
+          <ModuleLab 
+          importedModuleData={importedModuleData}
+          masterInstrumentArray = {masterInstrumentArray}
+          />
         </Accordion.Content>
       </Accordion>
       </div>

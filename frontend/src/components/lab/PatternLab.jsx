@@ -37,6 +37,7 @@ const [displayAll, setDisplayAll] = useState(false)
 const [positionLock, setPositionLock] = useState(false)
 const [startOnScaleDegree, setStartOnScaleDegree] = useState(true)
 const [generateScaleDegree, setGenerateScaleDegree] = useState(1)
+const [positionType, setPositionType] = useState('free')
 const [patternType, setPatternType] = useState('fluid')
 const [exportPool, setExportPool] = useState('global')
 const [inputFocus, setInputFocus] = useState(false)
@@ -137,12 +138,9 @@ useEffect(() => {
         dispatch(setLabData(newInfo))
     }, [notes, name, pattern])
 
-// useEffect(() => {
-//     patternAndScaleToNotes()
-// }, [scaleNotes])
-
 useEffect(() => {
     dispatch(setNoteDisplay(convertScaleForDispatch()))
+    console.log(convertScaleForDispatch(), 'PAttern lab!')
   }, [instrumentDisplay, notes, displayFocus, displayAll])
 
 function convertScaleForDispatch(){
@@ -192,16 +190,20 @@ function convertScaleForDispatch(){
     }
   
     if (instrumentDisplay === -2){
+    console.log(arrOfObj, 'patternLab') 
       return arrOfObj
     } else if (instrumentDisplay === -1){
       for (let j = 0; j < arrOfObj.length; j++){
         arrOfObj[j]['data'][0]['notes'][0] = scaleString
       }
+      console.log(arrOfObj, 'patternLab') 
       return arrOfObj
     } else {
       arrOfObj[instrumentDisplay - 1]['data'][0]['notes'][0] = scaleString
+      console.log(arrOfObj, 'patternLab') 
       return arrOfObj
     }
+
 }
 
 function sortAllChordsByPitch(chords){
@@ -369,7 +371,6 @@ function playAll(){
     Tone.Transport.stop()
     Tone.Transport.start();
     const convertedChords = chordSequenceToNoteString(notes)
-    console.log(convertedChords, 'converted chords pattern lab 338')
     var count = 0;
     const synthPart = new Tone.Sequence(
         function(time, note) {
@@ -1187,26 +1188,6 @@ const handleEditOptions = () => {
     setEdit(!edit)
 }
 
-const handleManipulateOptions = () => {
-    setEdit('off')
-    setManipulate(!manipulate)
-}
-
-const exportDropdownOptions = [
-    { key: 'global', text: 'global', value: 'global'},
-    { key: 'local', text: 'local', value: 'local'},
-]
-
-const handleExportDropdown = (e, {value}) => {
-    const user = JSON.parse(localStorage.getItem('userInfo'))
-    if (value === 'local'){
-        const user = JSON.parse(localStorage.getItem('userInfo'))
-        setExportPool(user['_id'])
-    } else {
-        setExportPool(value)
-    }
-  }
-
   const handleDescriptionChange = e => {
     setDescription(e.target.value)
   }
@@ -1263,6 +1244,18 @@ const handleExportDropdown = (e, {value}) => {
       }
   }
 
+  const handlePositionType = () => {
+    if (positionType === 'fluid'){
+        return 'map'
+    }
+    if (positionType === 'fixed'){
+        return 'anchor'
+    }
+    if (positionType === 'floating'){
+        return 'fly'
+    }
+  }
+
     return (
         <>
         <Menu>
@@ -1309,7 +1302,19 @@ const handleExportDropdown = (e, {value}) => {
          <Dropdown.Item active={patternType === 'fixed'} onClick={() => setPatternType('fixed')}> Fixed <Icon name='anchor'/></Dropdown.Item>       
          <Dropdown.Item active={patternType === 'floating'} onClick={() => setPatternType('floating')}> Floating <Icon name='fly'/></Dropdown.Item> 
         </Dropdown.Menu>
-        </Dropdown>      
+        </Dropdown>
+        <Dropdown
+         simple
+         item
+         text='Position'
+         >
+        <Dropdown.Menu>
+        <Dropdown.Item active={patternType === 'fluid'} onClick={() => setPositionType('fluid')}> Fluid <Icon name='map'/></Dropdown.Item> 
+         <Dropdown.Item active={patternType === 'fixed'} onClick={() => setPositionType('fixed')}> Fixed <Icon name='anchor'/></Dropdown.Item>       
+         <Dropdown.Item active={patternType === 'floating'} onClick={() => setPositionType('floating')}> Floating <Icon name='fly'/></Dropdown.Item> 
+        </Dropdown.Menu>
+        </Dropdown>
+
          <Dropdown
          simple
          item
@@ -1399,7 +1404,7 @@ const handleExportDropdown = (e, {value}) => {
         </div>}
         <div>{notes.length} {notes.length > 1 ? 'notes' : 'note'}</div>
         <div>
-            <div draggable onClick={() => setInputFocus(!inputFocus)} onDragStart={dragStartHandlerSpecial} style={{height: '25px', width:'125px', backgroundColor: 'lightblue', display: !inputFocus ? '': 'none' }}>{name}{' '}<Icon name={handlePatternType()} /></div>
+            <div draggable onClick={() => setInputFocus(!inputFocus)} onDragStart={dragStartHandlerSpecial} style={{height: '25px', width:'125px', backgroundColor: 'lightblue', display: !inputFocus ? '': 'none' }}>{name}{' '}<Icon name={handlePatternType()} /><Icon name={handlePositionType()} /></div>
             <Input type='text'
             value={name}
             id={'input_patternLab'}
