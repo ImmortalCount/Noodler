@@ -21,6 +21,7 @@ export default function ModuleLab({importedModuleData, masterInstrumentArray}) {
     const [showDescription, setShowDescription] = useState(false)
     const [instrumentDisplay, setInstrumentDisplay] = useState(-2)
     const [displayAll, setDisplayAll] = useState(false)
+    const [playType, setPlayType] = useState('Melody')
     const [displayFocus, setDisplayFocus] = useState(0)
     const [playing, setPlaying] = useState(false)
     const user = JSON.parse(localStorage.getItem('userInfo'))
@@ -30,6 +31,7 @@ export default function ModuleLab({importedModuleData, masterInstrumentArray}) {
     useEffect(() => {
         dispatch(setNoteDisplay(convertModuleForDispatch()))
     }, [instrumentDisplay, displayAll])
+
 
     function convertModuleForDispatch(){
         let notes = patternAndScaleToNotes(pattern, patternType, scaleNotes)
@@ -58,7 +60,6 @@ export default function ModuleLab({importedModuleData, masterInstrumentArray}) {
             arrOfObj[instrumentDisplay - 1] = JSON.parse(JSON.stringify(loadedObj))
         }
         return arrOfObj
-        
     }
 
     const initState = {
@@ -102,7 +103,7 @@ export default function ModuleLab({importedModuleData, masterInstrumentArray}) {
             desc: '',
             rhythm: [['O'], ['O'], ['O'], ['O']],
             length: 4,
-            noteSlots: 0,
+            notes: 0,
             speed: 1,
             author: '',
             authorId: '',
@@ -176,6 +177,7 @@ export default function ModuleLab({importedModuleData, masterInstrumentArray}) {
     var pattern = labInfo && labInfo['patternLab'] && labInfo['patternLab']['pattern'] ? labInfo['patternLab']['pattern'] : initState['patternLab']['pattern']
     var patternType = labInfo && labInfo['patternLab'] && labInfo['patternLab']['type'] ? labInfo['patternLab']['type'] : initState['patternLab']['type']
     var rhythm = labInfo && labInfo['rhythmLab'] && labInfo['rhythmLab']['rhythm'] ? labInfo['rhythmLab']['rhythm'] : initState['rhythmLab']['rhythm']
+    var notesFromRhythm = labInfo && labInfo['rhythmLab'] && labInfo['rhythmLab']['notes'] ? labInfo['rhythmLab']['notes'] : initState['rhythmLab']['notes']
     var playConstant = labInfo && labInfo['rhythmLab'] && labInfo['rhythmLab']['speed'] ? labInfo['rhythmLab']['speed'] : initState['rhythmLab']['speed']
     var chord = labInfo && labInfo['chordLab'] && labInfo['chordLab']['chord'] ? labInfo['chordLab']['chord'] : initState['chordLab']['chord']
 
@@ -251,6 +253,29 @@ for (var o = 0; o < 10; o++){
         }
         return notesExport;
     }
+    function chordIntoNotes(chord, notesFromRhythm){
+        if (notesFromRhythm === 0 || notesFromRhythm === undefined){
+            notesFromRhythm = 1;
+        } 
+
+        console.log(notesFromRhythm, 'notesFromRhythm')
+        console.log(chord, 'chord')
+        let returnStr = ''
+        for (let i = 0; i < chord.length; i++){
+            if (i === chord.length - 1){
+                returnStr += chord[i]
+            } else {
+                returnStr += chord[i] + ' '
+            }
+        }
+        
+        let returnArr = [];
+        //create the pattern to be as  long as the rhythmNotes
+        for (let j = 0; j < notesFromRhythm; j++){
+            returnArr.push(returnStr)
+        }
+        return returnArr;
+    }
 
     function mapNotesToRhythm(notes, rhythm){
         var cloneRhythm = JSON.parse(JSON.stringify(rhythm))
@@ -284,8 +309,17 @@ for (var o = 0; o < 10; o++){
         Tone.Transport.cancel();
         Tone.Transport.stop();
         Tone.Transport.start();
-        let notesToMap = patternAndScaleToNotes(pattern, patternType, scaleNotes)
-        let sequence = mapNotesToRhythm(notesToMap, rhythm)
+        let sequence;
+        if (playType === 'Melody'){
+            let notesToMap = patternAndScaleToNotes(pattern, patternType, scaleNotes)
+            sequence = mapNotesToRhythm(notesToMap, rhythm)
+            console.log(notesToMap, 'notesToMap')
+        } else if (playType === 'Chord'){
+            let notesToMap = chordIntoNotes(chord, notesFromRhythm)
+            sequence = mapNotesToRhythm(notesToMap, rhythm)
+            console.log(notesToMap, 'notesToMap')
+        }
+        
         let previousInstrumentDisplay = instrumentDisplay
         let gap = Tone.Time('4n').toMilliseconds()
         let totalTime = gap * sequence.length * playConstant
@@ -301,9 +335,8 @@ for (var o = 0; o < 10; o++){
             var synthPart = new Tone.Sequence(
                 function(time, note) {
                   if (note !== 'X'){
-                      polySynth.triggerAttackRelease(note, 0.2, time);
+                      polySynth.triggerAttackRelease(noteStringHandler(note), 0.2, time);
                   }
-                 
                 },
                sequence,
                 (playConstant * Tone.TransportTime('4n').toSeconds())
@@ -311,6 +344,8 @@ for (var o = 0; o < 10; o++){
               
                 synthPart.start();
                 synthPart.loop = 1;
+                intervals.current.push(setTimeout(() => Tone.Transport.stop(), totalTime));
+                intervals.current.push(setTimeout(() => setPlaying(false), totalTime));
         } else {
             let returnObj = {
                 displayOnly: false,
@@ -493,6 +528,16 @@ for (var o = 0; o < 10; o++){
          <Dropdown onChange={onChangeDropdown} options={options === 'sharps' ? dropdownOptionsKeySharp : dropdownOptionsKeyFlat} text = {`Key: ${key}`} simple item/>
          <Menu.Item onClick={() => setShowDescription(!showDescription)}> Desc </Menu.Item>
          <Menu.Item onClick={() => console.log(convertModuleForDispatch(), '!!')}> Test </Menu.Item>
+         <Dropdown
+            simple 
+            item
+            text = 'Playback'
+       >
+          <Dropdown.Menu>
+                <Dropdown.Item selected={playType === 'Melody'} onClick={() => setPlayType('Melody')}> Melody </Dropdown.Item>
+                <Dropdown.Item selected={playType === 'Chord'} onClick={() => setPlayType('Chord')}> Chord </Dropdown.Item>
+          </Dropdown.Menu>
+        </Dropdown>
          <Dropdown
             simple 
             item

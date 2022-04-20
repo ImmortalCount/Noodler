@@ -9,7 +9,7 @@ import { Menu, Button, Input, Icon, Dropdown, Form, TextArea} from 'semantic-ui-
 import { keySynth } from './synths';
 import { polySynth } from './synths';
 import { setLabData } from '../../store/actions/labDataActions';
-import { scaleHandler } from './utils';
+import { scaleHandler, updateLinkedArrays } from './utils';
 import { keyMap } from './keymap';
 import { setPlayImport } from '../../store/actions/playImportActions';
 import { setNoteDisplay } from '../../store/actions/noteDisplayActions';
@@ -18,8 +18,9 @@ import ExportModal from '../modal/ExportModal';
 
 export default function PatternLab({importedPatternData, masterInstrumentArray}) {
 const [playing, setPlaying] = useState(false)
-const [notes, setNotes] = useState([['A2'], ['B2'], ['C3'], ['D3'], ['E3'], ['F3'], ['G3'], ['A3']])
-const [pattern, setPattern] = useState(['0 1 2 4 7 4 2 1'])
+const [notes, setNotes] = useState([['C3'], ['D3'], ['E3'], ['F3'], ['G3'], ['A3'], ['B3'], ['C4']])
+const [pattern, setPattern] = useState([0,1,2,3,4,5,6,7])
+const [position, setPosition] = useState([0,1,1,0,1,1,1,1])
 const [scaleLock, setScaleLock] = useState(true)
 const [playOnKeyPress, setPlayOnKeyPress] = useState(false)
 const [name, setName] = useState('Pattern 1')
@@ -34,16 +35,14 @@ const [playNoteOnClick, setPlayNoteOnClick] = useState(true)
 const [instrumentDisplay, setInstrumentDisplay] = useState(-2) 
 const [displayFocus, setDisplayFocus] = useState(0)
 const [displayAll, setDisplayAll] = useState(false)
-const [positionLock, setPositionLock] = useState(false)
-const [startOnScaleDegree, setStartOnScaleDegree] = useState(true)
-const [generateScaleDegree, setGenerateScaleDegree] = useState(1)
-const [positionType, setPositionType] = useState('free')
+const [positionType, setPositionType] = useState('unlocked')
 const [patternType, setPatternType] = useState('fluid')
 const [exportPool, setExportPool] = useState('global')
 const [inputFocus, setInputFocus] = useState(false)
 const [chromaticNotes, setChromaticNotes] = useState(['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B'])
 const [description, setDescription] = useState('')
 const [showDescription, setShowDescription] = useState(false)
+const previousNotes = useRef([['C3'], ['D3'], ['E3'], ['F3'], ['G3'], ['A3'], ['B3'], ['C4']])
 const isMuted = false;
 const user = JSON.parse(localStorage.getItem('userInfo'))
 
@@ -100,8 +99,7 @@ for (var o = 0; o < 10; o++){
         // playAll(notesExport)
     }
 
-
-
+//Upon importing
 useEffect(() => {
     if (importedPatternData['pattern'] !== undefined){
         setPattern(importedPatternData['pattern'])
@@ -111,47 +109,48 @@ useEffect(() => {
     
 }, [importedPatternData])
 
+//upon updating
 useEffect(() => {
-    patternExtraction()
-}, [notes, patternType])
+    console.log('updating')
+    let mostCurrentPattern = patternExtraction()
+    let mostCurrentPosition = updateLinkedArrays(previousNotes.current, notes, position)
+    setPattern(mostCurrentPattern)
+    setPosition(mostCurrentPosition)
+    previousNotes.current = notes;
+    let newInfo = {...labInfo}
+    const patternDataPrototype = {
+        name: name,
+        patternName: name,
+        desc: '',
+        type: patternType,
+        length: notes.length,
+        pattern: patternType === 'fixed' ? notes : mostCurrentPattern,
+        position: position,
+        author: '',
+        authorId: '',
+        dataType: 'pattern',
+        pool: '',
+    }
+    newInfo['patternLab'] = patternDataPrototype
+    dispatch(setLabData(newInfo))
+    dispatch(setNoteDisplay(convertScaleForDispatch(mostCurrentPosition)))
+  }, [name, instrumentDisplay, notes, displayFocus, displayAll, positionType, patternType])
 
-// useEffect(() => {
-//     // patternAndScaleToNotes()
-// }, [scaleNotes])
-
-useEffect(() => {
-        let newInfo = {...labInfo}
-        const patternDataPrototype = {
-            name: name,
-            patternName: name,
-            desc: '',
-            type: patternType,
-            length: notes.length,
-            pattern: patternType === 'fixed' ? notes : pattern,
-            position: [],
-            author: '',
-            authorId: '',
-            dataType: 'pattern',
-            pool: '',
-        }
-        newInfo['patternLab'] = patternDataPrototype
-        dispatch(setLabData(newInfo))
-    }, [notes, name, pattern])
-
-useEffect(() => {
-    dispatch(setNoteDisplay(convertScaleForDispatch()))
-    console.log(convertScaleForDispatch(), 'PAttern lab!')
-  }, [instrumentDisplay, notes, displayFocus, displayAll])
-
-function convertScaleForDispatch(){
+function convertScaleForDispatch(position){
     let displayStyle;
+    let pos;
     if (displayAll){
         displayStyle = 'special'
     } else {
         displayStyle = false;
     }
+    if (positionType === 'locked'){
+        pos = position;
+    } else {
+        pos = [];
+    }
     var arrOfObj = []
-    var dispatchObj = {data: [{speed: 1, notes: [['C']]}], displayOnly: displayStyle, highlight: [], specialHighlight: [displayFocus]}
+    var dispatchObj = {data: [{speed: 1, notes: [['C']], position: pos}], displayOnly: displayStyle, highlight: [], specialHighlight: [displayFocus]}
     var scaleString = ''
 
     let clone = sortAllChordsByPitch(notes)
@@ -214,24 +213,6 @@ function sortAllChordsByPitch(chords){
     return tempArr
 }
 
-// function chordToNoteString(chord){
-//     let returnStr = ''
-//     for (let i = 0; i < chord.length; i++){
-//         if (i === chord.length - 1){
-//             returnStr += chord[i]
-//         } else {
-//             returnStr += chord[i] + ' '
-//         }
-//     }
-//     return [returnStr]
-// }
-// function allChordsToNoteStrings(){
-//     let returnArr = []
-//     for (let i = 0; i < notes.length; i++){
-//         chordToNoteString()
-//     }
-// }
-
 //=======Drag and drop functionality
 function changePositionsUsingIDs(startingID, endingID){
     var xfer;
@@ -272,7 +253,7 @@ const dragLeaveHandler = e => {
     e.preventDefault();
 }
 
-//---------------------
+
 const dropHandler = e => {
     e.currentTarget.className = 'inactive pattern'
     e.stopPropagation();
@@ -286,7 +267,9 @@ const dropHandler = e => {
         e.dataTransfer.clearData();
     }
 }
+//----------------------------
 
+//KEYPRESS EVENTS
 var [keyPressed, setKeyPressed] = useState(false);
 var keydownEvent = (e) => {
     if (keyPressed === false){
@@ -326,6 +309,8 @@ var keyUpEvent = (e) => {
 
 document.addEventListener('keydown', keydownEvent);
 document.addEventListener('keyup', keyUpEvent)
+
+//------------------------------
 
 function chordSequenceToNoteString(chords){
     var returnArr = [];
@@ -407,11 +392,16 @@ function playAll(){
                     tempArr = []
             }
         }
-
+        let pos;
+        if (positionType === 'unlocked'){
+            pos = [];
+        } else {
+            pos = position;
+        }
         let returnObj = {
             displayOnly: false,
             highlight: 1,
-            data: [{speed: 1, notes: noteArr}]
+            data: [{speed: 1, notes: noteArr, position: pos}]
         }
 
         Tone.start()
@@ -444,8 +434,39 @@ function generateRandomMelody(){
             returnArr.push([scaleNotes[randomIndex] + octave])
         }
     }
-    
+    let positionReturn = [];
+    for (let j = 0; j < generatePatternLength; j++){
+        positionReturn.push(0)
+    }
+
+previousNotes.current = returnArr;
+setPosition(positionReturn);  
 setNotes(returnArr);
+}
+
+function generatePattern(instructions, octave){
+    if (octave === undefined){
+        octave = 3
+    }
+    //instructions is an array of positive or negative numbers
+    let rootNote = scaleNotes[0] + octave
+    let instructionsIndex = 0;
+    let currentPosition = allScaleNotes.indexOf(rootNote)
+    let returnArr = [[rootNote]]
+    for (let i = 0; i < generatePatternLength - 1; i++){
+        let newPosition = currentPosition + instructions[instructionsIndex]
+        if (allScaleNotes[newPosition] === undefined){
+            break;
+        }
+        returnArr.push([allScaleNotes[newPosition]])
+        if (instructionsIndex < instructions.length - 1){
+            instructionsIndex++
+        } else {
+            instructionsIndex = 0
+        }
+        currentPosition = newPosition
+    }
+    setNotes(returnArr)
 }
 
 const handleClickUp = (e) => {
@@ -673,13 +694,22 @@ const handleDeleteAll = () => {
 
 const handleAddNoteToEnd = () => {
     const clone = JSON.parse(JSON.stringify(notes))
+    const clonePosition = [...position]
     if (clone.length === 0){
         clone.push(['C3'])
     } else {
         const lastNote = clone[clone.length - 1]
         clone.push(lastNote)
     }
-    setNotes(clone)
+    if (clonePosition.length === 0){
+        clonePosition.push(0)
+    } else {
+        const lastPosition = clonePosition[clonePosition.length -1]
+        clonePosition.push(lastPosition)
+    }
+    setNotes(JSON.parse(JSON.stringify(clone)))
+    setPosition(clonePosition)
+
 }
 
 const handleRemoveNoteFromEnd = () => {
@@ -720,7 +750,7 @@ var handleClickUpChord = (e) =>{
     var x = parentID.split('_')[1]
 
 
-    if (noteOptions === 'scaler'){
+    if (noteOptions === 'scale'){
         for (var y = 0; y < notes[x].length; y++){
             if (allScaleNotes.indexOf(notes[x][y]) === -1){
                 var chromaIndex = allChromaticNotes.indexOf(notes[x][y]);
@@ -774,7 +804,7 @@ var handleClickDownChord = (e) =>{
     var parentID = e.currentTarget.parentNode.parentNode.parentNode.id;
     var x = parentID.split('_')[1]
 
-    if (noteOptions === 'scaler'){
+    if (noteOptions === 'scale'){
         for (var y = 0; y < notes[x].length; y++){
             if (allScaleNotes.indexOf(notes[x][y]) === -1){
                 var chromaIndex = allChromaticNotes.indexOf(notes[x][y]);
@@ -1003,7 +1033,7 @@ function patternExtraction(){
         }
         patternExport.push(patternChord)
     }
-    setPattern(patternExport);
+    return patternExport
 }
 
 function patternAndScaleToNotes(){
@@ -1032,142 +1062,8 @@ function patternAndScaleToNotes(){
         }
     }
     setNotes(notesExport)
-    // playAll(notesExport)
 }
 
-function clearNotes(){
-    setNotes([])
-    document.removeEventListener('keydown', keydownEvent);
-}
-
-function chordParser(chord){
-    var chordArr = chord.split("");
-    if (chordArr[1] === '#' || chordArr[1] === 'b'){
-        return [chordArr.slice(0, 2).join(''), chordArr.slice(2).join('')]
-    } else {
-        return [chordArr.slice(0, 1).join(''), chordArr.slice(1).join('')]
-    }
-}
-
-//key is string A major, B minor, etc
-// function romanNumeralAssigner(chord, key){
-// var chordRoot = chordParser(chord)[0];
-// var chordType = chordParser(chord)[1];
-
-// var root = key.split(" ")[0];
-// var scale = Scale.get(root + ' chromatic').notes
-// var romanNumeralsMajor = [
-//         'I',
-//         'bII',
-//         'II',
-//         'bIII',
-//         'III',
-//         'IV',
-//         'bV',
-//         'V',
-//         'bVI',
-//         'VI',
-//         'bVII',
-//         'VII'
-//     ]
-
-// var romanNumeralsMinor = [
-//     'i',
-//     'bii',
-//     'ii',
-//     'biii',
-//     'iii',
-//     'iv',
-//     'bv',
-//     'v',
-//     'bvi',
-//     'vi',
-//     'bvii',
-//     'vii'
-//     ]
-//     var chordIndex;
-//     if (scale.indexOf(chordRoot) === -1){
-//         chordIndex = scale.indexOf(Note.enharmonic(chordRoot))
-//     } else {
-//         chordIndex = scale.indexOf(chordRoot)
-//     }
-//     if (chordType === 'major'){
-//         return romanNumeralsMajor[chordIndex] + chordType;
-//     } else {
-//         return romanNumeralsMinor[chordIndex] + chordType;
-//     }
-// }
-
-// function defaultScaleAssigner(chord, key){
-// var keyRoot = chordParser(key)[0]
-// var keyType = chordParser(key)[1]
-
-// var allNotes = Scale.get( keyRoot + ' chromatic').notes
-
-// var chordDegreeAndTypeToScale = [
-//     {major: 'ionian', minor: 'aeolian', dominant: 'mixolydian'},
-//     {major: 'lydian #2 #6', minor: 'dorian', dominant: 'mixolydian b6'},
-//     {major: 'lydian', minor: 'dorian', dominant: 'mixolydian'},
-//     {major: 'lydian', minor: 'dorian', dominant: 'mixolydian b6'},
-//     {major: 'double harmonic', minor: 'phrygian', dominant: 'phrygian dominant'},
-//     {major: 'lydian', minor: 'melodic minor', dominant: 'mixolydian#11'},
-//     {major: 'lydian', minor: 'dorian', dominant: 'altered'},
-//     {major: 'mixolydian', minor: 'dorian', dominant: 'mixolydian'},
-//     {major: 'lydian', minor: 'dorian', dominant: 'mixolydian b6'},
-//     {major: 'lydian', minor: 'aeolian', dominant: 'mixolydian b6'},
-//     {major: 'lydian', minor: 'dorian', dominant: 'mixolydian b6'},
-//     {major: 'lydian', minor: 'dorian', dominant: 'mixolydian b6'},
-// ]
-
-// var majorToMinorIndex = [
-//     9,
-//     10,
-//     11,
-//     0,
-//     1,
-//     2,
-//     3,
-//     4,
-//     5,
-//     6,
-//     7,
-//     8
-// ]
-
-// var chordRoot = chordParser(chord)[0];
-// var chordType = chordParser(chord)[1];
-
-// var chordIndex;
-// if (allNotes.indexOf(chordRoot) === -1){
-//     chordIndex = allNotes.indexOf(Note.enharmonic(chordRoot))
-// } else {
-//     chordIndex = allNotes.indexOf(chordRoot)
-// }
-
-// if (keyType === 'minor'){
-//     console.log(chordRoot + " " + chordDegreeAndTypeToScale[majorToMinorIndex[chordIndex]][chordType]) 
-// } else {
-//     console.log(chordRoot + " " + chordDegreeAndTypeToScale[chordIndex][chordType]) 
-// }
-// }
-//====
-// function handleExport(){
-//     const user = JSON.parse(localStorage.getItem('userInfo'))
-//     const patternDataPrototype = {
-//         name: name,
-//         patternName: name,
-//         desc: '',
-//         type: 'normal',
-//         length: notes.length,
-//         dataType: 'pattern',
-//         pattern: pattern,
-//         position: [],
-//         author: user['name'],
-//         authorId: user['_id'],
-//         pool: exportPool,
-//     }
-//     dispatch(insertData(patternDataPrototype))
-// }
 
 const exportObj = {
         name: name,
@@ -1178,6 +1074,7 @@ const exportObj = {
         dataType: 'pattern',
         pattern: pattern,
         position: [],
+        fixedPosition: false,
         author: user?.['name'],
         authorId: user?.['_id'],
         pool: exportPool,
@@ -1260,6 +1157,7 @@ const handleEditOptions = () => {
         <>
         <Menu>
         <Menu.Item onClick={() => handleSharpsOrFlats()}>{options === 'sharps' ? '#' : 'b'}</Menu.Item>
+        <Menu.Item onClick={() => console.log(position)}>Test</Menu.Item>
          <Menu.Item onClick={() => {playAll(); setPlaying(true)}}><Icon name={playing ? 'stop': 'play'}/></Menu.Item>
          <Button.Group>
          <Button basic onClick={()=> generateRandomMelody()}> Generate </Button>
@@ -1284,10 +1182,10 @@ const handleEditOptions = () => {
                 </Dropdown.Item>
                 <Dropdown.Divider />
                 <Dropdown.Header> Common Patterns</Dropdown.Header>
-                <Dropdown.Item>Scale Up</Dropdown.Item>
-                <Dropdown.Item>Scale Down</Dropdown.Item>
-                <Dropdown.Item>Arpeggio Up</Dropdown.Item>
-                <Dropdown.Item>Arpeggio Down</Dropdown.Item>
+                <Dropdown.Item onClick={() => generatePattern([1])}>Scale Up</Dropdown.Item>
+                <Dropdown.Item onClick={() => generatePattern([-1], 4)}>Scale Down</Dropdown.Item>
+                <Dropdown.Item onClick={() => generatePattern([2,2,3])}>Arpeggio Up</Dropdown.Item>
+                <Dropdown.Item onClick={() => generatePattern([-3, -2, -2], 4)}>Arpeggio Down</Dropdown.Item>
             </Dropdown.Menu> 
         </Dropdown> 
         </Button.Group> 
@@ -1309,12 +1207,10 @@ const handleEditOptions = () => {
          text='Position'
          >
         <Dropdown.Menu>
-        <Dropdown.Item active={patternType === 'fluid'} onClick={() => setPositionType('fluid')}> Fluid <Icon name='map'/></Dropdown.Item> 
-         <Dropdown.Item active={patternType === 'fixed'} onClick={() => setPositionType('fixed')}> Fixed <Icon name='anchor'/></Dropdown.Item>       
-         <Dropdown.Item active={patternType === 'floating'} onClick={() => setPositionType('floating')}> Floating <Icon name='fly'/></Dropdown.Item> 
+        <Dropdown.Item active={positionType === 'unlocked'} onClick={() => setPositionType('unlocked')}> Unlocked<Icon name='lock open'/></Dropdown.Item> 
+         <Dropdown.Item active={positionType === 'locked'} onClick={() => setPositionType('locked')}> Locked <Icon name='lock'/></Dropdown.Item>       
         </Dropdown.Menu>
         </Dropdown>
-
          <Dropdown
          simple
          item
@@ -1376,6 +1272,7 @@ const handleEditOptions = () => {
             <Button compact basic active={noteOptions === 'scale'} onClick ={() => setNoteOptions('scale')}> Scale</Button>
             <Button  compact basic active={noteOptions === 'chromatic'} onClick ={() => setNoteOptions('chromatic')}>Chromatic</Button>
             <Button  compact basic active={noteOptions === 'insert'} onClick ={() => setNoteOptions('insert')}>Insert</Button>
+            <Button  compact basic active={noteOptions === 'position'} onClick ={() => setNoteOptions('position')}>Position</Button>
             <Button  compact basic active={noteOptions === 'delete'} onClick ={() => setNoteOptions('delete')}>Delete</Button>
             <Button compact basic onClick={() => handleRemoveNoteFromEnd()}>Note-- </Button>
             <Button compact basic onClick={() => handleAddNoteToEnd()}>Note++ </Button>
@@ -1383,7 +1280,6 @@ const handleEditOptions = () => {
             {noteOptions !== 'delete' && noteOptions !== 'insert' && <Button  compact basic onClick ={handleClickUpAll}>All Up</Button>}
             {noteOptions !== 'delete' && noteOptions !== 'insert' && <Button  compact basic onClick ={handleClickDownAll}>All Down</Button>}
             <Button  compact basic onClick ={() => setManipulate(!manipulate)}>Advanced</Button>
-
         </Button.Group>
         }
         {manipulate &&
@@ -1392,7 +1288,7 @@ const handleEditOptions = () => {
             <Button  compact basic onClick ={reverseMelody}>Reverse Melody</Button>
             <Button  compact basic onClick ={invertMelodyChromatically}>Invert Melody</Button>
             <Button  compact basic onClick ={() => patternAndScaleToNotes()}>Fit Pattern To Scale</Button>
-            <Button  compact basic  active onClick ={() => setManipulate(!manipulate)}>Advanced</Button>
+            <Button  compact basic onClick ={() => setManipulate(!manipulate)}>Basic</Button>
         </Button.Group>
         }
   

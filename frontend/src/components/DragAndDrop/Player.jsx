@@ -260,6 +260,7 @@ function convertModuleDataIntoPlayableSequence(musicData){
                     let notes = patternAndScaleToNotes(pattern, patternType, scale)
                     let sequence = notesIntoRhythm(notes, rhythm)
                     innerObject['speed'] = musicData[h]['data'][i]['data']['rhythmData']['speed']
+                    innerObject['position'] = musicData[h]['data'][i]['data']['patternData']['position']
                     innerObject['notes'] = sequence
                     returnObject['data'].push(innerObject)
                     }
@@ -275,6 +276,7 @@ function convertModuleDataIntoPlayableSequence(musicData){
                     let thisChord = musicData[h]['data'][i]['data']['chordData']['chord']
                     let sequence = chordIntoRhythm(thisChord, rhythm, numberOfNotes )
                     innerObject['speed'] = musicData[h]['data'][i]['data']['rhythmData']['speed']
+                    innerObject['position'] = musicData[h]['data'][i]['data']['chordData']['position']
                     innerObject['notes'] = sequence
                     returnObject['data'].push(innerObject)
                     }

@@ -421,6 +421,7 @@ export const initialDataType2 = [
                 chordName: 'Dm',
                 name: 'Dm',
                 chord: ['D3', 'F3', 'A3'],
+                position: []
             },
             rhythmData: {
                 rhythmName: 'Str8 8s',
@@ -433,7 +434,10 @@ export const initialDataType2 = [
                 name: 'Arp up - Scale Down',
                 patternName: 'Arp up - Scale Down',
                 pattern: [0, 2, 4, 7, 6, 5, 4, 3],
-                position: [],
+                type: 'fluid',
+                length: 8,
+                position: [0, 0, 1, 1, 2, 2, 1, 1],
+                fixedPosition: true
             },
             scaleData: {
                 scaleName: 'D Dorian',
@@ -461,6 +465,7 @@ export const initialDataType2 = [
                 name: 'GM',
                 chordName: 'GM',
                 chord: ['G3', 'B3', 'D4'],
+                position: []
             },
             rhythmData: {
                 rhythmName: 'Str8 8s',
@@ -473,7 +478,10 @@ export const initialDataType2 = [
                 name: 'Arp up - Scale Down',
                 patternName: 'Arp up - Scale Down',
                 pattern: [0, 2, 4, 7, 6, 5, 4, 3],
-                position: [],
+                type: 'fluid',
+                length: 8,
+                position: [0, 0 , 0, 0, 0, 0, 0, 0],
+                fixedPosition: true
             },
             scaleData: {
                 scaleName: 'G Mixolydian',
@@ -502,6 +510,7 @@ export const initialDataType2 = [
                 chordName: 'CM',
                 name: 'CM',
                 chord: ['C3', 'E3', 'G3'],
+                position: []
             },
             rhythmData: {
                 rhythmName: 'Str8 8s',
@@ -514,7 +523,10 @@ export const initialDataType2 = [
                 name: 'Arp up - Scale Down',
                 patternName: 'Arp up - Scale Down',
                 pattern: [0, 2, 4, 7, 6, 5, 4, 3],
-                position: [],
+                type: 'fluid',
+                position: [3, 3, 3, 3, 3, 3, 3, 3],
+                length: 8,
+                fixedPosition: true
             },
             scaleData: {
                 scaleName: 'C Major',
@@ -543,6 +555,7 @@ export const initialDataType2 = [
                 chordName: 'CM',
                 name: 'CM',
                 chord: ['C3', 'E3', 'G3'],
+                position: []
             },
             rhythmData: {
                 rhythmName: 'Str8 8s',
@@ -555,7 +568,10 @@ export const initialDataType2 = [
                 name: 'Arp up - Scale Down',
                 patternName: 'Arp up - Scale Down',
                 pattern: [0, 2, 4, 7, 6, 5, 4, 3],
-                position: [],
+                type: 'fluid',
+                length: 8,
+                position: [0, 0, 1, 1, 1, 2, 2, 2],
+                fixedPosition: true
             },
             scaleData: {
                 scaleName: 'C Major',

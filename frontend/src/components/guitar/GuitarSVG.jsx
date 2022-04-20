@@ -841,11 +841,17 @@ function playHandler(){
     Tone.Transport.start();
 }
 
-function returnPosition(note, tuning){
-    if (positionNamer(noteStringHandler(note), tuning)[globalPosition.current] === undefined){
+function returnPosition(note, tuning, manualPosition){
+    let position;
+    if (manualPosition === undefined){
+        position = globalPosition.current
+    } else {
+        position = manualPosition
+    }
+    if (positionNamer(noteStringHandler(note), tuning)[position] === undefined){
         return positionNamer(noteStringHandler(note), tuning)[positionNamer(noteStringHandler(note), tuning).length -1]
     } else {
-        return positionNamer(noteStringHandler(note), tuning)[globalPosition.current]
+        return positionNamer(noteStringHandler(note), tuning)[position]
     }
 }
 
@@ -945,8 +951,13 @@ function loadNoteSequenceAndVisualDataOntoTimeline(data){
                 } else {
                     //Information uses #sharp notes only, nameArray contains info on sharp/flat 
                     let nameArray = noteStringHandler(note)
-                    var pos = returnPosition(note, tuning);
-                    // var tabArray = []
+                    let pos;
+                    if (data[i]['position'].length === 0){
+                        pos = returnPosition(note, tuning)
+                    } else {
+                        let manualPosition = data[i]['position'][playPosition]
+                        pos = returnPosition(note, tuning, manualPosition)
+                    }
                     if (pos !== undefined){
                         for (var w = 0; w < pos.length; w++){
                             let findNote = pos[w]
@@ -969,7 +980,7 @@ function loadNoteSequenceAndVisualDataOntoTimeline(data){
                 }
               }
 
-        if (playPosition < flattenNotes(data).length - 1){
+        if (playPosition < flattenNotes(data[i]['notes']).length - 1){
             playPosition++;
         } else {
             playPosition = 0;
@@ -1032,11 +1043,13 @@ function displayNotes(input){
             // let highlights = data[i]['highlight']
             let highlights = [1];
             if (displayOnly === 'special'){
+                let manualPosition = data[i]['data'][0]['position']
                 let highlight = data[i]['specialHighlight'][0]
                 if (globalPosition.current !== -1){
                 for (let j = 0; j < currentArray.length; j++){
                 let nameArray = noteStringHandler(currentArray[j])
-                var pos = returnPosition(currentArray[j], instruments[i]['tuning']);
+                let pos = returnPosition(currentArray[j], instruments[i]['tuning'], manualPosition[j])
+                
                 if (pos !== undefined){
                     for (let w = 0; w < pos.length; w++){
                         let findNote = pos[w]
@@ -1145,7 +1158,7 @@ function displayNotes(input){
                 }
             } else {
                 let nameArray = noteStringHandler(data[i]['data'][currentModuleIndex]['notes'][0][0])
-                var pos = returnPosition(data[i]['data'][currentModuleIndex]['notes'][0][0], instruments[i]['tuning']);
+                let pos = returnPosition(data[i]['data'][currentModuleIndex]['notes'][0][0], instruments[i]['tuning']);
                 // var tabArray = []
                 if (pos !== undefined){
                     for (var w = 0; w < pos.length; w++){
@@ -1493,7 +1506,7 @@ const handlePause = () => {
         <Button compact basic onClick={() => globalPositionChange('down')}><Icon name='arrow down'/></Button>
         <Button compact basic onClick={() => globalPositionChange('up')}><Icon name='arrow up'/></Button>
         <Button compact basic onClick={() => handleSeeAllPositions()}><Icon name='arrows alternate vertical'/></Button>
-        <Button compact basic onClick={() => loadNoteSequenceAndVisualDataOntoTimeline(data)}>Test</Button>
+        <Button compact basic onClick={() => console.log(data)}>Test</Button>
         </>
     )
 }

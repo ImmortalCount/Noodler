@@ -31,4 +31,41 @@ export function scaleHandler(scale, options){
       }
   }
 
+function arraysAreEqual(arr1, arr2){
+    if (arr1.length !== arr2.length){
+        return false
+    }
+    let areEqual = true;
+    for (let i = 0; i < arr1.length; i++){
+        if (arr1[i] !== arr2[i]){
+            areEqual = false;
+        }
+    }
+    return areEqual
+}
+
+export function updateLinkedArrays(previousMasterArray, currentMasterArray, slaveArray1){
+    //assume equal length between all arrays
+    if (JSON.stringify(previousMasterArray) === JSON.stringify(currentMasterArray)){
+      return slaveArray1
+    }
+    let newIndices = [];
+    for (let i = 0; i < previousMasterArray.length; i++){
+        for (let j = 0; j < currentMasterArray.length; j++){
+            if (arraysAreEqual(previousMasterArray[i], currentMasterArray[j])){
+                if (newIndices.includes(j) === false){
+                    newIndices.push(j)
+                }
+            }
+        }
+    }
+    let returnArr = [];
+    for (let k = 0; k < slaveArray1.length; k++){
+        returnArr[newIndices[k]] = slaveArray1[k]
+    }
+
+    return returnArr
+}
+
+
  
