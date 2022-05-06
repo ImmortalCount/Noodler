@@ -1,4 +1,7 @@
 import React, { useState, useEffect, useLayoutEffect, useRef} from 'react'
+import { jsPDF } from "jspdf";
+import { svgAsPngUri } from "save-svg-as-png";
+import FileSaver from 'file-saver'
 import * as Tone from 'tone';
 import { allSynths } from './allSynths';
 import { useSelector, useDispatch} from 'react-redux';
@@ -13,6 +16,9 @@ import { setSongData } from '../../store/actions/songDataActions';
 import { setInstrumentNames } from '../../store/actions/instrumentNameActions';
 import './guitar.css'
 import { setPlayHighlight } from '../../store/actions/playHighlightActions';
+import { tuningOptionsGuitar, tuningOptionsBass } from './tunings';
+import { instrumentOptions } from './instruments';
+import { setGlobalInstruments } from '../../store/actions/globalInstrumentsActions';
 
 
 export default function GuitarSVG({masterInstrumentArray, activelyDisplayedInstruments}) {
@@ -62,6 +68,8 @@ export default function GuitarSVG({masterInstrumentArray, activelyDisplayedInstr
         "acoustic_bass",
         "electric_bass_finger"
     ]
+
+
     useEffect(() => {
         handleInstrumentUpdate();
     }, [masterInstrumentArray])
@@ -81,8 +89,11 @@ export default function GuitarSVG({masterInstrumentArray, activelyDisplayedInstr
         displayNotes()
     }, [data, instruments])
 
-    //===if position has changed while paused
+    useEffect(() => {
+        dispatch(setGlobalInstruments(instruments))
+    }, [instruments])
 
+    //display functionality
     useEffect(() => {
         const thisInterval = setInterval(function () {
             let state = Tone.Transport.state
@@ -500,162 +511,6 @@ function createGuitarSVG(){
     }
     
 }
-    //positionNamer only takes one instrument at a time
-// function positionNamer2(notesArr, tuning){
-
-//     //See if you can make this change for each board 
-//     var fretNumber = 24;
-//     //sort the notes coming in from the Notes Ar
-//     //generate fretboard
-//     var fretboard = [];
-//     for (var i = 0; i < tuning.length; i++){
-//         var stringNotes = [];
-//         var index = findIndex(tuning[i]);
-//         for (var j = 0; j < fretNumber + 1; j++){
-//             stringNotes.push(noteValues[index + j]['name'])
-//         }
-//         fretboard.push(stringNotes)
-//     }
-
-//     var allPositions = [];
-//     //scan etc
-
-
-//     //single note function
-
-//     if (Array.isArray(notesArr) === false){
-//         for (var k = 0; k < tuning.length;k++){
-//             var foundFretIndex = fretboard[k].indexOf(notesArr);
-//         //if the note we're looking for is on the string 
-//             if (foundFretIndex !== -1){
-//             var indexID = (k + 1 + "_" + foundFretIndex);
-//             allPositions.push([indexID]);
-//         }
-//     }
-//     return allPositions;
-// }
-//     //if the array is only one note long
-//     if (notesArr.length === 1){
-//         for (var k = 0; k < tuning.length;k++){
-//             var foundFretIndex = fretboard[k].indexOf(notesArr[0]);
-//         //if the note we're looking for is on the string 
-//             if (foundFretIndex !== -1){
-//             var indexID = (k + 1 + "_" + foundFretIndex);
-//             allPositions.push([indexID]);
-//         }
-//     }
-//     return allPositions;
-// }
-
-
-
-// //-----------------Multiple notes --> continue
-
-//     function alreadyCalled(val){
-//         var state = false;
-//         for (var m = 0; m < allPositions.length; m++){
-//             if (allPositions[m].indexOf(val) !== -1){
-//                 state = true;
-//             }
-//     }
-//     return state;
-// }   
-
-//     function notSharingString(val){
-        
-//         var stringsInUse = [];
-//         for (var i = 0; i< singlePosition.length; i++){
-//             var calledNote = (singlePosition[i][0])
-//             stringsInUse.push(calledNote);
-//         }
-//         if (stringsInUse.indexOf((val[0])) === -1){
-//             return true;
-//         } else {
-//             return false;
-            
-//         }
-//     }
-
-// const anchorNoteIndex = notesArr.length - 1;
-// //update fingering Or something so that it can't put two things on same line
-//     function fingeringSort(arr, anchorNoteID){
-
-//         var smallest = Infinity
-//         var smallestIndex = 0;
-//         for (var i = 0; i < arr.length; i++){
-//             var anchorNote = Number(anchorNoteID.split('_')[1]);
-//             var movingNote = Number(arr[i].split('_')[1]);
-//             if ((Math.abs(anchorNote - movingNote)) < smallest){
-//                 smallest = Math.abs(anchorNote - movingNote);
-//                 smallestIndex = i;
-//             }
-//         }
-//     return arr[smallestIndex] + "";
-//     }
-//     //is it complete?
-//     var complete = false;
-//     //make sure that it hasn't been called before
-    
-//     var notesArrIndex = notesArr.length - 1;
-//     var toBeSorted = [];
-//     var singlePosition = [];
-//     var anchorNoteID = '';
-//     var safetyCount = 0;
-
-//     while (complete === false){
-        
-//         //scan strings
-        
-        
-//         for (let k = 0;  k < tuning.length;){
-//             var foundFretIndex = fretboard[k].indexOf(notesArr[notesArrIndex]);
-//             //if the note we're looking for is on the string 
-//             if (foundFretIndex !== -1){
-//                 var indexID = (k + 1 + "_" + foundFretIndex);
-//                 //and its the anchor note
-//                 if (notesArrIndex === anchorNoteIndex){
-//                     //and it hasnt been called before
-//                     if (alreadyCalled(indexID) === false){
-//                         //push it
-//                         notesArrIndex--;
-//                         singlePosition.push(indexID);
-//                         anchorNoteID = indexID;
-//                         continue;
-//                     }
-//                 }
-//                 //if it isnt the anchor note and it hasn't been called
-//                 if ((alreadyCalled(indexID) === false) && (notSharingString(indexID))){
-//                     //and it isn't on the same string as a previous thing
-//                     toBeSorted.push(indexID);
-//                 }
-//             }
-//             //if its the last string scan
-//             if (k === tuning.length -1){
-//                 notesArrIndex--;
-//                 var bestNote = (fingeringSort(toBeSorted, anchorNoteID));
-//                 singlePosition.push(bestNote);
-//                 toBeSorted = [];
-//                 //if it is the last string and last note
-//                 if (notesArrIndex === -1){
-//                     if (singlePosition.indexOf("undefined") !== -1){
-//                         complete = true;
-//                     } else {
-//                         allPositions.push(singlePosition);
-//                         singlePosition = [];
-//                         notesArrIndex = notesArr.length - 1
-//                         safetyCount++
-//                         if (safetyCount > 16){
-//                             complete = true;
-//                         }
-//                     }
-//                 }  
-//             }
-//             k++;
-//         }
-//     }
-
-//     return allPositions;
-// }
 
 function positionNamer(notesArr, tuning){
     //make sure notes are sorted
@@ -959,6 +814,7 @@ function loadNoteSequenceAndVisualDataOntoTimeline(data){
                         pos = returnPosition(note, tuning, manualPosition)
                     }
                     if (pos !== undefined){
+                        console.log(pos, 'POS!!')
                         for (var w = 0; w < pos.length; w++){
                             let findNote = pos[w]
                             if (Note.accidentals(pos[w]) === 'b'){
@@ -1073,6 +929,7 @@ function displayNotes(input){
                 }
                 }
                 } else {
+                console.log('here 1076')
                 for (let j = 0; j < currentArray.length; j++){
                     let nameArray = noteStringHandler(currentArray[j])
                     for (let w = 0; w < nameArray.length; w++){
@@ -1106,6 +963,7 @@ function displayNotes(input){
                 
                 
             } else if (displayOnly){
+                console.log('here 1110')
                 for (let q = 0; q < currentArray.length; q++){
                     let findNote = currentArray[q]
                     let flat = false
@@ -1133,7 +991,7 @@ function displayNotes(input){
                 }
                 //if the globalPosition is set to -1 'show all notes'
             } else if (globalPosition.current < 0){
-                console.log('global? no plaz')
+                console.log('here 1138')
                 for (let w = 0; w < currentArray.length; w++){
                     let findNote = currentArray[w]
                     let flat = false
@@ -1157,8 +1015,10 @@ function displayNotes(input){
                     }
                 }
             } else {
+                console.log('here 1162')
+                let manualPosition = data[i]['data'][0]['position']
                 let nameArray = noteStringHandler(data[i]['data'][currentModuleIndex]['notes'][0][0])
-                let pos = returnPosition(data[i]['data'][currentModuleIndex]['notes'][0][0], instruments[i]['tuning']);
+                let pos = returnPosition(data[i]['data'][currentModuleIndex]['notes'][0][0], instruments[i]['tuning'], manualPosition);
                 // var tabArray = []
                 if (pos !== undefined){
                     for (var w = 0; w < pos.length; w++){
@@ -1184,65 +1044,7 @@ function displayNotes(input){
     return
 }
 
-
-
 //
-//----------------------------------
-
-
-
-//========reload guitar on change? good
-
-
-const tuningOptions = [
-    {key: 'Standard 1', text: 'E', value: ['E4']},
-    {key: 'Standard 2', text: 'BE', value: ['E4', 'B3']},
-    {key: 'Standard 3', text: 'GBE', value: ['E4', 'B3', 'G3']},
-    {key: 'Standard 4', text: 'DGBE', value: ['E4', 'B3', 'G3', 'D3']},
-    {key: 'Standard 5', text: 'ADGBE', value: ['E4', 'B3', 'G3', 'D3', 'A2']},
-    {key: 'Standard 6', text: 'EADGBE', value: ['E4', 'B3', 'G3', 'D3', 'A2', 'E2']},
-    {key: 'Standard 7', text: 'BEADGBE', value: ['E4', 'B3', 'G3', 'D3', 'A2', 'E2', 'B1']},
-    {key: 'Standard 8', text: 'F#BEADGBE', value: ['E4', 'B3', 'G3', 'D3', 'A2', 'E2', 'B1', 'F#1']},
-    {key: 'Standard 9', text: 'C#F#BEADGBE', value: ['E4', 'B3', 'G3', 'D3', 'A2', 'E2', 'B1', 'F#1', 'C#1']},
-    {key: 'Standard 10', text: 'G#C#F#BEADGBE', value: ['E4', 'B3', 'G3', 'D3', 'A2', 'E2', 'B1', 'F#1', 'C#1', 'G#0']},
-    {key: 'DADGAD', text: 'DADGAD', value: ['D4', 'A3', 'G3', 'D3', 'A2', 'D2']},
-    {key: 'P4', text: 'P4', value: ['F4', 'C4', 'G3', 'D3', 'A2', 'E2']},
-    {key: 'DropD', text: 'DropD', value: ['E4', 'B4', 'G3', 'D3', 'A2', 'D2']},
-]
-
-const tuningOptionsGuitar = [
-    {key: 'Standard 1', text: 'E', value: ['E4']},
-    {key: 'Standard 2', text: 'BE', value: ['E4', 'B3']},
-    {key: 'Standard 3', text: 'GBE', value: ['E4', 'B3', 'G3']},
-    {key: 'Standard 4', text: 'DGBE', value: ['E4', 'B3', 'G3', 'D3']},
-    {key: 'Standard 5', text: 'ADGBE', value: ['E4', 'B3', 'G3', 'D3', 'A2']},
-    {key: 'Standard 6', text: 'EADGBE', value: ['E4', 'B3', 'G3', 'D3', 'A2', 'E2']},
-    {key: 'Standard 7', text: 'BEADGBE', value: ['E4', 'B3', 'G3', 'D3', 'A2', 'E2', 'B1']},
-    {key: 'Standard 8', text: 'F#BEADGBE', value: ['E4', 'B3', 'G3', 'D3', 'A2', 'E2', 'B1', 'F#1']},
-    {key: 'Standard 9', text: 'C#F#BEADGBE', value: ['E4', 'B3', 'G3', 'D3', 'A2', 'E2', 'B1', 'F#1', 'C#1']},
-    {key: 'Standard 10', text: 'G#C#F#BEADGBE', value: ['E4', 'B3', 'G3', 'D3', 'A2', 'E2', 'B1', 'F#1', 'C#1', 'G#0']},
-]
-
-const tuningOptionsBass = [
-    {key: 'Standard Bass 4', text: 'Bass: EADG', value: ['G2', 'D2', 'A1', 'E1']},
-    {key: 'Drop D Bass', text: 'Bass: Drop D', value: ['G2', 'D2', 'A1', 'D1']},
-    {key: 'Standard Bass 5', text: 'Bass: BEADG', value: ['G2', 'D2', 'A1', 'E1', 'B0']},
-    {key: 'Standard Bass 6', text: 'Bass: F#BEADG', value: ['G2', 'D2', 'A1', 'E1', 'B0', 'F#0']},
-    {key: 'Standard Bass 4', text: 'Bass: EADG', value: ['G2', 'D2', 'A1', 'E1']},
-    {key: 'Standard Bass 4', text: 'Bass: EADG', value: ['G2', 'D2', 'A1', 'E1']},
-]
-
-const instrumentOptions = [
-    {key: 'acoustic_bass', text: 'Acoustic Bass', value: 'acoustic_bass'},
-    {key: 'electic_bass_finger', text: 'Electric Bass ', value: 'electric_bass_finger'},
-    {key: 'acoustic_guitar_nylon', text: 'Acoustic Guitar Nylon', value: 'acoustic_guitar_nylon'},
-    {key: 'acoustic_guitar_steel', text: 'Acoustic Guitar Steel', value: 'acoustic_guitar_steel'},
-    {key: 'electric_guitar_clean', text: 'Electric Guitar Clean', value: 'electric_guitar_clean'},
-    {key: 'electric_guitar_jazz', text: 'Electric Guitar Jazz', value: 'electric_guitar_jazz'},
-    {key: 'electric_distortion_guitar', text: 'Electric Guitar Distorted', value: 'electric_distortion_guitar'},
-
-]
-
 //=====functions to handle clicks
 
 function loopOn(){
@@ -1349,13 +1151,22 @@ function addRemoveGuitars(action){
     }
 }
 
+let tempName = useRef('')
+
+const handleInstrumentNameInput = (e) => {
+    tempName.current = e.target.value
+}
+
 const handleInstrumentNameChange = e => {
     var clone = [...instruments]
     const idx = Number(e.target.id.split('_')[1])
-    clone[idx]['name'] = e.target.value
+    clone[idx]['name'] = tempName.current
+    tempName.current = ('')
+    setInputFocus(null)
     setInstruments(clone)
-    
 }
+
+
 
 function handleActiveEdits(idx){
     var clone = [...activeEdits]
@@ -1372,7 +1183,7 @@ function mapGuitarSVGContainers(instruments){
     return(
        instruments.map((instruments, idx) =>
         <div id={'SVGContainer' + idx} key={'SVGContainer' + idx} style={{display: activelyDisplayedInstruments.includes(idx) ? '' : 'none'}}>
-            <Input type='text' id={'input_' + idx} value={instruments[idx]} ref={input => input && input.focus()} placeholder={'Instr ' + (idx + 1)} onInput={handleInstrumentNameChange} onBlur={() => setInputFocus(null)} style={{display: inputFocus === idx ? '': 'none' }}/>
+            <Input type='text' id={'input_' + idx} value={instruments[idx]} ref={input => input && input.focus()} placeholder={'Instr ' + (idx + 1)} onInput={handleInstrumentNameInput} onBlur={handleInstrumentNameChange} style={{display: inputFocus === idx ? '': 'none' }}/>
             
         <Button.Group>
             <Button compact basic onClick={() => handleActiveEdits(idx)}><Icon name='cog'/></Button>
@@ -1421,6 +1232,7 @@ function mapGuitarSVGContainers(instruments){
             </Segment>
             <Button compact basic onClick={()=> handleFretChange('up', idx)} > <Icon name ='right arrow'/></Button>
         </Button.Group>
+        <Button compact basic onClick={() => downloadSVGAsPNGUsingID(idx)}><Icon name='download'/></Button>
         </>}
         <div className='guitarDiv' id={`divGuitar${idx}`}></div>
         </div>
@@ -1491,8 +1303,112 @@ const handleStop = () => {
 const handlePause = () => {
     Tone.Transport.pause()
     lastPosition.current = Tone.Time(Tone.Transport.position).toSeconds()
+}
+
+// function downloadSVGasPDFusingID(IdNumber){
+//     //thanks Purushoth
+//     let svg = document.getElementById(`divGuitar${IdNumber}`).innerHTML
+
+//     var canvas = document.createElement('canvas');
+//     canvg(canvas, svg);
+//     var imgData = canvas.toDataURL('image/png');
+//     // Generate PDF
+//     var doc = new jsPDF('p', 'pt', 'a4');
+//     doc.addImage(imgData, 'PNG', 40, 40, 75, 75);
+//     doc.save('test.pdf');
+//     var blob = new Blob([doc], {type: "application/pdf;charset=utf-8"})
+//     FileSaver.saveAs(blob, IdNumber + '.pdf')
+// }
+
+async function downloadSVGasPDFusingID(ID) {
+    let svg = document.getElementById(`divGuitar${ID}`).childNodes[0]
+    const pdf = new jsPDF("l", "pt", [1900, 500]);
+    const pdfCanvas = document.createElement("canvas");
+    pdfCanvas.setAttribute("width", 2000);
+    pdfCanvas.setAttribute("height", 600);
+    const dataURI = await svgAsPngUri(svg)
+    pdf.addImage(dataURI, "PNG", 0, 0);
+    pdf.save("whole board!.pdf");
+  }
+
+async function downloadSVGAsPNGUsingID(ID){
+    let svgString = new XMLSerializer().serializeToString(document.getElementById(`divGuitar${ID}`).childNodes[0]) 
+    var svg = new Blob([svgString], { type: "image/svg+xml;charset=utf-8" })
+    let canvas = document.createElement('canvas')
+    let width = 2000;
+    let height = 600;
+    let image = new Image();
+    image.src = svgString;
+    canvas.height = (2000)
+    canvas.width = (600)
+    let ctx = canvas.getContext("2d")
+    ctx.fillStyle='white'
+    ctx.drawImage(image, 0, 0, width, height)
+    var jpg = canvas.toDataURL("image/jpg")
+    FileSaver.saveAs(jpg, ID + ".jpg");
 
 }
+
+
+
+
+function testDownload(ID){
+    const canvasRef = document.createElement('canvas')
+    let svgString = new XMLSerializer().serializeToString(document.getElementById(`divGuitar${ID}`).childNodes[0]) 
+    let width = 2000;
+    let height = 600;
+        canvasRef.setAttribute('width', width)
+        canvasRef.setAttribute('height', height)
+        let ctx = canvasRef.getContext("2d")
+        var img = new Image();
+        let imgsrc =
+      "data:image/svg+xml;base64," +
+      btoa(unescape(encodeURIComponent(svgString)));
+
+      img.onload = () => {
+        ctx.clearRect(0, 0, width, height);
+        ctx.fillStyle = "white";
+        ctx.fillRect(0, 0, width, height);
+        ctx.drawImage(img, 0, 0, width, height);
+  
+        var blob = new Blob([canvasRef], {type: "image/png"})
+        FileSaver.saveAs(blob, 'test.png');
+      };
+  
+      img.src = imgsrc;
+}
+
+function testDownload2(){
+    let ID = 0;
+    let width = 2000;
+    let height = 400;
+    let name = 'TestDownload2'
+    var svgString = new XMLSerializer().serializeToString(document.getElementById(`divGuitar${ID}`).childNodes[0]);
+    const canvas = document.createElement('canvas')
+    canvas.setAttribute('width', width)
+    canvas.setAttribute('height', height)
+    var ctx = canvas.getContext("2d");
+    // eslint-disable-next-line no-restricted-globals
+    var DOMURL = self.URL || self.webkitURL || self;
+    var img = new Image();
+    var svg = new Blob([svgString], {type: "image/svg+xml;charset=utf-8"});
+    var url = DOMURL.createObjectURL(svg);
+    img.onload = function() {
+    ctx.clearRect(0, 0, width, height);
+    ctx.fillStyle = "white";
+    ctx.fillRect(0, 0, width, height);
+    ctx.drawImage(img, 0, 0);
+    var png = canvas.toDataURL("image/png");
+        var a = document.createElement("a");
+        a.download = name + ".png";
+        a.href = png;
+        a.click();
+        window.URL.revokeObjectURL(png);
+};
+img.src = url;
+}
+
+
     return (
         <>
         {mapGuitarSVGContainers(instruments)}
@@ -1506,7 +1422,7 @@ const handlePause = () => {
         <Button compact basic onClick={() => globalPositionChange('down')}><Icon name='arrow down'/></Button>
         <Button compact basic onClick={() => globalPositionChange('up')}><Icon name='arrow up'/></Button>
         <Button compact basic onClick={() => handleSeeAllPositions()}><Icon name='arrows alternate vertical'/></Button>
-        <Button compact basic onClick={() => console.log(data)}>Test</Button>
+        <Button compact basic onClick={() => testDownload2(0)}>Test Download</Button>
         </>
     )
 }

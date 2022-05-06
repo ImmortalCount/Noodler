@@ -431,13 +431,13 @@ export const initialDataType2 = [
                 notes: 8
             },
             patternData: {
-                name: 'Arp up - Scale Down',
-                patternName: 'Arp up - Scale Down',
-                pattern: [0, 2, 4, 7, 6, 5, 4, 3],
+                name: 'Arp up-Scale Down',
+                patternName: 'Arp up-Scale Down',
+                pattern: [[0], [2], [4], [7], [6], [5], [4], [3]],
                 type: 'fluid',
                 length: 8,
-                position: [0, 0, 1, 1, 2, 2, 1, 1],
-                fixedPosition: true
+                position: [0, 0, 0, 0, 0, 0, 0, 0],
+                positionType: 'locked'
             },
             scaleData: {
                 scaleName: 'D Dorian',
@@ -475,13 +475,13 @@ export const initialDataType2 = [
                 notes: 8
             },
             patternData: {
-                name: 'Arp up - Scale Down',
-                patternName: 'Arp up - Scale Down',
-                pattern: [0, 2, 4, 7, 6, 5, 4, 3],
+                name: 'Arp up-Scale Down',
+                patternName: 'Arp up-Scale Down',
+                pattern: [[0], [2], [4], [7], [6], [5], [4], [3]],
                 type: 'fluid',
                 length: 8,
-                position: [0, 0 , 0, 0, 0, 0, 0, 0],
-                fixedPosition: true
+                position: [1, 1 , 1, 1, 1, 1, 1, 1],
+                positionType: 'locked'
             },
             scaleData: {
                 scaleName: 'G Mixolydian',
@@ -520,13 +520,13 @@ export const initialDataType2 = [
                 notes: 8
             },
             patternData: {
-                name: 'Arp up - Scale Down',
-                patternName: 'Arp up - Scale Down',
-                pattern: [0, 2, 4, 7, 6, 5, 4, 3],
+                name: 'Arp up-Scale Down',
+                patternName: 'Arp up-Scale Down',
+                pattern: [[0], [2], [4], [7], [6], [5], [4], [3]],
                 type: 'fluid',
-                position: [3, 3, 3, 3, 3, 3, 3, 3],
+                position: [2, 2, 2, 2, 2, 2, 2, 2],
                 length: 8,
-                fixedPosition: true
+                positionType: 'locked'
             },
             scaleData: {
                 scaleName: 'C Major',
@@ -565,13 +565,13 @@ export const initialDataType2 = [
                 notes: 8
             },
             patternData: {
-                name: 'Arp up - Scale Down',
-                patternName: 'Arp up - Scale Down',
-                pattern: [0, 2, 4, 7, 6, 5, 4, 3],
+                name: 'Arp up-Scale Down',
+                patternName: 'Arp up-Scale Down',
+                pattern: [[0], [2], [4], [7], [6], [5], [4], [3]],
                 type: 'fluid',
                 length: 8,
-                position: [0, 0, 1, 1, 1, 2, 2, 2],
-                fixedPosition: true
+                position: [3, 3, 3, 3, 3, 3, 3, 3],
+                positionType: 'locked'
             },
             scaleData: {
                 scaleName: 'C Major',
@@ -585,6 +585,5 @@ export const initialDataType2 = [
                 root: 'C'
             },
         }  
-    },
-    
+    },    
 ]

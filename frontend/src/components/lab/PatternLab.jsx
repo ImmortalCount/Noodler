@@ -18,9 +18,10 @@ import ExportModal from '../modal/ExportModal';
 
 export default function PatternLab({importedPatternData, masterInstrumentArray}) {
 const [playing, setPlaying] = useState(false)
-const [notes, setNotes] = useState([['C3'], ['D3'], ['E3'], ['F3'], ['G3'], ['A3'], ['B3'], ['C4']])
+const [data, setData] = useState([{notes: ['C3'], position: 0}, {notes: ['D3'], position: 0}, {notes: ['E3'], position: 0}, {notes: ['F3'], position: 0}, {notes: ['G3'], position: 0}, {notes: ['A3'], position: 0}, {notes: ['B3'], position: 0}, {notes: ['C4'], position: 0}])
+const notes = []
+const position = []
 const [pattern, setPattern] = useState([0,1,2,3,4,5,6,7])
-const [position, setPosition] = useState([0,1,1,0,1,1,1,1])
 const [scaleLock, setScaleLock] = useState(true)
 const [playOnKeyPress, setPlayOnKeyPress] = useState(false)
 const [name, setName] = useState('Pattern 1')
@@ -33,7 +34,7 @@ const [generatePatternLength, setGeneratePatternLength] = useState(8)
 const [manipulate, setManipulate] = useState(false)
 const [playNoteOnClick, setPlayNoteOnClick] = useState(true)
 const [instrumentDisplay, setInstrumentDisplay] = useState(-2) 
-const [displayFocus, setDisplayFocus] = useState(0)
+const [displayFocus, setDisplayFocus] = useState(1)
 const [displayAll, setDisplayAll] = useState(false)
 const [positionType, setPositionType] = useState('unlocked')
 const [patternType, setPatternType] = useState('fluid')
@@ -42,7 +43,6 @@ const [inputFocus, setInputFocus] = useState(false)
 const [chromaticNotes, setChromaticNotes] = useState(['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B'])
 const [description, setDescription] = useState('')
 const [showDescription, setShowDescription] = useState(false)
-const previousNotes = useRef([['C3'], ['D3'], ['E3'], ['F3'], ['G3'], ['A3'], ['B3'], ['C4']])
 const isMuted = false;
 const user = JSON.parse(localStorage.getItem('userInfo'))
 
@@ -70,7 +70,41 @@ for (var o = 0; o < 10; o++){
         }
     }
 
-    function patternAndScaleToNotes2(patternArr){
+//turn data into notes
+for (let i = 0; i < data.length; i++){
+    notes.push(data[i]['notes'])
+}
+
+//turn data into position
+for (let i = 0; i < data.length; i++){
+    position.push(data[i]['position'])
+}
+
+//Convert pattern and position data into DATA
+function handleSetData(notes, position){
+    if (position === undefined){
+        let newPos = [];
+        for (let i = 0; i < notes.length; i++){
+            newPos.push(0)
+        }
+        position = newPos
+    }
+    let returnArr = [];
+    for (let i = 0; i < notes.length; i++){
+        let returnObj = {}
+        returnObj['notes'] = notes[i]
+        if (position[i] !== undefined){
+            returnObj['position'] = position[i]
+        } else {
+            returnObj['position'] = 0;
+        }
+        returnArr.push(returnObj)
+    }
+    setData(returnArr)
+}
+
+function patternAndScaleToNotes(patternArr){
+        console.log(patternArr, 'good patternArr!')
         var notesExport = [];
         var root = scaleNotes[0] + 3
         const allNotes = Note.sortedNames(allScaleNotes);
@@ -87,42 +121,43 @@ for (var o = 0; o < 10; o++){
         } else {
             startingChromaticIndex = allChromaticNotes.indexOf(root);
         }
-        for (var k = 0; k < patternArr.length; k++){
-            //check if flag is added to patternArr
-            if (typeof patternArr[k] === 'string'){
-                notesExport.push(allChromaticNotes[startingChromaticIndex + Number(patternArr[k].split("").slice(1).join(""))])
-            } else {
-                notesExport.push(allNotes[startingIndex + patternArr[k]])
+        for (let k = 0; k < patternArr.length; k++){
+            let tempExport = [];
+            for (let l = 0; l < patternArr[k].length; l++){
+                if (typeof patternArr[k][l] === 'string'){
+                    tempExport.push(allChromaticNotes[startingChromaticIndex + Number(patternArr[k][l].split("").slice(1).join(""))])
+                } else {
+                    tempExport.push(allNotes[startingIndex + patternArr[k][l]])
+                }
             }
+            notesExport.push(tempExport)
         }
-        setNotes(notesExport)
-        // playAll(notesExport)
+
+        return notesExport
     }
+
+
 
 //Upon importing
 useEffect(() => {
     if (importedPatternData['pattern'] !== undefined){
         setPattern(importedPatternData['pattern'])
         setName(importedPatternData['patternName'])
-        patternAndScaleToNotes2(importedPatternData['pattern'])
+        handleSetData(patternAndScaleToNotes(importedPatternData['pattern']), importedPatternData['position'])
     }
-    
 }, [importedPatternData])
 
 //upon updating
 useEffect(() => {
-    console.log('updating')
     let mostCurrentPattern = patternExtraction()
-    let mostCurrentPosition = updateLinkedArrays(previousNotes.current, notes, position)
     setPattern(mostCurrentPattern)
-    setPosition(mostCurrentPosition)
-    previousNotes.current = notes;
     let newInfo = {...labInfo}
     const patternDataPrototype = {
         name: name,
         patternName: name,
         desc: '',
         type: patternType,
+        positionType: positionType,
         length: notes.length,
         pattern: patternType === 'fixed' ? notes : mostCurrentPattern,
         position: position,
@@ -133,34 +168,36 @@ useEffect(() => {
     }
     newInfo['patternLab'] = patternDataPrototype
     dispatch(setLabData(newInfo))
-    dispatch(setNoteDisplay(convertScaleForDispatch(mostCurrentPosition)))
-  }, [name, instrumentDisplay, notes, displayFocus, displayAll, positionType, patternType])
+    dispatch(setNoteDisplay(convertScaleForDispatch()))
+  }, [name, instrumentDisplay, data, displayFocus, displayAll, positionType, patternType])
 
-function convertScaleForDispatch(position){
+function convertScaleForDispatch(){
+    let clone = sortAllChordsByPitch(notes)
+    let focus;
     let displayStyle;
     let pos;
+    if (clone[displayFocus] === undefined){
+        focus = 0;
+    } else {
+        focus = displayFocus
+    }
     if (displayAll){
         displayStyle = 'special'
     } else {
         displayStyle = false;
     }
     if (positionType === 'locked'){
-        pos = position;
+        if (!displayAll){
+            pos = position[focus]
+        } else {
+            pos = position;
+        }
     } else {
         pos = [];
     }
     var arrOfObj = []
     var dispatchObj = {data: [{speed: 1, notes: [['C']], position: pos}], displayOnly: displayStyle, highlight: [], specialHighlight: [displayFocus]}
     var scaleString = ''
-
-    let clone = sortAllChordsByPitch(notes)
-    let focus;
-
-    if (clone[displayFocus] === undefined){
-        focus = 0;
-    } else {
-        focus = displayFocus
-    }
     
     if (!displayAll){
         for (let i= 0; i < clone[focus].length; i++){
@@ -189,20 +226,16 @@ function convertScaleForDispatch(position){
     }
   
     if (instrumentDisplay === -2){
-    console.log(arrOfObj, 'patternLab') 
       return arrOfObj
     } else if (instrumentDisplay === -1){
       for (let j = 0; j < arrOfObj.length; j++){
         arrOfObj[j]['data'][0]['notes'][0] = scaleString
       }
-      console.log(arrOfObj, 'patternLab') 
       return arrOfObj
     } else {
       arrOfObj[instrumentDisplay - 1]['data'][0]['notes'][0] = scaleString
-      console.log(arrOfObj, 'patternLab') 
       return arrOfObj
     }
-
 }
 
 function sortAllChordsByPitch(chords){
@@ -216,13 +249,13 @@ function sortAllChordsByPitch(chords){
 //=======Drag and drop functionality
 function changePositionsUsingIDs(startingID, endingID){
     var xfer;
-    var clone = [...notes]
+    var clone = JSON.parse(JSON.stringify(data))
     var ex1 = startingID.split('_')[1]
     var ex2 = endingID.split('_')[1]
     xfer = clone[ex1]
     clone.splice(ex1, 1)
     clone.splice(ex2, 0, xfer)
-    setNotes(clone)
+    setData(clone)
 }
 
 const dragStartHandler = e => {
@@ -234,8 +267,9 @@ const dragStartHandlerSpecial = e => {
     var obj = {id: 'special', className: 'patternData', message: {
         patternName: name,
         pattern: patternType === 'fixed'? chordSequenceToNoteString(notes) : pattern,
-        position: [],
+        position: position,
         type: patternType,
+        positionType: positionType,
     }, type: 'patternLabExport'}
     e.dataTransfer.setData('text', JSON.stringify(obj));
 }
@@ -287,7 +321,7 @@ var keydownEvent = (e) => {
                 keySynth.triggerAttackRelease(playNote, "8n", now);
                 document.removeEventListener('keydown', keydownEvent);
                 newNotes.push([playNote])
-                setNotes(newNotes)
+                handleSetData(newNotes)
                 }
             } else if (obj !== undefined){
                 const now = Tone.now();
@@ -295,7 +329,7 @@ var keydownEvent = (e) => {
                 keySynth.triggerAttackRelease(playNote, "8n", now);
                 document.removeEventListener('keydown', keydownEvent);
                 newNotes.push(playNote)
-                setNotes(newNotes)
+                handleSetData(newNotes)
         }
         } 
     } 
@@ -434,14 +468,8 @@ function generateRandomMelody(){
             returnArr.push([scaleNotes[randomIndex] + octave])
         }
     }
-    let positionReturn = [];
-    for (let j = 0; j < generatePatternLength; j++){
-        positionReturn.push(0)
-    }
 
-previousNotes.current = returnArr;
-setPosition(positionReturn);  
-setNotes(returnArr);
+handleSetData(returnArr)
 }
 
 function generatePattern(instructions, octave){
@@ -466,7 +494,7 @@ function generatePattern(instructions, octave){
         }
         currentPosition = newPosition
     }
-    setNotes(returnArr)
+    handleSetData(returnArr)
 }
 
 const handleClickUp = (e) => {
@@ -474,6 +502,8 @@ const handleClickUp = (e) => {
     var positionId = e.target.parentNode.parentNode.id;
     var x = positionId.split('_')[1]
     var y = positionId.split('_')[2]
+    setDisplayFocus(Number(x))
+    console.log(x, 'display focus?!?!')
     if (noteOptions === 'scale'){
         if (allScaleNotes.indexOf(notes[x][y]) === -1){
             var chromaIndex = allChromaticNotes.indexOf(notes[x][y]);
@@ -493,13 +523,11 @@ const handleClickUp = (e) => {
         } else {
         clone[x][y] = allScaleNotes[allScaleNotes.indexOf(notes[x][y]) + 1];
         }
-    setNotes(clone)
     }
     if (noteOptions === 'octave'){
     var note = Note.pitchClass(notes[x][y])
     var octave = Note.octave(notes[x][y])
     clone[x][y] = note + (octave + 1)
-    setNotes(clone)
     }
     if (noteOptions === 'chromatic'){
     let chromaIndex = allChromaticNotes.indexOf(notes[x][y])
@@ -507,12 +535,11 @@ const handleClickUp = (e) => {
         chromaIndex = allChromaticNotes.indexOf(Note.enharmonic(notes[x][y]))
     }
     clone[x][y] = allChromaticNotes[chromaIndex + 1];
-    setNotes(clone)
     }
     if (noteOptions === 'insert'){
         clone[x].splice(y + 1, 0, notes[x][y]);
-        setNotes(clone)
-        }
+    }
+    handleSetData(clone, position)
 }
 
 const handleClickDown = (e) => {
@@ -520,6 +547,7 @@ const handleClickDown = (e) => {
     var positionId = e.target.parentNode.parentNode.id;
     var x = positionId.split('_')[1]
     var y = positionId.split('_')[2]
+    setDisplayFocus(Number(x))
     if (noteOptions === 'scale'){
         if (allScaleNotes.indexOf(notes[x][y]) === -1){
             var chromaIndex = allChromaticNotes.indexOf(notes[x][y]);
@@ -539,13 +567,11 @@ const handleClickDown = (e) => {
         } else {
         clone[x][y] = allScaleNotes[allScaleNotes.indexOf(notes[x][y]) - 1];
         }
-    setNotes(clone)
     }
     if (noteOptions === 'octave'){
     var note = Note.pitchClass(notes[x][y])
     var octave = Note.octave(notes[x][y])
     clone[x][y] = note + (octave - 1)
-    setNotes(clone)
     }
     if (noteOptions === 'chromatic'){
     var chromaIndex = allChromaticNotes.indexOf(notes[x][y])
@@ -553,201 +579,19 @@ const handleClickDown = (e) => {
         chromaIndex = allChromaticNotes.indexOf(Note.enharmonic(notes[x][y]))
     }
     clone[x][y] = allChromaticNotes[chromaIndex - 1];
-    setNotes(clone)
     }
     if (noteOptions === 'insert'){
     clone[x].splice(y, 0, notes[x][y]);
-    setNotes(clone)
     }
-}
-
-const handleDeleteNote = (e) => {
-    var clone = [...notes]
-    var positionId = e.target.parentNode.id;
-    var nOfSiblings = e.target.parentNode.parentNode.childNodes.length - 1
-    var x = positionId.split('_')[1]
-    var y = positionId.split('_')[2]
-
-    if (nOfSiblings === 1){
-        clone.splice(x, 1)
-    } else {
-        clone[x].splice(y, 1)
-    }
-
-    setNotes(clone)
-}
-
-const handleClickUpAll = () =>{
-    var clone = [...notes]
-    if (noteOptions === 'scale'){
-        for (let x = 0; x < notes.length; x++){
-            for (let y = 0; y < notes[x].length; y++){
-                if (allScaleNotes.indexOf(notes[x][y]) === -1){
-                    let chromaIndex = allChromaticNotes.indexOf(notes[x][y]);
-                    if (chromaIndex === -1){
-                        chromaIndex = allChromaticNotes.indexOf(Note.enharmonic(notes[x][y]));
-                    }
-                    var matched = false;
-                    var count = 0;
-                    while (matched === false){
-                        if (allScaleNotes.indexOf(allChromaticNotes[chromaIndex + count]) !== -1){
-                            clone[x][y] = allScaleNotes[allScaleNotes.indexOf(allChromaticNotes[chromaIndex + count])];
-                            matched = true;
-                        } else {
-                            count++;
-                        }
-                    }
-                } else {
-                clone[x][y] = allScaleNotes[allScaleNotes.indexOf(notes[x][y]) + 1];
-                }
-            }
-        }
-    setNotes(clone)
-    }
-    if (noteOptions === 'octave'){
-        for (let x = 0; x < notes.length; x++){
-            for (let y = 0; y < notes[x].length; y++){
-                var note = Note.pitchClass(notes[x][y])
-                var octave = Note.octave(notes[x][y])
-                clone[x][y] = note + (octave + 1)
-            }
-            setNotes(clone)
-            }
-        }
-    if (noteOptions === 'chromatic'){
-        for (let x = 0; x < notes.length; x++){
-            for (let y = 0; y < notes[x].length; y++){
-                let chromaIndex = allChromaticNotes.indexOf(notes[x][y])
-                if (allChromaticNotes.indexOf(notes[x][y]) === -1){
-                    chromaIndex = allChromaticNotes.indexOf(Note.enharmonic(notes[x][y]))
-                }
-        clone[x][y] = allChromaticNotes[chromaIndex + 1];
-            }
-        setNotes(clone)
-        }
-    }
-    if (noteOptions === 'insert'){
-        return
-    }
-}
-
-const handleClickDownAll = () =>{
-    var clone = [...notes]
-    if (noteOptions === 'scale'){
-        for (let x = 0; x < notes.length; x++){
-            for (let y = 0; y < notes[x].length; y++){
-                if (allScaleNotes.indexOf(notes[x][y]) === -1){
-                    var chromaIndex = allChromaticNotes.indexOf(notes[x][y]);
-                    if (chromaIndex === -1){
-                        chromaIndex = allChromaticNotes.indexOf(Note.enharmonic(notes[x][y]));
-                    }
-                    var matched = false;
-                    var count = 0;
-                    while (matched === false){
-                        if (allScaleNotes.indexOf(allChromaticNotes[chromaIndex + count]) !== -1){
-                            clone[x][y] = allScaleNotes[allScaleNotes.indexOf(allChromaticNotes[chromaIndex + count])];
-                            matched = true;
-                        } else {
-                            count--;
-                        }
-                    }
-                } else {
-                clone[x][y] = allScaleNotes[allScaleNotes.indexOf(notes[x][y]) - 1];
-                }
-            }
-        }
-
-    setNotes(clone)
-    }
-    if (noteOptions === 'octave'){
-        for (let x = 0; x < notes.length; x++){
-            for (let y = 0; y < notes[x].length; y++){
-                const note = Note.pitchClass(notes[x][y])
-                const octave = Note.octave(notes[x][y])
-                clone[x][y] = note + (octave - 1)
-            }
-            setNotes(clone)
-            }
-        }
-    if (noteOptions === 'chromatic'){
-        for (let x = 0; x < notes.length; x++){
-            for (let y = 0; y < notes[x].length; y++){
-                let chromaIndex = allChromaticNotes.indexOf(notes[x][y])
-                if (allChromaticNotes.indexOf(notes[x][y]) === -1){
-                    chromaIndex = allChromaticNotes.indexOf(Note.enharmonic(notes[x][y]))
-                }
-        clone[x][y] = allChromaticNotes[chromaIndex - 1];
-            }
-        setNotes(clone)
-        }
-        }
-    if (noteOptions === 'insert'){
-        return
-    }
-}
-
-
-const handleDeleteAll = () => {
-    setNotes([])
-    setNoteOptions('delete')
-}
-
-const handleAddNoteToEnd = () => {
-    const clone = JSON.parse(JSON.stringify(notes))
-    const clonePosition = [...position]
-    if (clone.length === 0){
-        clone.push(['C3'])
-    } else {
-        const lastNote = clone[clone.length - 1]
-        clone.push(lastNote)
-    }
-    if (clonePosition.length === 0){
-        clonePosition.push(0)
-    } else {
-        const lastPosition = clonePosition[clonePosition.length -1]
-        clonePosition.push(lastPosition)
-    }
-    setNotes(JSON.parse(JSON.stringify(clone)))
-    setPosition(clonePosition)
-
-}
-
-const handleRemoveNoteFromEnd = () => {
-    const clone =  JSON.parse(JSON.stringify(notes))
-    clone.pop()
-    setNotes(clone)
-}
-
-const handlePlayThis = (e, x) => {
-    if (!playNoteOnClick){
-        return
-    }
-    let parentID;
-    if (x){
-        parentID = e.target.parentNode.id
-    } else {
-        parentID = e.target.id;
-    }
-
-    if (parentID.split('_').length === 2){
-        const x = parentID.split('_')[1]
-        polySynth.triggerAttackRelease(notes[x], '8n');
-    } else if (parentID.split('_').length === 3) {
-        const x = parentID.split('_')[1]
-        const y = parentID.split('_')[2]
-        polySynth.triggerAttackRelease(notes[x][y], '8n')
-    } else {
-        return
-    }
-    var thisChord = document.getElementById(parentID)
-    thisChord.className = 'active pattern'
-    setTimeout(() => {thisChord.className ='inactive pattern'}, 250)
+    handleSetData(clone, position)
 }
 
 var handleClickUpChord = (e) =>{
     var clone = [...notes]
+    var clonePosition = [...position]
     var parentID = e.currentTarget.parentNode.parentNode.parentNode.id;
     var x = parentID.split('_')[1]
+    setDisplayFocus(Number(x))
 
 
     if (noteOptions === 'scale'){
@@ -772,7 +616,6 @@ var handleClickUpChord = (e) =>{
             clone[x][y] = allScaleNotes[allScaleNotes.indexOf(notes[x][y]) + 1];
             }
         }
-    setNotes(clone)
     }
     if (noteOptions === 'octave'){
         for (var y = 0; y < notes[x].length; y++){
@@ -780,7 +623,6 @@ var handleClickUpChord = (e) =>{
             var octave = Note.octave(notes[x][y])
             clone[x][y] = note + (octave + 1)
         }
-        setNotes(clone)
         }
     if (noteOptions === 'chromatic'){
         for (var y = 0; y < notes[x].length; y++){
@@ -790,19 +632,24 @@ var handleClickUpChord = (e) =>{
             }
     clone[x][y] = allChromaticNotes[chromaIndex + 1];
         }
-    setNotes(clone)
     }
     if (noteOptions === 'insert'){
         var newChord = [...clone[x]]
         clone.splice(x, 0, newChord);
-        setNotes(clone)
     }
+    if (noteOptions === 'position'){
+        clonePosition[x] += 1;
+    }
+
+    handleSetData(clone, clonePosition)
 }
 
 var handleClickDownChord = (e) =>{
     var clone = [...notes]
+    var clonePosition = [...position]
     var parentID = e.currentTarget.parentNode.parentNode.parentNode.id;
     var x = parentID.split('_')[1]
+    setDisplayFocus(Number(x))
 
     if (noteOptions === 'scale'){
         for (var y = 0; y < notes[x].length; y++){
@@ -825,7 +672,6 @@ var handleClickDownChord = (e) =>{
             clone[x][y] = allScaleNotes[allScaleNotes.indexOf(notes[x][y]) - 1];
             }
         }
-    setNotes(clone)
     }
     if (noteOptions === 'octave'){
         for (var y = 0; y < notes[x].length; y++){
@@ -833,7 +679,6 @@ var handleClickDownChord = (e) =>{
             var octave = Note.octave(notes[x][y])
             clone[x][y] = note + (octave - 1)
         }
-        setNotes(clone)
         }
     if (noteOptions === 'chromatic'){
         for (var y = 0; y < notes[x].length; y++){
@@ -843,23 +688,225 @@ var handleClickDownChord = (e) =>{
             }
     clone[x][y] = allChromaticNotes[chromaIndex - 1];
         }
-    setNotes(clone)
     }
     if (noteOptions === 'insert'){
         var newChord = [...clone[x]]
         clone.splice(x, 0, newChord);
-        setNotes(clone)
     }
+    if (noteOptions === 'position'){
+        if (clonePosition[x] > 0){
+            clonePosition[x] -= 1
+        }
+    }
+    handleSetData(clone, clonePosition)
 }
 
 
 
 const handleDeleteChord = (e) => {
     var clone = [...notes]
+    var clonePosition = [...position]
     var parentID = e.currentTarget.parentNode.parentNode.id;
     var x = parentID.split('_')[1]
     clone.splice(x, 1)
-    setNotes(clone);
+    clonePosition.splice(x,1)
+    handleSetData(clone, clonePosition)
+}
+
+const handleDeleteNote = (e) => {
+    var clone = [...notes]
+    var positionId = e.target.parentNode.id;
+    var nOfSiblings = e.target.parentNode.parentNode.childNodes.length - 1
+    var x = positionId.split('_')[1]
+    var y = positionId.split('_')[2]
+    setDisplayFocus(Number(x))
+
+    if (nOfSiblings === 1){
+        clone.splice(x, 1)
+    } else {
+        clone[x].splice(y, 1)
+    }
+
+    handleSetData(clone, position)
+}
+
+const handleClickUpAll = () =>{
+    var clone = [...notes]
+    var clonePosition = [...position]
+    if (noteOptions === 'scale'){
+        for (let x = 0; x < notes.length; x++){
+            for (let y = 0; y < notes[x].length; y++){
+                if (allScaleNotes.indexOf(notes[x][y]) === -1){
+                    let chromaIndex = allChromaticNotes.indexOf(notes[x][y]);
+                    if (chromaIndex === -1){
+                        chromaIndex = allChromaticNotes.indexOf(Note.enharmonic(notes[x][y]));
+                    }
+                    var matched = false;
+                    var count = 0;
+                    while (matched === false){
+                        if (allScaleNotes.indexOf(allChromaticNotes[chromaIndex + count]) !== -1){
+                            clone[x][y] = allScaleNotes[allScaleNotes.indexOf(allChromaticNotes[chromaIndex + count])];
+                            matched = true;
+                        } else {
+                            count++;
+                        }
+                    }
+                } else {
+                clone[x][y] = allScaleNotes[allScaleNotes.indexOf(notes[x][y]) + 1];
+                }
+            }
+        }
+    }
+    if (noteOptions === 'octave'){
+        for (let x = 0; x < notes.length; x++){
+            for (let y = 0; y < notes[x].length; y++){
+                var note = Note.pitchClass(notes[x][y])
+                var octave = Note.octave(notes[x][y])
+                clone[x][y] = note + (octave + 1)
+            }
+            }
+        }
+    if (noteOptions === 'chromatic'){
+        for (let x = 0; x < notes.length; x++){
+            for (let y = 0; y < notes[x].length; y++){
+                let chromaIndex = allChromaticNotes.indexOf(notes[x][y])
+                if (allChromaticNotes.indexOf(notes[x][y]) === -1){
+                    chromaIndex = allChromaticNotes.indexOf(Note.enharmonic(notes[x][y]))
+                }
+        clone[x][y] = allChromaticNotes[chromaIndex + 1];
+            }
+        }
+    }
+    if (noteOptions === 'insert'){
+        return
+    }
+    if (noteOptions === 'position'){
+        for (let i = 0; i < clonePosition.length; i++){
+            clonePosition[i] += 1
+        }
+    }
+    handleSetData(clone, clonePosition)
+}
+
+const handleClickDownAll = () =>{
+    var clone = [...notes]
+    var clonePosition = [...position]
+    if (noteOptions === 'scale'){
+        for (let x = 0; x < notes.length; x++){
+            for (let y = 0; y < notes[x].length; y++){
+                if (allScaleNotes.indexOf(notes[x][y]) === -1){
+                    var chromaIndex = allChromaticNotes.indexOf(notes[x][y]);
+                    if (chromaIndex === -1){
+                        chromaIndex = allChromaticNotes.indexOf(Note.enharmonic(notes[x][y]));
+                    }
+                    var matched = false;
+                    var count = 0;
+                    while (matched === false){
+                        if (allScaleNotes.indexOf(allChromaticNotes[chromaIndex + count]) !== -1){
+                            clone[x][y] = allScaleNotes[allScaleNotes.indexOf(allChromaticNotes[chromaIndex + count])];
+                            matched = true;
+                        } else {
+                            count--;
+                        }
+                    }
+                } else {
+                clone[x][y] = allScaleNotes[allScaleNotes.indexOf(notes[x][y]) - 1];
+                }
+            }
+        }
+    }
+    if (noteOptions === 'octave'){
+        for (let x = 0; x < notes.length; x++){
+            for (let y = 0; y < notes[x].length; y++){
+                const note = Note.pitchClass(notes[x][y])
+                const octave = Note.octave(notes[x][y])
+                clone[x][y] = note + (octave - 1)
+            }
+            }
+        }
+    if (noteOptions === 'chromatic'){
+        for (let x = 0; x < notes.length; x++){
+            for (let y = 0; y < notes[x].length; y++){
+                let chromaIndex = allChromaticNotes.indexOf(notes[x][y])
+                if (allChromaticNotes.indexOf(notes[x][y]) === -1){
+                    chromaIndex = allChromaticNotes.indexOf(Note.enharmonic(notes[x][y]))
+                }
+        clone[x][y] = allChromaticNotes[chromaIndex - 1];
+            }
+        }
+        }
+    if (noteOptions === 'insert'){
+        return
+    }
+    if (noteOptions === 'position'){
+        for (let i = 0; i < clonePosition.length; i++){
+            if (clonePosition[i] > 0){
+                clonePosition[i] -= 1
+            }
+        }
+    }
+    handleSetData(clone, clonePosition)
+}
+
+
+const handleDeleteAll = () => {
+    handleSetData([])
+    setNoteOptions('delete')
+}
+
+const handleAddNoteToEnd = () => {
+    const clone = [...notes]
+    const clonePosition = [...position]
+    if (clone.length === 0){
+        clone.push(['C3'])
+    } else {
+        const lastNote = clone[clone.length - 1]
+        clone.push(JSON.parse(JSON.stringify(lastNote)))
+    }
+    if (clonePosition.length === 0){
+        clonePosition.push(0)
+    } else {
+        const lastPosition = clonePosition[clonePosition.length -1]
+        clonePosition.push(JSON.parse(JSON.stringify(lastPosition)))
+    }
+    handleSetData(clone, clonePosition)
+
+}
+
+const handleRemoveNoteFromEnd = () => {
+    const clone =  [...notes]
+    const clonePosition = [...position]
+    clone.pop()
+    clonePosition.pop()
+    handleSetData(clone, clonePosition)
+}
+
+const handlePlayThis = (e, x) => {
+    if (!playNoteOnClick){
+        return
+    }
+    let parentID;
+    if (x){
+        parentID = e.target.parentNode.id
+    } else {
+        parentID = e.target.id;
+    }
+
+    if (parentID.split('_').length === 2){
+        const x = parentID.split('_')[1]
+        setDisplayFocus(Number(x))
+        polySynth.triggerAttackRelease(notes[x], '8n');
+    } else if (parentID.split('_').length === 3) {
+        const x = parentID.split('_')[1]
+        const y = parentID.split('_')[2]
+        setDisplayFocus(Number(x))
+        polySynth.triggerAttackRelease(notes[x][y], '8n')
+    } else {
+        return
+    }
+    var thisChord = document.getElementById(parentID)
+    thisChord.className = 'active pattern'
+    setTimeout(() => {thisChord.className ='inactive pattern'}, 250)
 }
 
 function noteStringHandler(notes){
@@ -898,6 +945,7 @@ function mapNotes(notes){
             <div onClick={(e) => (handlePlayThis(e, true))} style={{display: 'flex', flexDirection: 'row', marginBottom: '18px'}}>
             { (edit && noteOptions !== 'delete') && <div  style={{display: 'flex', flexDirection: (noteOptions === 'insert') ? 'row' : 'column'}}>
             <Icon onClick={handleClickUpChord} name= {(noteOptions === 'insert') ? "plus" : "caret square up" }/><Icon onClick={handleClickDownChord}name= {(noteOptions === 'insert') ? "" : "caret square down" }/>
+            {(edit && noteOptions === 'position') && <div>{position[i]}</div>}
             </div>}
             {(edit && noteOptions === 'delete') && <Icon onClick={handleDeleteChord} name= 'trash alternate outline' /> }
             </div>
@@ -924,74 +972,54 @@ function mapMenuItems(){
 
 const reverseMelody = () => {
     var returnArr = [];
-    for (var i = notes.length -1; i > -1; i--){
-        returnArr.push(notes[i])
+    for (var i = data.length -1; i > -1; i--){
+        returnArr.push(data[i])
     }
-    setNotes(returnArr);
+    setData(returnArr)
 }
 
-const invertMelodyChromatically = () =>{
-    var midiNotes = [];
-    var noteDistances = [0];
-    var invertedNoteDistances = []
-    var finalNotes = [];
-    for (var i = 0; i < notes.length; i++){
-        midiNotes.push(toMidi(notes[i]))
+//update this so it works when C3 is not the root
+function invertMelody(){
+    let returnPattern = []
+    for (let i = 0; i < pattern.length; i++){
+        let tempPattern = [];
+        for (let j = 0; j < pattern[i].length; j++){
+            if (pattern[i][j] === 0){
+                tempPattern.push(pattern[i][j])
+            }
+            if (typeof pattern[i][j] === 'number' && pattern[i][j] !== 0){
+                tempPattern.push(pattern[i][j] * -1)
+            }
+            if (typeof pattern[i][j] === 'string'){
+                let num = Number(pattern[i][j].split("").slice(1).join(""))
+                tempPattern.push( '*' + (num * -1))
+                console.log(num, '*' + (num * -1))
+            }
+        }
+        returnPattern.push(tempPattern)
     }
-    var refNote = midiNotes[0];
-    for (var j = 1; j < midiNotes.length; j++){
-        noteDistances.push(midiNotes[j] - refNote);
-    }
-    invertedNoteDistances = noteDistances.map(function(e){ if( e === 0){return e} else {return e * -1}})
-    
-    for (var k = 0; k < midiNotes.length; k++){
-        var finalNote = (invertedNoteDistances[k] + refNote)
-        finalNotes.push(midiToNoteName(finalNote, { sharps: true }))
-    }
-    setNotes(finalNotes)
-    
-}
-
-const invertMelodyScalar = () => {
-    var allIndices = [];
-    var noteDistances = [];
-    var invertedNoteDistances = [];
-    var finalNotes = [];
-
-    for (var k = 0; k < notes.length; k++){
-        allIndices.push(allScaleNotes.indexOf(notes[k]))
-    }
-
-    for (var l = 0; l < allIndices.length; l++){
-        noteDistances.push(allIndices[l] - allIndices[0])
-    }
-
-    invertedNoteDistances = noteDistances.map(function(e){ if( e === 0){return e} else {return e * -1}})
-    var refIndex = allIndices[0]
- 
-    for (var m = 0; m < invertedNoteDistances.length; m++){
-            var finalNote = allScaleNotes[invertedNoteDistances[m] + refIndex]
-            finalNotes.push((finalNote))
-    }
-
-    setNotes(finalNotes)
+    handleSetData(patternAndScaleToNotes(returnPattern))
 }
 
 const shuffleNotes = () => {
-    var cloneNotes = [...notes]
+    var cloneData = [...data]
     var returnArr = [];
-    for (var i = 0; i < cloneNotes.length; i++){
+    for (var i = 0; i < cloneData.length; i++){
         returnArr.push('')
     }
     var j = 0;
-    while (j < cloneNotes.length){
-        var randomIndex = Math.floor(Math.random() * cloneNotes.length);
+    while (j < cloneData.length){
+        var randomIndex = Math.floor(Math.random() * cloneData.length);
         if (returnArr[randomIndex] === ''){
-            returnArr[randomIndex] = cloneNotes[j];
+            returnArr[randomIndex] = cloneData[j];
             j++;
         }
     }
-    setNotes(returnArr)
+    setData(returnArr)
+}
+
+function fitPatternToScale(){
+    handleSetData(patternAndScaleToNotes(pattern), position)
 }
 
 function patternExtraction(){
@@ -1036,35 +1064,6 @@ function patternExtraction(){
     return patternExport
 }
 
-function patternAndScaleToNotes(){
-    var notesExport = [];
-    var root = scaleNotes[0] + 3
-    const allNotes = Note.sortedNames(allScaleNotes);
-    //------------
-    var startingIndex;
-    if (allNotes.indexOf(root) === -1){
-        startingIndex = allNotes.indexOf(Note.enharmonic(root))
-    } else {
-        startingIndex = allNotes.indexOf(root)
-    }
-    var startingChromaticIndex;
-    if (allChromaticNotes.indexOf(root) === -1){
-        startingChromaticIndex = allChromaticNotes.indexOf(Note.enharmonic(root))
-    } else {
-        startingChromaticIndex = allChromaticNotes.indexOf(root);
-    }
-    for (var k = 0; k < pattern.length; k++){
-        //check if flag is added to pattern
-        if (typeof pattern[k] === 'string'){
-            notesExport.push(allChromaticNotes[startingChromaticIndex + Number(pattern[k].split("").slice(1).join(""))])
-        } else {
-            notesExport.push(allNotes[startingIndex + pattern[k]])
-        }
-    }
-    setNotes(notesExport)
-}
-
-
 const exportObj = {
         name: name,
         patternName: name,
@@ -1090,48 +1089,48 @@ const handleEditOptions = () => {
   }
 
   function handleSharpsOrFlats(){
+    let patternClone = JSON.parse(JSON.stringify(notes))
       if (options === 'sharps'){
         setChromaticNotes(['C', 'Db', 'D', 'Eb', 'E', 'F', 'Gb', 'G', 'Ab', 'A', 'Bb', 'B'])
           setOptions('flats')
-          let patternClone = JSON.parse(JSON.stringify(notes))
+
               for (let j = 0; j < patternClone.length; j++){
                   for (let k = 0; k < patternClone[j].length; k++){
                     if (Note.accidentals(patternClone[j][k]) === '#'){
                         let x = Note.enharmonic(patternClone[j][k])
-                        patternClone[j] = x
+                        patternClone[j] = [x]
                     }
                   }
               }
-          setNotes(patternClone)
       }
       if (options === 'flats'){
         setChromaticNotes(['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B'])
           setOptions('sharps')
-          let patternClone = JSON.parse(JSON.stringify(notes))
               for (let j = 0; j < patternClone.length; j++){
                   for (let k = 0; k < patternClone[j].length; k++){
                     if (Note.accidentals(patternClone[j][k]) === 'b'){
                         let x = Note.enharmonic(patternClone[j][k])
-                        patternClone[j] = x
+                        patternClone[j] = [x]
                     }
                   }
               }
-          setNotes(patternClone)
       }
+
+      handleSetData(patternClone, position)
   }
 
   const importChordsFromChordLab = () => {
       if (labData?.labInfo?.chordLab?.chords){
-        setNotes(labData['labInfo']['chordLab']['chords'])
+        handleSetData(labData['labInfo']['chordLab']['chords'])
       } else {
-          setNotes([['C3', 'E3', 'G3']])
+          handleSetData([['C3', 'E3', 'G3']])
       }
 
   }
 
   const handlePatternType = () => {
       if (patternType === 'fluid'){
-          return 'map'
+          return ''
       }
       if (patternType === 'fixed'){
           return 'anchor'
@@ -1142,14 +1141,11 @@ const handleEditOptions = () => {
   }
 
   const handlePositionType = () => {
-    if (positionType === 'fluid'){
-        return 'map'
+    if (positionType === 'locked'){
+        return 'lock'
     }
-    if (positionType === 'fixed'){
-        return 'anchor'
-    }
-    if (positionType === 'floating'){
-        return 'fly'
+    if (positionType === 'unlocked'){
+        return ''
     }
   }
 
@@ -1157,7 +1153,7 @@ const handleEditOptions = () => {
         <>
         <Menu>
         <Menu.Item onClick={() => handleSharpsOrFlats()}>{options === 'sharps' ? '#' : 'b'}</Menu.Item>
-        <Menu.Item onClick={() => console.log(position)}>Test</Menu.Item>
+        <Menu.Item onClick={() => console.log(pattern)}>Test</Menu.Item>
          <Menu.Item onClick={() => {playAll(); setPlaying(true)}}><Icon name={playing ? 'stop': 'play'}/></Menu.Item>
          <Button.Group>
          <Button basic onClick={()=> generateRandomMelody()}> Generate </Button>
@@ -1251,16 +1247,6 @@ const handleEditOptions = () => {
         <Menu.Item onClick={() => setShowDescription(!showDescription)}> Desc </Menu.Item>
         <Menu.Item onClick={importChordsFromChordLab}> Import </Menu.Item>
         <Button.Group>
-        {/* <Button basic disabled={localStorage.getItem('userInfo') === null} onClick={()=> handleExport()}>Export</Button>
-        <Dropdown
-          simple
-          item
-          disabled={localStorage.getItem('userInfo') === null}
-          className='button icon'
-          options={exportDropdownOptions}
-          onChange={handleExportDropdown}
-          trigger={<></>}
-        /> */}
         <ExportModal
         dataType={'Pattern'}
         exportObj={exportObj}/>
@@ -1286,8 +1272,8 @@ const handleEditOptions = () => {
         <Button.Group>
             <Button  compact basic onClick ={shuffleNotes}>Shuffle</Button>
             <Button  compact basic onClick ={reverseMelody}>Reverse Melody</Button>
-            <Button  compact basic onClick ={invertMelodyChromatically}>Invert Melody</Button>
-            <Button  compact basic onClick ={() => patternAndScaleToNotes()}>Fit Pattern To Scale</Button>
+            <Button  compact basic onClick ={() => invertMelody()}>Invert Melody</Button>
+            <Button  compact basic onClick ={() => fitPatternToScale()}>Fit Pattern To Scale</Button>
             <Button  compact basic onClick ={() => setManipulate(!manipulate)}>Basic</Button>
         </Button.Group>
         }

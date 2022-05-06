@@ -153,6 +153,7 @@ function createScaleSVG(){
       setDescription(newDesc)
       createScaleSVG()
     }
+    console.log(importedScaleData, '!!')
   }, [importedScaleData])
 
   useEffect(() => {
@@ -182,19 +183,12 @@ useEffect(() => {
   dispatch(setNoteDisplay(convertScaleForDispatch()))
 }, [instrumentDisplay, notes])
 
-function convertScaleForDispatch(data){
+function convertScaleForDispatch(){
   var arrOfObj = []
-  var dispatchObj = {data: [{speed: 1, notes: [['']]}], displayOnly: true, highlight: []}
+  var dispatchObj = {data: [{speed: 1, notes: [['']], position: []}], displayOnly: true, highlight: []}
   var scaleString = ''
 
-  let localNotes;
-
-  if (data === undefined){
-    localNotes = notes
-  } else {
-    localNotes = data
-  }
-
+  let localNotes = notes;
 
   for (let i= 0; i < localNotes.length; i++){
     scaleString += localNotes[i] + ' '
@@ -534,7 +528,6 @@ function convertScaleForDispatch(data){
         Tone.Transport.stop()
         Tone.Transport.start();
         var position = 0;
-  
         dispatch(setNoteDisplay())
         
     //---Synthpart function 
@@ -579,7 +572,7 @@ function convertScaleForDispatch(data){
       let returnObj = {
         displayOnly: false,
         highlight: 1,
-        data: [{speed: 1, notes: noteArr}]
+        data: [{speed: 1, notes: noteArr, position:[]}]
       }
 
       Tone.start()

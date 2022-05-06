@@ -1,7 +1,7 @@
+import { Icon } from "semantic-ui-react";
 
-
-export default function DragAndFillCard({onDrag, onDragStart, dragOverHandler, dropHandler, chordName, rhythmName, patternName, scaleName, id, romanNumeralName, countName, keyName, moduleName, currentlyPlaying, onClick}) {
-    const lengthAllowed = 25;
+export default function DragAndFillCard({onDrag, onDragStart, dragOverHandler, dropHandler, chordName, rhythmName, patternName, scaleName, id, romanNumeralName, countName, keyName, moduleName, currentlyPlaying, onClick, patternType, positionType}) {
+    const lengthAllowed = 20;
     function stringOverflowHandler(str){
         if (typeof str === 'string'){
             if (str.length > lengthAllowed){
@@ -13,6 +13,26 @@ export default function DragAndFillCard({onDrag, onDragStart, dragOverHandler, d
             return str;
         } 
     }
+    function patternTypeHandler(){
+        if (patternType === 'fluid'){
+            return ''
+        }
+        if (patternType === 'fixed'){
+            return 'anchor'
+        }
+        if (patternType === 'floating'){
+            return 'fly'
+        }
+    }
+
+    function positionTypeHandler(){
+        if (positionType === 'unlocked'){
+            return ''
+        }
+        if (positionType === 'locked'){
+            return 'lock'
+        }
+    }
     return (
         <>
         <div>{stringOverflowHandler(moduleName)}
@@ -20,7 +40,7 @@ export default function DragAndFillCard({onDrag, onDragStart, dragOverHandler, d
                 <div className="romanNumeralData" style={{textAlign: 'center'}} > {stringOverflowHandler(romanNumeralName)}</div>
                 <div className="chordData" draggable="true" style={{background: "lightsalmon"}}>{stringOverflowHandler(chordName)}</div>
                 <div className="scaleData" draggable="true" style={{background: "lightcoral"}}>{stringOverflowHandler(scaleName)}</div>
-                <div className="patternData" draggable="true" style={{background: "lightblue"}}>{stringOverflowHandler(patternName)}</div>
+                <div className="patternData" draggable="true" style={{background: "lightblue"}}>{stringOverflowHandler(patternName)}<Icon name={patternTypeHandler()}/><Icon name={positionTypeHandler()}/></div>
                 <div className="rhythmData" draggable="true" style={{background: "lightseagreen"}}>{stringOverflowHandler(rhythmName)}</div>
                 <div className="keyData" draggable="true" style={{background: "teal"}}>{stringOverflowHandler(keyName)}</div>
                 <div className="countData" draggable="true" style={{textAlign: 'center', background: 'lightgreen'}}> {stringOverflowHandler(countName)} </div>

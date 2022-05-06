@@ -4,25 +4,11 @@ import { useDispatch, useSelector } from 'react-redux';
 import "./modal.css";
 import { insertData } from '../../store/actions/dataPoolActions';
 
-function MapModal({dataType, exportObj}) {
+function MapModal({mapObj, handleMapChords}) {
   const [isOpen, setIsOpen] = useState(false);
   const [messageDisplay, setMessageDisplay] = useState(false)
-  const [poolDisplay, setPoolDisplay] = useState('global')
-  const [overWriteOptionDisplay, setOverWriteOptionDisplay] = useState()
-  const user = JSON.parse(localStorage.getItem('userInfo'))
-  const exportDropdownOptions = [
-    { key: 'global', text: 'global', value: 'global'},
-    { key: 'local', text: 'local', value: 'local'},
-  ]
-  const handleExportDropdown = (e, {value}) => {
-    if (value === 'local'){
-        exportObj['pool'] = (user['_id'])
-        setPoolDisplay('local')
-    } else {
-        exportObj['pool'] = value;
-        setPoolDisplay(value)
-    }
-  }
+  const [overwriteOptions, setOverwriteOptions] = useState('overwrite')
+  const [scaleSelectOptions, setScaleSelectOptions] = useState('diatonic')
 
   const openModal = () => {
     setIsOpen(true);
@@ -31,31 +17,25 @@ function MapModal({dataType, exportObj}) {
   const closeModal = () => {
     setIsOpen(false);
     setMessageDisplay(false)
-  }
+  } 
 
-  const dataInsertStatus  = useSelector(state => state.dataInsert)
-  const {loading, error, dataInsert} = dataInsertStatus
+  const overwriteOptionsDropdown = [
+    { key: 'overwrite', text: 'overwrite', value: 'overwrite'},
+    { key: 'append', text: 'append', value: 'append'},
+  ]
+
+  const scaleSelectOptionsDropdown = [
+    { key: 'diatonic', text: 'diatonic', value: 'diatonic'},
+    { key: 'modal', text: 'modal', value: 'modal'},
+  ]
 
   const dispatch = useDispatch()
 
-  const handleExport = () => {
-    setMessageDisplay(true)
-    dispatch(insertData(exportObj))
+  const mapMapObj = () => {
+    return mapObj.map((chords, idx) => <div key={idx}>
+      {chords.name}
+    </div>)
   }
-
-  const dontRender = [
-    'authorId',
-    'scaleName',
-    'chordName',
-    'rhythmName',
-    'moduleName',
-    'patternName',
-    'desc',
-    'instruments',
-    'data'
-  ]
-
-
   return (
     <>
       {isOpen && (
@@ -63,53 +43,42 @@ function MapModal({dataType, exportObj}) {
           <div className="overlay"></div>
           <div className="modal">
             <header className="modal__header">
-              <h2>Export {dataType} '{exportObj.name}' To: {poolDisplay}</h2>
+              <h2>
+                {overwriteOptions === 'append' 
+                ? 'Append chords to selected instruments on the player' 
+                : 'Overwrite chords to selected instruments on the player'}
+                {scaleSelectOptions === 'diatonic' 
+                ? ' using diatonic scale select' 
+                : ' using modal scale select'}
+                </h2>
               <Dropdown
               simple
               item
               className='button icon'
-              options={exportDropdownOptions}
-              onChange={handleExportDropdown}
+              options={overwriteOptionsDropdown}
+              onChange={((e, {value}) => setOverwriteOptions(value))}
+              trigger={<></>}
+            />
+            <Dropdown
+              simple
+              item
+              className='button icon'
+              options={scaleSelectOptionsDropdown}
+              onChange={((e, {value}) => setScaleSelectOptions(value))}
               trigger={<></>}
             />
               <button onClick={closeModal} className="close-button">&times;</button>
             </header>
             <main className="modal__main">
-             {messageDisplay && <h3>{dataInsert?.data?.message}</h3>}
-              <h3>Name: {exportObj.name}</h3>
-              <h3>Description: {exportObj.desc}</h3>
-              <h3>
-              {Object.entries(exportObj).map(([key, value], i) => {
-                     if (key === 'data' && dataType !== 'Song'){
-                    return (
-                      <>
-                    <div>scale name:{value.scaleData.name}</div>
-                    <div>scale: {value.scaleData.scale}</div>
-                    <div>chord name:{value.chordData.name}</div>
-                    <div>chord: {value.chordData.chord}</div>
-                    <div>pattern name:{value.patternData.name}</div>
-                    <div>pattern:{value.patternData.pattern}</div>
-                    <div>rhythm name:{value.rhythmData.name}</div>
-                    <div>{value.keyData.keyName}</div>
-                      </>
-                    )
-                  } else if (dontRender.includes(key) ||typeof value === 'object'){
-                      return <div key={i}></div>
-                  } else if (value === user['_id'])  {
-                    return <div key={i}>{key}: local</div>
-                  } else {
-                    return <div key={i}>{key}: {value}</div>
-                  }
-              }
-              )}
-              </h3>
+              <h3>chords</h3>
+              {mapMapObj()}
 
             </main>
-            <Button loading={loading} onClick={handleExport}>Export</Button>
+            <Button onClick={() => handleMapChords()}>Map</Button>
           </div>
         </>
       )}
-      <Button disabled={localStorage.getItem('userInfo') === null} basic onClick={openModal}>Export</Button>
+      <Button basic compact onClick={openModal}>Map</Button>
     </>
   );
 }

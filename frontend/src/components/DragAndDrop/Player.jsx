@@ -5,6 +5,7 @@ import { Note, Scale, Chord, Midi, ChordType} from '@tonaljs/tonal';
 import { useDispatch, useSelector } from 'react-redux';
 import { bindActionCreators } from 'redux';
 import { actionCreators } from '../../store/index.js';
+import { downloadTabAsTextFile , generateTabFromModules} from '../guitar/tabfunctions.js';
 import { initialData, initialDataType2} from './dummyData';
 import { DataPrototype } from './dataPrototypes';
 import * as Tone from 'tone';
@@ -40,9 +41,34 @@ export default function Player ({masterInstrumentArray, display}) {
     const playHighlightData = useSelector(state => state.playHighlight)
     const {playHighlight} = playHighlightData
 
+    const mapChordsToPlayerData = useSelector(state => state.mapChordsToPlayer)
+    const {mapChordsToPlayer} = mapChordsToPlayerData
+
+    const globalInstrumentData = useSelector(state => state.globalInstruments)
+    const {globalInstruments} = globalInstrumentData
+
     var highlight = useRef(false)
 
-    const {sendModuleData, receiveModuleData} = bindActionCreators(actionCreators, dispatch);
+    const {sendModuleData} = bindActionCreators(actionCreators, dispatch);
+
+    function addModulesToData(data, modules){
+        let cloneData = JSON.parse(JSON.stringify(data))
+        let mappedModules = modules
+        for (let i = 0; i < cloneData.length; i++){
+            cloneData[i]['data'] = [];
+            for (let j = 0; j < mappedModules.length; j++){
+                cloneData[i]['data'].push(mappedModules[j])
+            }
+        }
+        setData(cloneData)
+    }
+    useEffect(() => {
+        if (mapChordsToPlayer){
+            addModulesToData(data, mapChordsToPlayer)
+        } else {
+            return
+        }
+    }, [mapChordsToPlayer])
 
     useEffect(() => {
         if (playHighlight !== highlight.current){
@@ -64,6 +90,7 @@ export default function Player ({masterInstrumentArray, display}) {
     useEffect (()=>{
         setModuleMarkers()
         const sentData = convertModuleDataIntoPlayableSequence(data)
+        console.log(sentData, '!!!')
         sendModuleData(JSON.stringify({markers: markers, data: sentData})) 
     }, [data, bpm]);
 
@@ -253,14 +280,22 @@ function convertModuleDataIntoPlayableSequence(musicData){
                 returnObject['displayOnly'] = false;
                 for (let i = 0; i < musicData[h]['data'].length; i++){
                     let innerObject = {speed:1, notes:[]}
+                    let positionType = musicData[h]['data'][i]['data']['patternData']['positionType'];
+                    let speed = musicData[h]['data'][i]['data']['rhythmData']['speed']
+                    let position;
+                    if ( positionType === 'unlocked'){
+                        position = [];
+                    } else {
+                        position = musicData[h]['data'][i]['data']['patternData']['position']
+                    }
                     let rhythm = musicData[h]['data'][i]['data']['rhythmData']['rhythm'];
                     let pattern = musicData[h]['data'][i]['data']['patternData']['pattern']
                     let patternType = musicData[h]['data'][i]['data']['patternData']['type']
                     let scale = musicData[h]['data'][i]['data']['scaleData']['scale']
                     let notes = patternAndScaleToNotes(pattern, patternType, scale)
                     let sequence = notesIntoRhythm(notes, rhythm)
-                    innerObject['speed'] = musicData[h]['data'][i]['data']['rhythmData']['speed']
-                    innerObject['position'] = musicData[h]['data'][i]['data']['patternData']['position']
+                    innerObject['speed'] = speed
+                    innerObject['position'] = position
                     innerObject['notes'] = sequence
                     returnObject['data'].push(innerObject)
                     }
@@ -495,6 +530,8 @@ function moduleSubtract(){
             moduleName={cardData.name}
             romanNumeralName={setRomanNumeralsByKey(cardData.data.chordData.chord, cardData.data.keyData.root)}
             chordName={cardData.data.chordData.chordName}
+            patternType={cardData.data.patternData.type}
+            positionType={cardData.data.patternData.positionType}
             rhythmName={cardData.data.rhythmData.rhythmName}
             patternName={cardData.data.patternData.patternName}
             scaleName={cardData.data.scaleData.scaleName}
@@ -669,85 +706,46 @@ const handleDescriptionChange = e => {
     setDescription(e.target.value)
 }
 
-var scaleDataPrototype = {
-    scaleName: 'D Dorian',
-    name: 'D Dorian',
-    scale: ['D', 'E', 'F', 'G', 'A', 'B', 'C'],
-    binary: [1, 0, 1, 1, 0, 1, 0, 1, 0, 1, 1, 0],
-    number: 2902
-}
-
-
-
-const determineChordType = (noteArr) => {
-    const chord = data[0]['data'][0]['data']['chordData']['chord']
-
-
-    var midiArr = [];
-    var lowestValue = Number.POSITIVE_INFINITY
-    for (let i = 0; i < chord.length; i++){
-        const midiVal = Midi.toMidi(chord[i])
-        if (midiVal < lowestValue){
-            lowestValue = midiVal
+function getNamesFromGlobalInstruments(globalInstruments){
+    //only instruments labelled  chord or melody can pass through
+    let returnArr = []
+    for (let i = 0; i < globalInstruments.length; i++){
+        if (data[i]['mode'] === 'chord' || data[i]['mode'] === 'melody'){
+            returnArr.push(globalInstruments[i]['name'])
         }
-        midiArr.push(midiVal)
     }
-    //normalize the array
-    for (let j = 0; j < midiArr.length; j++){
-        let x = midiArr[j] - lowestValue
-        while (x > 12){
-            x -= 12;
+    return returnArr
+}
+
+
+function getTuningsFromGlobalInstruments(globalInstruments){
+     //only instruments labelled  chord or melody can pass through
+    let returnArr = []
+    for (let i = 0; i < globalInstruments.length; i++){
+        if (data[i]['mode'] === 'chord' || data[i]['mode'] === 'melody'){
+            returnArr.push(globalInstruments[i]['tuning'])
         }
-        midiArr[j] = x
     }
-    if (midiArr.includes(4) && midiArr.includes(10)){
-        return 'dominant'
-    }
-    if (midiArr.includes(3) && midiArr.includes(10)){
-        return 'minorMajor'
-    }
-    if (midiArr.includes(3)){
-        return 'minor'
-    }
-    if (midiArr.includes(4)){
-        return 'major'
-    }
-    return 'unknown'
+    return returnArr
 }
 
-const setRecommendedScales = () => {
-    console.log(data[0]['data'][0]['data']['keyData']['root'])
-    const positions = {
-    'major_key': {
-            'major': ['major', 'lydian', 'mixolydian', 'lydian','phrygian dominant', 'lydian', 'mixolydian', 'lydian', 'lydian', 'lydian', 'lydian', 'lydian'],
-            'minor': ['aeolian', 'dorian', 'dorian', 'dorian', 'phyrgian', 'dorian', 'melodic minor', 'dorian', 'dorian', 'dorian', 'aeolian', 'dorian', 'phrygian'],
-            'dominant': ['mixolydian', 'lydian dominant', 'mixolydian', 'lydian dominant', 'phyrgian dominant', 'mixolydian', 'lydian dominant', 'mixolydian', 'lydian dominant', 'mixolydian b6', 'lydian dominant', 'lydian dominant'],
-            'diminished': ['locrian 6', '2477', '2918', 'locrian 6', '2477', '2918', 'locrian 6', '2477', '2918', 'locrian 6', '2477', '2918'],
-    }, 
-    'minor_key': {
-        'major_chord': ['major', 'lydian', 'lydian', 'major', 'lydian', 'lydian', 'lydian', 'double harmonic major', 'lydian', 'lydian', 'mixolydian', 'lydian'],
-        'minor_chord': ['aeolian', 'dorian', 'dorian', 'dorian', 'dorian', 'dorian', 'dorian', 'phrygian', 'dorian', 'dorian', 'dorian', 'dorian'],
-        'dominant_chord': ['mixolydian', 'lydian dominant', 'mixolydian', 'lydian dominant', 'phyrgian dominant', 'mixolyian', 'lydian dominant', 'phyrgian dominant', 'lydian dominant', 'lydian dominant', 'mixolydian', 'lydian dominant'],
-        'quayle_diminished_options': ['lydian diminished', '2477', '2918', 'lydian diminished', '2477', '2918', 'lydian diminished', '2477', '2918', 'lydian diminished', '2918', 'ultralocrian'],
-    },
+function removeSilentDataForTabProcessing(data){
+    let returnArr = [];
+    for (let i = 0; i < data.length; i++){
+        if (data[i]['mode'] === 'melody' || data[i]['mode'] === 'chord'){
+            returnArr.push(JSON.parse(JSON.stringify(data[i])))
+        }
     }
-    const always = {
-        '7b9': 'phyrgian dominant',
-        '7#5': 'altered',
-        '7b5': 'altered',
-        '7#9': 'altered',
-        '7#11': 'lydian dominant',
-        '7b6': 'mixolydian b6',
-        'maj7#11': 'lydian',
-        'min7b5': 'locrian',
-        'aug': 'major augmented',
-        'dim': 'ultralocrian', 
-        //dim options: 3436
-    }
+    return returnArr
 }
 
-const distanceFromChordRootToKeyRoot = () => {
-    const chromaticScale = []
+const handleDownloadTab = () =>{
+    let tunings = getTuningsFromGlobalInstruments(globalInstruments)
+    let instrumentNames = getNamesFromGlobalInstruments(globalInstruments)
+    let cleanData = removeSilentDataForTabProcessing(data)
+    let dataFromPlayer = convertModuleDataIntoPlayableSequence(cleanData, tunings, instrumentNames)
+    let tab = generateTabFromModules(dataFromPlayer, tunings, instrumentNames, name, user)
+    console.log(tab)
 }
 
     return (
@@ -759,10 +757,11 @@ const distanceFromChordRootToKeyRoot = () => {
         </Button.Group>
         {mapDropdowns()}
         <Menu.Item basic active={edit} onClick={()=> setEdit(!edit)}>Edit</Menu.Item>
-        <Menu.Item basic active={edit} onClick={()=> console.log(playHighlight)}>Test</Menu.Item>
+        <Menu.Item basic active={edit} onClick={()=> console.log(data)}>Test</Menu.Item>
+        <Menu.Item basic active={edit} onClick={handleDownloadTab}>Download Tab</Menu.Item>
         <Menu.Item basic active={songOptions} onClick={()=> setSongOptions(!songOptions)}>Bpm </Menu.Item>
         <Menu.Item basic active={showDescription} onClick={() => setShowDescription(!showDescription)}> Desc</Menu.Item>
-        <Menu.Item basic active={showDescription} onClick={setRecommendedScales}> Set Recommended Scales</Menu.Item>
+        <Menu.Item basic active={showDescription} onClick={() => console.log('beep boop')}> Set Recommended Scales</Menu.Item>
         <Button.Group>
         <ExportModal
         dataType={'Song'}

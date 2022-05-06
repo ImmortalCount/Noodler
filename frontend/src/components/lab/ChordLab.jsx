@@ -10,11 +10,16 @@ import { polySynth } from './synths';
 import { scaleHandler } from './utils';
 import { setNoteDisplay } from '../../store/actions/noteDisplayActions';
 import { setPlayImport } from '../../store/actions/playImportActions';
+import { turnChordIntoModule} from './chordMapGenerator'
+import { mapChordsToPlayer } from '../../store/actions/mapChordsToPlayerActions';
 import ExportModal from '../modal/ExportModal'
+import MapModal from '../modal/MapModal';
 
 export default function ChordLab({importedChordData, masterInstrumentArray}) {
     const [playing, setPlaying] = useState(false)
-    const [chords, setChords] = useState([['C3', 'E3', 'G3']])
+    const [data, setData] = useState([{chord: ['C3', 'E3', 'G3'], position: 0}])
+    const chords = []
+    const position = []
     const [exportNames, setExportNames] = useState([null])
     const [noteOptions, setNoteOptions] = useState("octave")
     const [generateChordOptions, setGenerateChordOptions] = useState({intervals: 3, number: 3})
@@ -24,6 +29,7 @@ export default function ChordLab({importedChordData, masterInstrumentArray}) {
     const [description, setDescription] = useState('')
     const [showDescription, setShowDescription] = useState(false)
     const [options, setOptions] = useState('sharps')
+    const [positionType, setPositionType] = useState('unlocked')
     const [exportPool, setExportPool] = useState('global')
     const [voicing, setVoicing] = useState([0])
     const [progression, setProgression] = useState(1)
@@ -39,11 +45,48 @@ export default function ChordLab({importedChordData, masterInstrumentArray}) {
     const labData = useSelector(state => state.labData)
     const {labInfo} = labData
 
+    //turn data into chords
+    for (let i = 0; i < data.length; i++){
+        chords.push(data[i]['chord'])
+    }
+
+    //turn data into position
+    for (let i = 0; i < data.length; i++){
+        position.push(data[i]['position'])
+    }
+
+    //Convert notes and position data into DATA
+    function handleSetData(chords, position){
+        var clone = JSON.parse(JSON.stringify(chords))
+        clone = sortAllChordsByPitch(clone)
+        if (position === undefined){
+            let newPos = [];
+            for (let i = 0; i < clone.length; i++){
+                newPos.push(0)
+            }
+            position = newPos
+        }
+        let returnArr = [];
+        for (let i = 0; i < clone.length; i++){
+            let returnObj = {}
+            returnObj['chord'] = clone[i]
+            if (position[i] !== undefined){
+                returnObj['position'] = position[i]
+            } else {
+                returnObj['position'] = 0;
+            }
+            returnArr.push(returnObj)
+        }
+        setData(returnArr)
+    }
+
     useEffect(() => {
         generateChordStack()
     }, [progression, progressionType, voicing, generateChordOptions])
 
+    //upon import
     useEffect(() => {
+        console.log(importedChordData)
         if(importedChordData['chord']){
             let newInfo = {...labInfo}
         const chordDataPrototype = {
@@ -51,7 +94,7 @@ export default function ChordLab({importedChordData, masterInstrumentArray}) {
             chordName: importedChordData['chordName'],
             desc: '',
             chord: importedChordData['chord'],
-            position: [],
+            position: importedChordData['position'],
             author: '',
             authorId: '',
             dataType: 'chord',
@@ -61,7 +104,8 @@ export default function ChordLab({importedChordData, masterInstrumentArray}) {
         dispatch(setLabData(newInfo))
         var returnArr = []
         returnArr.push(importedChordData['chord'])
-        setChords(returnArr)
+        setExportNames([importedChordData['chordName']])
+        handleSetData(returnArr, importedChordData['position'])
         }
         
     }, [importedChordData])
@@ -69,8 +113,8 @@ export default function ChordLab({importedChordData, masterInstrumentArray}) {
     useEffect(() => {
         let newInfo = {...labInfo}
         const chordDataPrototype = {
-            name: chords.length !==0 ? Chord.detect(chords[0])[0] : 'N/A',
-            chordName: chords.length !==0 ? Chord.detect(chords[0])[0] : 'N/A',
+            name: exportNames[0] !== null ? exportNames[0] : Chord.detect(chords[0])[0] ? Chord.detect(chords[0])[0] : Note.pitchClass(chords[0][0])  + ' ???',
+            chordName: exportNames[0] !== null ? exportNames[0] : Chord.detect(chords[0])[0] ? Chord.detect(chords[0])[0] : Note.pitchClass(chords[0][0])  + ' ???',
             desc: description,
             chord: chords.length !==0 ? chords[0] : [],
             chords: chords,
@@ -82,33 +126,40 @@ export default function ChordLab({importedChordData, masterInstrumentArray}) {
         }
         newInfo['chordLab'] = chordDataPrototype
         dispatch(setLabData(newInfo))
-        
-    }, [chords])
+    }, [data])
 
     useEffect(() => {
-        dispatch(setNoteDisplay(convertScaleForDispatch()))
-      }, [instrumentDisplay, chords, displayFocus, displayAll])
+        dispatch(setNoteDisplay(convertChordsForDispatch()))
+      }, [instrumentDisplay, data, displayFocus, displayAll])
       
-    function convertScaleForDispatch(){
-        let displayStyle;
-        if (displayAll){
-            displayStyle = 'special'
-        } else {
-            displayStyle = false;
-        }
-        var arrOfObj = []
-        var dispatchObj = {data: [{speed: 1, notes: [['C E G']]}], displayOnly: displayStyle, highlight: [], specialHighlight: [displayFocus]}
-        var scaleString = ''
-
+    function convertChordsForDispatch(){
         let clone = sortAllChordsByPitch(chords)
         let focus;
-
+        let displayStyle;
+        let pos;
         if (clone[displayFocus] === undefined){
             focus = 0;
         } else {
             focus = displayFocus
         }
-        
+        if (displayAll){
+            displayStyle = 'special'
+        } else {
+            displayStyle = false;
+        }
+        if (positionType === 'locked'){
+            if (!displayAll){
+                pos = position[focus]
+            } else {
+                pos = position
+            }
+        } else{
+            pos = [];
+        }
+        var arrOfObj = []
+        var dispatchObj = {data: [{speed: 1, notes: [['C E G']], position: pos}], displayOnly: displayStyle, highlight: [], specialHighlight: [displayFocus]}
+        var scaleString = ''
+
         if (!displayAll){
             for (let i= 0; i < clone[focus].length; i++){
                 if (i === clone[focus].length - 1){
@@ -131,11 +182,6 @@ export default function ChordLab({importedChordData, masterInstrumentArray}) {
             scaleString = tempArr;
         }
 
-        
-
-
-      
-      
         for (let h = 0; h < masterInstrumentArray.length; h++){
           arrOfObj.push(JSON.parse(JSON.stringify(dispatchObj)))
         }
@@ -150,6 +196,58 @@ export default function ChordLab({importedChordData, masterInstrumentArray}) {
         } else {
           arrOfObj[instrumentDisplay - 1]['data'][0]['notes'][0] = scaleString
           return arrOfObj
+        }
+    }
+
+    function convertChordsForMapping(){
+        let modulePrototype = {   
+            name: 'module A',
+            moduleName: 'module A',
+            desc: '',
+            author: '',
+            authorId: '',
+            dataType: 'module',
+            pool: '',
+            data: {
+                chordData: {
+                    chordName: 'Dm',
+                    name: 'Dm',
+                    chord: ['D3', 'F3', 'A3'],
+                    position: []
+                },
+                rhythmData: {
+                    rhythmName: 'Str8 8s',
+                    rhythm: [['O', 'O'], ['O', 'O'], ['O', 'O'], ['O', 'O']],
+                    speed: 1,
+                    length: 4,
+                    notes: 8
+                },
+                patternData: {
+                    name: 'Arp up-Scale Down',
+                    patternName: 'Arp up-Scale Down',
+                    pattern: [[0], [2], [4], [7], [6], [5], [4], [3]],
+                    type: 'fluid',
+                    length: 8,
+                    position: [0, 0, 0, 0, 0, 0, 0, 0],
+                    positionType: 'unlocked'
+                },
+                scaleData: {
+                    scaleName: 'D Dorian',
+                    name: 'D Dorian',
+                    scale: ['D', 'E', 'F', 'G', 'A', 'B', 'C'],
+                    binary: [1, 0, 1, 1, 0, 1, 0, 1, 0, 1, 1, 0],
+                    number: 2902
+                },
+                keyData: {
+                    keyName: 'Key: C',
+                    root: 'C'
+                },
+            }
+        }
+        let moduleArr = [];
+        for (let i = 0; i < chords.length; i++){
+            moduleArr.push(chords[i])
+            
         }
     }
     
@@ -172,12 +270,6 @@ export default function ChordLab({importedChordData, masterInstrumentArray}) {
                 allScaleNotes.push(allChromaticNotes[n])
             }
         }
-    
-    function handleSetChords(chords){
-        var clone = [...chords]
-        clone = sortAllChordsByPitch(clone)
-        setChords(clone)
-    }
         
     function handleProgressionChange(progression, progressionType){
         setProgression(progression)
@@ -230,12 +322,12 @@ export default function ChordLab({importedChordData, masterInstrumentArray}) {
             if (progressionType === 'number'){
                 const sortedChords = sortChordsByNumber(progression, chordStack)
                 setExportNames(nullStack)
-                handleSetChords(sortedChords)
+                handleSetData(sortedChords)
             }
             if (progressionType === 'manual'){
                 const sortedChords = sortChordsManual(progression, chordStack)
                 setExportNames(nullStack)
-                handleSetChords(sortedChords)
+                handleSetData(sortedChords)
             }
 
     }
@@ -360,11 +452,16 @@ export default function ChordLab({importedChordData, masterInstrumentArray}) {
                     tempArr = []
                 }
             }
-
+            let pos;
+            if (positionType === 'unlocked'){
+                pos = [];
+            } else {
+                pos = position;
+            }
             let returnObj = {
                 displayOnly: false,
                 highlight: 1,
-                data: [{speed: 0.5, notes: noteArr}]
+                data: [{speed: 0.5, notes: noteArr, position: pos}]
             }
             
             Tone.start()
@@ -401,8 +498,9 @@ export default function ChordLab({importedChordData, masterInstrumentArray}) {
         var y = positionId.split('_')[2]
         var cloneNames = [...exportNames]
         cloneNames[x] = null
+        setDisplayFocus(x)
         setExportNames(cloneNames)
-        if (noteOptions === 'scaler'){
+        if (noteOptions === 'scale'){
             if (allScaleNotes.indexOf(chords[x][y]) === -1){
                 var chromaIndex = allChromaticNotes.indexOf(chords[x][y]);
                 if (chromaIndex === -1){
@@ -421,30 +519,23 @@ export default function ChordLab({importedChordData, masterInstrumentArray}) {
             } else {
             clone[x][y] = allScaleNotes[allScaleNotes.indexOf(chords[x][y]) + 1];
             }
-        // clone = sortAllChordsByPitch(clone)
-        handleSetChords(clone)
         }
         if (noteOptions === 'octave'){
-        var note = Note.pitchClass(chords[x][y])
-        var octave = Note.octave(chords[x][y])
-        clone[x][y] = note + (octave + 1)
-        // clone = sortAllChordsByPitch(clone)
-        handleSetChords(clone)
+            var note = Note.pitchClass(chords[x][y])
+            var octave = Note.octave(chords[x][y])
+            clone[x][y] = note + (octave + 1)
         }
         if (noteOptions === 'chromatic'){
-        var chromaIndex = allChromaticNotes.indexOf(chords[x][y])
-        if (allChromaticNotes.indexOf(chords[x][y]) === -1){
-            chromaIndex = allChromaticNotes.indexOf(Note.enharmonic(chords[x][y]))
+            var chromaIndex = allChromaticNotes.indexOf(chords[x][y])
+            if (allChromaticNotes.indexOf(chords[x][y]) === -1){
+                chromaIndex = allChromaticNotes.indexOf(Note.enharmonic(chords[x][y]))
         }
-        clone[x][y] = allChromaticNotes[chromaIndex + 1];
-        // clone = sortAllChordsByPitch(clone)
-        handleSetChords(clone)
+            clone[x][y] = allChromaticNotes[chromaIndex + 1];
         }
         if (noteOptions === 'insert'){
             clone[x].splice(y + 1, 0, chords[x][y]);
-            // clone = sortAllChordsByPitch(clone)
-            handleSetChords(clone)
-            }
+        }
+        handleSetData(clone, position)
     }
 
     var handleClickDown = (e) =>{
@@ -454,9 +545,10 @@ export default function ChordLab({importedChordData, masterInstrumentArray}) {
         var y = positionId.split('_')[2]
         var cloneNames = [...exportNames]
         cloneNames[x] = null
+        setDisplayFocus(x)
         setExportNames(cloneNames)
 
-        if (noteOptions === 'scaler'){
+        if (noteOptions === 'scale'){
             if (allScaleNotes.indexOf(chords[x][y]) === -1){
                 var chromaIndex = allChromaticNotes.indexOf(chords[x][y]);
                 if (chromaIndex === -1){
@@ -475,15 +567,12 @@ export default function ChordLab({importedChordData, masterInstrumentArray}) {
             } else {
             clone[x][y] = allScaleNotes[allScaleNotes.indexOf(chords[x][y]) - 1];
             }
-        // clone = sortAllChordsByPitch(clone)
-        handleSetChords(clone)
+
         }
         if (noteOptions === 'octave'){
         var note = Note.pitchClass(chords[x][y])
         var octave = Note.octave(chords[x][y])
         clone[x][y] = note + (octave - 1)
-        // clone = sortAllChordsByPitch(clone)
-        handleSetChords(clone)
         }
         if (noteOptions === 'chromatic'){
         var chromaIndex = allChromaticNotes.indexOf(chords[x][y])
@@ -491,26 +580,25 @@ export default function ChordLab({importedChordData, masterInstrumentArray}) {
             chromaIndex = allChromaticNotes.indexOf(Note.enharmonic(chords[x][y]))
         }
         clone[x][y] = allChromaticNotes[chromaIndex - 1];
-        // clone = sortAllChordsByPitch(clone)
-        handleSetChords(clone)
         }
         if (noteOptions === 'insert'){
         clone[x].splice(y, 0, chords[x][y]);
-        // clone = sortAllChordsByPitch(clone)
-        handleSetChords(clone)
         }
+        handleSetData(clone, position)
     }
 
     var handleClickUpChord = (e) =>{
         var clone = [...chords]
+        var clonePosition = [...position]
         var parentID = e.currentTarget.parentNode.parentNode.parentNode.id;
         var x = parentID.split('_')[1]
         var cloneNames = [...exportNames]
+        setDisplayFocus(x)
         if (noteOptions !== 'octave'){
             cloneNames[x] = null
             setExportNames(cloneNames)
         }
-        if (noteOptions === 'scaler'){
+        if (noteOptions === 'scale'){
             for (var y = 0; y < chords[x].length; y++){
                 if (allScaleNotes.indexOf(chords[x][y]) === -1){
                     var chromaIndex = allChromaticNotes.indexOf(chords[x][y]);
@@ -531,8 +619,6 @@ export default function ChordLab({importedChordData, masterInstrumentArray}) {
                 clone[x][y] = allScaleNotes[allScaleNotes.indexOf(chords[x][y]) + 1];
                 }
             }
-        // clone = sortAllChordsByPitch(clone)
-        handleSetChords(clone)
         }
         if (noteOptions === 'octave'){
             for (var y = 0; y < chords[x].length; y++){
@@ -540,7 +626,6 @@ export default function ChordLab({importedChordData, masterInstrumentArray}) {
                 var octave = Note.octave(chords[x][y])
                 clone[x][y] = note + (octave + 1)
             }
-            handleSetChords(clone)
             }
         if (noteOptions === 'chromatic'){
             for (var y = 0; y < chords[x].length; y++){
@@ -550,27 +635,30 @@ export default function ChordLab({importedChordData, masterInstrumentArray}) {
                 }
         clone[x][y] = allChromaticNotes[chromaIndex + 1];
             }
-        // clone = sortAllChordsByPitch(clone)
-        handleSetChords(clone)
+        }
+        if (noteOptions === 'position'){
+            clonePosition[x] += 1
         }
         if (noteOptions === 'insert'){
             var newChord = [...clone[x]]
             clone.splice(x, 0, newChord);
-            handleSetChords(clone)
         }
+        handleSetData(clone, clonePosition)
     }
 
     var handleClickDownChord = (e) =>{
         var clone = [...chords]
+        var clonePosition = [...position]
         var parentID = e.currentTarget.parentNode.parentNode.parentNode.id;
         var x = parentID.split('_')[1]
+        setDisplayFocus(x)
         var cloneNames = [...exportNames]
         if (noteOptions !== 'octave'){
             cloneNames[x] = null
             setExportNames(cloneNames)
         }
 
-        if (noteOptions === 'scaler'){
+        if (noteOptions === 'scale'){
             for (var y = 0; y < chords[x].length; y++){
                 if (allScaleNotes.indexOf(chords[x][y]) === -1){
                     var chromaIndex = allChromaticNotes.indexOf(chords[x][y]);
@@ -591,8 +679,6 @@ export default function ChordLab({importedChordData, masterInstrumentArray}) {
                 clone[x][y] = allScaleNotes[allScaleNotes.indexOf(chords[x][y]) - 1];
                 }
             }
-        // clone = sortAllChordsByPitch(clone)
-        handleSetChords(clone)
         }
         if (noteOptions === 'octave'){
             for (var y = 0; y < chords[x].length; y++){
@@ -600,8 +686,6 @@ export default function ChordLab({importedChordData, masterInstrumentArray}) {
                 var octave = Note.octave(chords[x][y])
                 clone[x][y] = note + (octave - 1)
             }
-            // clone = sortAllChordsByPitch(clone)
-            handleSetChords(clone)
             }
         if (noteOptions === 'chromatic'){
             for (var y = 0; y < chords[x].length; y++){
@@ -611,22 +695,25 @@ export default function ChordLab({importedChordData, masterInstrumentArray}) {
                 }
         clone[x][y] = allChromaticNotes[chromaIndex - 1];
             }
-        // clone = sortAllChordsByPitch(clone)
-        handleSetChords(clone)
+        }
+        if (noteOptions === 'position'){
+            if (clonePosition[x] > 0){
+                clonePosition[x] -= 1
+            }
         }
         if (noteOptions === 'insert'){
             var newChord = [...clone[x]]
             clone.splice(x, 0, newChord);
-            // clone = sortAllChordsByPitch(clone)
-            handleSetChords(clone)
         }
+        handleSetData(clone, clonePosition)
     }
 
     var handleClickUpAll = () =>{
         var clone = [...chords]
+        var clonePosition = [...position]
         var cloneNames = [...exportNames]
         setExportNames(cloneNames)
-        if (noteOptions === 'scaler'){
+        if (noteOptions === 'scale'){
             for (let x = 0; x < chords.length; x++){
                 for (let y = 0; y < chords[x].length; y++){
                     if (allScaleNotes.indexOf(chords[x][y]) === -1){
@@ -649,8 +736,6 @@ export default function ChordLab({importedChordData, masterInstrumentArray}) {
                     }
                 }
             }
-        // clone = sortAllChordsByPitch(clone)
-        handleSetChords(clone)
         }
         if (noteOptions === 'octave'){
             for (let x = 0; x < chords.length; x++){
@@ -659,7 +744,6 @@ export default function ChordLab({importedChordData, masterInstrumentArray}) {
                     var octave = Note.octave(chords[x][y])
                     clone[x][y] = note + (octave + 1)
                 }
-                handleSetChords(clone)
                 }
             }
         if (noteOptions === 'chromatic'){
@@ -671,20 +755,25 @@ export default function ChordLab({importedChordData, masterInstrumentArray}) {
                     }
             clone[x][y] = allChromaticNotes[chromaIndex + 1];
                 }
-            // clone = sortAllChordsByPitch(clone)
-            handleSetChords(clone)
+            }
+        }
+        if (noteOptions === 'position'){
+            for (let x = 0; x < clonePosition.length; x++){
+                clonePosition[x] += 1;
             }
         }
         if (noteOptions === 'insert'){
             return
         }
+        handleSetData(clone, clonePosition)
     }
 
     var handleClickDownAll = () =>{
         var clone = [...chords]
+        var clonePosition = [...position]
         var cloneNames = [...exportNames]
         setExportNames(cloneNames)
-        if (noteOptions === 'scaler'){
+        if (noteOptions === 'scale'){
             for (let x = 0; x < chords.length; x++){
                 for (let y = 0; y < chords[x].length; y++){
                     if (allScaleNotes.indexOf(chords[x][y]) === -1){
@@ -707,8 +796,6 @@ export default function ChordLab({importedChordData, masterInstrumentArray}) {
                     }
                 }
             }
-        // clone = sortAllChordsByPitch(clone)
-        handleSetChords(clone)
         }
         if (noteOptions === 'octave'){
             for (let x = 0; x < chords.length; x++){
@@ -717,8 +804,6 @@ export default function ChordLab({importedChordData, masterInstrumentArray}) {
                     const octave = Note.octave(chords[x][y])
                     clone[x][y] = note + (octave - 1)
                 }
-                // clone = sortAllChordsByPitch(clone)
-                handleSetChords(clone)
                 }
             }
         if (noteOptions === 'chromatic'){
@@ -730,17 +815,23 @@ export default function ChordLab({importedChordData, masterInstrumentArray}) {
                     }
             clone[x][y] = allChromaticNotes[chromaIndex - 1];
                 }
-            // clone = sortAllChordsByPitch(clone)
-            handleSetChords(clone)
             }
+            }
+        if (noteOptions === 'position'){
+            for (let x = 0; x < clonePosition.length; x++){
+                if (clonePosition[x] > 0){
+                    clonePosition[x] -= 1
+                }
+                }
             }
         if (noteOptions === 'insert'){
             return
         }
+        handleSetData(clone, clonePosition)
     }
 
     const handleDeleteAll = () => {
-        handleSetChords([])
+        handleSetData([], [])
         setExportNames([])
     }
 
@@ -751,7 +842,8 @@ export default function ChordLab({importedChordData, masterInstrumentArray}) {
         var cloneNames = [...exportNames]
         var x = positionId.split('_')[1]
         var y = positionId.split('_')[2]
-        
+        setDisplayFocus(x)
+
         if (nOfSiblings === 1){
             clone.splice(x, 1)
         } else {
@@ -760,11 +852,12 @@ export default function ChordLab({importedChordData, masterInstrumentArray}) {
         
         cloneNames[x] = null
         setExportNames(cloneNames)
-        handleSetChords(clone)
+        handleSetData(clone, position)
     }
 
     const handleDeleteChord =(e) => {
         var clone = [...chords]
+        var clonePosition = [...position]
         var parentID = e.currentTarget.parentNode.parentNode.id;
         var x = parentID.split('_')[1]
 
@@ -773,12 +866,13 @@ export default function ChordLab({importedChordData, masterInstrumentArray}) {
         setExportNames(cloneNames)
 
         clone.splice(x, 1)
-        // clone = sortAllChordsByPitch(clone)
-        handleSetChords(clone);
+        clonePosition.splice(x, 1)
+        handleSetData(clone, clonePosition)
     }
 
     const handleAddChord = () => {
         const clone = JSON.parse(JSON.stringify(chords))
+        const clonePosition = [...position]
         if (chords.length === 0){
             generateChordStack(1)
             return 
@@ -789,18 +883,20 @@ export default function ChordLab({importedChordData, masterInstrumentArray}) {
         let z = [...exportNames]
         z.push(y)
         setExportNames(z)
+        clonePosition.push(0)
         }
-        handleSetChords(clone)
+        handleSetData(clone, clonePosition)
     }
 
     const handleRemoveChord = () => {
         const clone = [...chords]
+        const clonePosition = [...position]
         if (chords.length === 0){
             return
         } else {
         clone.pop()
         }
-        handleSetChords(clone)
+        handleSetData(clone, clonePosition)
     }
 
     const handlePlayThis = (e, x) => {
@@ -813,10 +909,12 @@ export default function ChordLab({importedChordData, masterInstrumentArray}) {
 
         if (parentID.split('_').length === 2){
             const x = parentID.split('_')[1]
+            setDisplayFocus(x)
             polySynth.triggerAttackRelease(chords[x], '8n');
         } else if (parentID.split('_').length === 3) {
             const x = parentID.split('_')[1]
             const y = parentID.split('_')[2]
+            setDisplayFocus(x)
             polySynth.triggerAttackRelease(chords[x][y], '8n')
         } else {
             return
@@ -831,10 +929,8 @@ export default function ChordLab({importedChordData, masterInstrumentArray}) {
         let x = Number(parentID.split('_')[1])
         if (noteOptions === 'change name'){
             setInputFocus(x)
-        } else {
-            setDisplayFocus(x)
-            // handlePlayThis(e, x)
-        }
+        } 
+        setDisplayFocus(x)
     }
 
     const handleEdit = () => {
@@ -848,7 +944,7 @@ export default function ChordLab({importedChordData, masterInstrumentArray}) {
     function changePositionsUsingIDs(startingID, endingID){
     var xfer;
     var xfer2;
-    var clone = [...chords]
+    var clone = JSON.parse(JSON.stringify(data))
     var cloneNames = [...exportNames]
     var ex1 = startingID.split('_')
     var ex2 = endingID.split('_')
@@ -866,7 +962,7 @@ export default function ChordLab({importedChordData, masterInstrumentArray}) {
     cloneNames.splice(startingPosition, 1)
     cloneNames.splice(endingPosition, 0, xfer2)
     
-    handleSetChords(clone)
+    setData(clone)
     setExportNames(cloneNames)
 }
 
@@ -888,7 +984,6 @@ export default function ChordLab({importedChordData, masterInstrumentArray}) {
             position: []
         }, type: 'chordLab'}
         e.dataTransfer.setData('text', JSON.stringify(obj));
-        console.log(obj)
     };
 
     const dragStartHandlerSpecial = e => {
@@ -905,7 +1000,6 @@ export default function ChordLab({importedChordData, masterInstrumentArray}) {
             position: []
         }, type: 'chordLabExport'}
         e.dataTransfer.setData('text', JSON.stringify(obj));
-        console.log(obj)
     }
     
     const dragHandler = e => {
@@ -938,18 +1032,6 @@ export default function ChordLab({importedChordData, masterInstrumentArray}) {
         }
         
         
-    }
-
-    const clickHandler = e => {
-        var childNodes = e.target.childNodes
-        var returnArr = []
-        for (var i = 0; i < childNodes.length; i++){
-            returnArr.push(childNodes)
-        }
-        // handlePlayThis()
-        // console.log(returnArr, 'returnArr')
-        // console.log(e.target.id, 'e.target')
-        // console.log(e.currentTarget.id, 'e.currentTarget')
     }
 
     //==========================================
@@ -990,6 +1072,7 @@ export default function ChordLab({importedChordData, masterInstrumentArray}) {
                 <div onClick={(e) => (handlePlayThis(e, true))} style={{display: 'flex', flexDirection: 'row', marginBottom: '18px'}}>
                 { (edit && noteOptions !== 'delete') && <div  style={{display: 'flex', flexDirection: (noteOptions === 'insert') ? 'row' : 'column'}}>
                 <Icon onClick={handleClickUpChord} name= {(noteOptions === 'insert') ? "plus" : "caret square up" }/><Icon onClick={handleClickDownChord}name= {(noteOptions === 'insert') ? "" : "caret square down" }/>
+                {(edit && noteOptions === 'position') && <div>{position[i]}</div>}
                 </div>}
                 {(edit && noteOptions === 'delete') && <Icon onClick={handleDeleteChord} name= 'trash alternate outline' /> }
                 </div>
@@ -1037,22 +1120,6 @@ export default function ChordLab({importedChordData, masterInstrumentArray}) {
         setGenerateChordOptions(clone)
     }
 
-    function handleExport(){
-        const user = JSON.parse(localStorage.getItem('userInfo'))
-        const chordDataPrototype = {
-            name: Chord.detect(chords[0])[0],
-            chordName: Chord.detect(chords[0])[0],
-            desc: '',
-            chord: chords[0],
-            position: [],
-            author: user['name'],
-            authorId: user['_id'],
-            dataType: 'chord',
-            pool: exportPool,
-        }
-        dispatch(insertData(chordDataPrototype))
-    }
-
     const exportObj = {
         name: exportNames ? exportNames[0] : Chord.detect(chords[0])[0] ? Chord.detect(chords[0])[0]: '',
         chordName: exportNames ? exportNames[0] : Chord.detect(chords[0])[0] ? Chord.detect(chords[0])[0]: '',
@@ -1088,7 +1155,7 @@ export default function ChordLab({importedChordData, masterInstrumentArray}) {
                     }
                 }
             }
-            handleSetChords(chordsClone)
+            handleSetData(chordsClone, position)
           }
           if (options === 'flats'){
             setChromaticNotes(['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B'])
@@ -1102,9 +1169,29 @@ export default function ChordLab({importedChordData, masterInstrumentArray}) {
                     }
                 }
             }
-            handleSetChords(chordsClone)
+            handleSetData(chordsClone, position)
           }
       }
+
+      const handleMapChords = () => {
+        let returnArr = []
+        for (let i = 0; i < chords.length; i++){
+            let name = exportNames[i] !== null ? exportNames[i] : Chord.detect(chords[i])[0] ? Chord.detect(chords[i])[0] : Note.pitchClass(chords[i][0])  + ' ???'
+            let dispatchObj = turnChordIntoModule(chords[i], 'C', name, 'module ' + (i + 4))
+            returnArr.push(dispatchObj)
+        }
+        dispatch(mapChordsToPlayer(returnArr))
+      }
+
+      const modalMapObjArr = [
+          {chord: ['C3', 'E3', 'G3'], name: 'CM'},
+          {chord: ['D3', 'F3', 'A3'], name: 'Dm'},
+          {chord: ['E3', 'G3', 'B3'], name: 'Em'},
+          {chord: ['F3', 'A3', 'C4'], name: 'FM'},
+          {chord: ['G3', 'B3', 'D4'], name: 'GM'},
+          {chord: ['A3', 'C4', 'E4'], name: 'Am'},
+          {chord: ['B3', 'D4', 'F4'], name: 'Bm'},
+      ]
       //====
     return (
         <>
@@ -1191,6 +1278,16 @@ export default function ChordLab({importedChordData, masterInstrumentArray}) {
 
             </Dropdown.Menu>
            </Dropdown>
+           <Dropdown
+            simple
+            item
+            text='Position'
+            >
+        <Dropdown.Menu>
+        <Dropdown.Item active={positionType === 'unlocked'} onClick={() => setPositionType('unlocked')}> Unlocked<Icon name='lock open'/></Dropdown.Item> 
+         <Dropdown.Item active={positionType === 'locked'} onClick={() => setPositionType('locked')}> Locked <Icon name='lock'/></Dropdown.Item>       
+        </Dropdown.Menu>
+        </Dropdown>
          <Menu.Item onClick={handleEdit}> Edit </Menu.Item>     
          <Menu.Item onClick={() => setShowDescription(!showDescription)}> Desc </Menu.Item>
             <Dropdown
@@ -1210,7 +1307,10 @@ export default function ChordLab({importedChordData, masterInstrumentArray}) {
              {mapMenuItems()}
           </Dropdown.Menu>
         </Dropdown>
-         <Menu.Item onClick={() => generateChordStack(1)}> Map </Menu.Item>  
+         <MapModal
+         mapObj={modalMapObjArr}
+         handleMapChords={handleMapChords}
+         />  
          <Button.Group>
          <ExportModal
         dataType={'Chord'}
@@ -1219,9 +1319,10 @@ export default function ChordLab({importedChordData, masterInstrumentArray}) {
         </Menu>
         {edit && <Button.Group>
             <Button basic compact active={noteOptions === 'octave'} onClick={() => setNoteOptions('octave')}>Octave</Button>
-            <Button basic compact active={noteOptions === 'scaler'} onClick={() => setNoteOptions('scaler')}>Scale</Button>
+            <Button basic compact active={noteOptions === 'scale'} onClick={() => setNoteOptions('scale')}>Scale</Button>
             <Button basic compact active={noteOptions === 'chromatic'} onClick={() => setNoteOptions('chromatic')}>Chromatic</Button>
             <Button basic compact active={noteOptions === 'insert'} onClick={() => setNoteOptions('insert')}>Insert</Button>
+            <Button basic compact active={noteOptions === 'position'} onClick={() => setNoteOptions('position')}>Position</Button>
             <Button basic compact active={noteOptions === 'delete'} onClick={() => setNoteOptions('delete')}>Delete</Button>
             <Button basic compact onClick={handleRemoveChord}>Chord--</Button>
             <Button basic compact onClick={handleAddChord}>Chord++</Button>
@@ -1243,7 +1344,7 @@ export default function ChordLab({importedChordData, masterInstrumentArray}) {
             id={'input_patternLab'}
             ref={input => input && input.focus()}
             onBlur={() => setInputFocus(-2)}
-            onInput={(e) => handleChangeName(e, 2)}
+            onInput={(e) => handleChangeName(e, 0)}
             style={{display: inputFocus === -1 ? '': 'none' }}
             />
         </div>

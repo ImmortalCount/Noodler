@@ -36,15 +36,22 @@ export default function ModuleLab({importedModuleData, masterInstrumentArray}) {
     function convertModuleForDispatch(){
         let notes = patternAndScaleToNotes(pattern, patternType, scaleNotes)
         let displayStyle;
+        let pos;
         if (displayAll){
             displayStyle = 'special'
         } else {
             displayStyle = false;
         }
+        if (positionType === 'locked'){
+            pos = position
+        } else {
+            pos = []
+        }
+
         
         var arrOfObj = [];
-        var blankObj = {data: [{speed: 1, notes: [['']]}], displayOnly: displayStyle, highlight: [], specialHighlight: [0]}
-        var loadedObj = {data: [{speed: 1, notes: [notes]}], displayOnly: displayStyle, highlight: [], specialHighlight: [0]}
+        var blankObj = {data: [{speed: 1, notes: [['']], position: []}], displayOnly: displayStyle, highlight: [], specialHighlight: [0]}
+        var loadedObj = {data: [{speed: 1, notes: [notes], position: pos}], displayOnly: displayStyle, highlight: [], specialHighlight: [0]}
 
         for (let h = 0; h < masterInstrumentArray.length; h++){
             arrOfObj.push(JSON.parse(JSON.stringify(blankObj)))
@@ -91,6 +98,7 @@ export default function ModuleLab({importedModuleData, masterInstrumentArray}) {
             type: 'fluid',
             length: 0,
             pattern: [7, 8, 9, 18, 14, 13, 11, 12],
+            positionType: 'unlocked',
             position: [],
             author: '',
             authorId: '',
@@ -176,6 +184,8 @@ export default function ModuleLab({importedModuleData, masterInstrumentArray}) {
     var chromaticNotes = scaleHandler(Scale.get('c chromatic').notes, options);
     var pattern = labInfo && labInfo['patternLab'] && labInfo['patternLab']['pattern'] ? labInfo['patternLab']['pattern'] : initState['patternLab']['pattern']
     var patternType = labInfo && labInfo['patternLab'] && labInfo['patternLab']['type'] ? labInfo['patternLab']['type'] : initState['patternLab']['type']
+    var position = labInfo && labInfo['patternLab'] && labInfo['patternLab']['position'] ? labInfo['patternLab']['position'] : initState['patternLab']['position']
+    var positionType = labInfo && labInfo['patternLab'] && labInfo['patternLab']['positionType'] ? labInfo['patternLab']['positionType'] : initState['patternLab']['positionType']
     var rhythm = labInfo && labInfo['rhythmLab'] && labInfo['rhythmLab']['rhythm'] ? labInfo['rhythmLab']['rhythm'] : initState['rhythmLab']['rhythm']
     var notesFromRhythm = labInfo && labInfo['rhythmLab'] && labInfo['rhythmLab']['notes'] ? labInfo['rhythmLab']['notes'] : initState['rhythmLab']['notes']
     var playConstant = labInfo && labInfo['rhythmLab'] && labInfo['rhythmLab']['speed'] ? labInfo['rhythmLab']['speed'] : initState['rhythmLab']['speed']
@@ -347,10 +357,16 @@ for (var o = 0; o < 10; o++){
                 intervals.current.push(setTimeout(() => Tone.Transport.stop(), totalTime));
                 intervals.current.push(setTimeout(() => setPlaying(false), totalTime));
         } else {
+            let pos;
+            if (positionType === 'locked'){
+                pos = position
+            } else {
+                pos = [];
+            }
             let returnObj = {
                 displayOnly: false,
                 highlight: 1,
-                data: [{speed: 1, notes: sequence}]
+                data: [{speed: 1, notes: sequence, position: pos}]
             }
             console.log(totalTime)
             Tone.start()
@@ -527,7 +543,7 @@ for (var o = 0; o < 10; o++){
          <Menu.Item onClick={() => {playModule(); setPlaying(true)}} ><Icon name={playing ? 'stop': 'play'}/></Menu.Item>  
          <Dropdown onChange={onChangeDropdown} options={options === 'sharps' ? dropdownOptionsKeySharp : dropdownOptionsKeyFlat} text = {`Key: ${key}`} simple item/>
          <Menu.Item onClick={() => setShowDescription(!showDescription)}> Desc </Menu.Item>
-         <Menu.Item onClick={() => console.log(convertModuleForDispatch(), '!!')}> Test </Menu.Item>
+         <Menu.Item onClick={() => console.log(position, positionType, 'pos postype')}> Test </Menu.Item>
          <Dropdown
             simple 
             item
@@ -582,6 +598,8 @@ for (var o = 0; o < 10; o++){
             chordName={labInfo && labInfo['chordLab'] && labInfo['chordLab']['name'] ? labInfo['chordLab']['name']: initState['chordLab']['name']}
             rhythmName={labInfo && labInfo['rhythmLab'] && labInfo['rhythmLab']['name'] ? labInfo['rhythmLab']['name']: initState['rhythmLab']['name']}
             patternName={labInfo && labInfo['patternLab'] && labInfo['patternLab']['name'] ? labInfo['patternLab']['name']: initState['patternLab']['name']}
+            patternType={labInfo && labInfo['patternLab'] && labInfo['patternLab']['type'] ? labInfo['patternLab']['type']: initState['patternLab']['type']}
+            positionType={labInfo && labInfo['patternLab'] && labInfo['patternLab']['positionType'] ? labInfo['patternLab']['positionType']: initState['patternLab']['positionType']}
             scaleName={labInfo && labInfo['scaleLab'] && labInfo['scaleLab']['scaleName'] ? labInfo['scaleLab']['name']: initState['scaleLab']['name']}
             countName={labInfo && labInfo['rhythmLab'] && labInfo['rhythmLab']['length'] ? labInfo['rhythmLab']['length'] : initState['rhythmLab']['length']}
             keyName={`Key: ${key}`}
