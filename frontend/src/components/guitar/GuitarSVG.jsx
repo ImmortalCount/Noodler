@@ -1,16 +1,16 @@
-import React, { useState, useEffect, useLayoutEffect, useRef} from 'react'
+import React, { useState, useEffect, useRef} from 'react'
+import instrumentSamples from '../Instruments/Instruments'
 import { jsPDF } from "jspdf";
 import { svgAsPngUri } from "save-svg-as-png";
 import FileSaver from 'file-saver'
 import * as Tone from 'tone';
-import { allSynths } from './allSynths';
+import { currentSynths, nameOfNewSynthSource } from './allSynths'
 import { useSelector, useDispatch} from 'react-redux';
 import { Dropdown, Button, Icon, Segment, Input } from 'semantic-ui-react';
 import {moduleMarkerCreator, moduleMarkerCreatorAll, moduleMarkerCreatorCompact, loopLengthCreator, findBetween} from './timeFunctions'
-import { invisAll, shadeHexColor, showAll } from './guitarDisplayFunctions';
+import { invisAll, shadeHexColor} from './guitarDisplayFunctions';
 import {noteValues, romanNumerals} from './guitarSVGConstants';
 import { guitarPrototype, bassPrototype } from './instrumentPrototypes';
-import { data1, data2 } from './dummyData';
 import { Note } from '@tonaljs/tonal';
 import { setSongData } from '../../store/actions/songDataActions';
 import { setInstrumentNames } from '../../store/actions/instrumentNameActions';
@@ -24,7 +24,7 @@ import { setGlobalInstruments } from '../../store/actions/globalInstrumentsActio
 export default function GuitarSVG({masterInstrumentArray, activelyDisplayedInstruments}) {
     const state = useSelector((state) => state.module)
     //Change it so that noteColors is global?
-    const [instruments, setInstruments] = useState([{name: 'Instr 1', instrument:'acoustic_guitar_nylon', type: 'guitar', noteColors: '', scale:[], tuning:['E4','B3','G3','D3','A2','E2'],stringNumber:6,fretNumber: 24}])
+    const [instruments, setInstruments] = useState([{name: 'Instr 1', instrument:'acoustic_guitar_nylon', synthSource: 'acoustic_guitar_nylon', type: 'guitar', noteColors: '', scale:[], tuning:['E4','B3','G3','D3','A2','E2'],stringNumber:6,fretNumber: 24}])
     const [module, setModule] = useState(0);
     const [inputFocus, setInputFocus] = useState(null)
     const [noteColors, setNoteColors] = useState('')
@@ -55,6 +55,8 @@ export default function GuitarSVG({masterInstrumentArray, activelyDisplayedInstr
     const {playImport} = playImportData
 
     var initialLoad = useRef(true)
+
+    var loadedSynths = useRef(currentSynths)
 
     //=====Consts
     const guitarInstruments = [
@@ -676,8 +678,11 @@ function handleInstrumentUpdate(){
     if (masterInstrumentArray.length === instruments.length){
         return
     } else if (masterInstrumentArray.length > instruments.length){
+        let newSynth = nameOfNewSynthSource('acoustic_guitar_nylon', instruments)
         clonePrototype['name'] = 'Instr ' + masterInstrumentArray.length
+        clonePrototype['synthSource'] = newSynth
         clone.push(clonePrototype)
+        loadASynth(newSynth, 'acoustic_guitar_nylon')
         setInstruments(clone)
     } else if (masterInstrumentArray.length < instruments.length){
         clone.pop()
@@ -814,7 +819,6 @@ function loadNoteSequenceAndVisualDataOntoTimeline(data){
                         pos = returnPosition(note, tuning, manualPosition)
                     }
                     if (pos !== undefined){
-                        console.log(pos, 'POS!!')
                         for (var w = 0; w < pos.length; w++){
                             let findNote = pos[w]
                             if (Note.accidentals(pos[w]) === 'b'){
@@ -851,7 +855,7 @@ function loadNoteSequenceAndVisualDataOntoTimeline(data){
             }  
     }
     for (let j = 0; j < data.length; j++){
-        setUpSequence(data[j]['data'], allSynths[instruments[j]['instrument']], j, data[j]['displayOnly'])
+        setUpSequence(data[j]['data'], loadedSynths.current[instruments[j]['synthSource']], j, data[j]['displayOnly'])
     }
 }
 
@@ -1118,26 +1122,60 @@ const onChangeTuning = (e, {id, value}) => {
   }
 
 const onChangeInstrument = (e, {id, value}) => {
-   
+   Tone.Transport.stop();
     var clone = [...instruments]
     var idx = Number(id.split("_")[1])
     const name = instruments[idx]['name']
 
-   if (guitarInstruments.includes(value)){
-       clone[idx] = JSON.parse(JSON.stringify(guitarPrototype))
-       clone[idx]['instrument'] = value;
-       clone[idx]['name'] = name;
-       clone[idx]['type'] = 'guitar'
-    setInstruments(clone)
-       
-   }
-   if (bassInstruments.includes(value)){
-    clone[idx] = JSON.parse(JSON.stringify(bassPrototype))
+    if (guitarInstruments.includes(value)){
+        clone[idx] = JSON.parse(JSON.stringify(guitarPrototype))
+        clone[idx]['type'] = 'guitar'
+    }
+
+    if (bassInstruments.includes(value)){
+        clone[idx] = JSON.parse(JSON.stringify(bassPrototype))
+        clone[idx]['type'] = 'bass'
+    }
+    let newSynth = nameOfNewSynthSource(value, instruments)
     clone[idx]['instrument'] = value;
     clone[idx]['name'] = name;
-    clone[idx]['type'] = 'bass'
+    clone[idx]['synthSource'] = newSynth
+
+    loadASynth(newSynth, value)
     setInstruments(clone)
-    }
+  }
+
+  const onChangeVolume = (e) => {
+      console.log(e.target.value)
+  }
+
+  const onChangeVolume1 = (e) => {
+    let thisInstrumentSynth = loadedSynths.current[instruments[0]['synthSource']]
+    thisInstrumentSynth.volume.value = e.target.value
+  }
+  const onChangeVolume2 = (e) => {
+    let thisInstrumentSynth = loadedSynths.current[instruments[1]['synthSource']]
+    thisInstrumentSynth.volume.value = e.target.value
+  }
+
+  const onChangeVolumeMaster = (e) => {
+      Tone.getDestination().volume.value = e.target.value
+  }
+
+  let panner = useRef(new Tone.PingPongDelay({wet: 0.5, delayTime: "8n", feedback: 0.5}).toDestination())
+  let thisInstrumentSynth = loadedSynths.current[instruments[0]['synthSource']]
+  thisInstrumentSynth.connect(panner.current, Tone.Destination)
+
+
+  const onChangePanning1 = (e) => {
+      panner.current.wet.value = e.target.value;
+//    panner.current.pan.value = e.target.value;
+// panner.current.dispose()
+  }
+
+  const onChangePanning2 = (e) => {
+    let thisInstrumentSynth = loadedSynths.current[instruments[1]['synthSource']]
+    thisInstrumentSynth.panning.value = e.target.value
   }
 
 function addRemoveGuitars(action){
@@ -1408,7 +1446,14 @@ function testDownload2(){
 img.src = url;
 }
 
+function loadASynth(synthName, synthType){
+    loadedSynths.current[synthName] = new Tone.Sampler(instrumentSamples[synthType]).toDestination()
+}
 
+function disposeOfASynth(synthName){
+    synthName.dispose();
+    delete loadedSynths.current[synthName]
+}
     return (
         <>
         {mapGuitarSVGContainers(instruments)}
@@ -1422,7 +1467,15 @@ img.src = url;
         <Button compact basic onClick={() => globalPositionChange('down')}><Icon name='arrow down'/></Button>
         <Button compact basic onClick={() => globalPositionChange('up')}><Icon name='arrow up'/></Button>
         <Button compact basic onClick={() => handleSeeAllPositions()}><Icon name='arrows alternate vertical'/></Button>
-        <Button compact basic onClick={() => testDownload2(0)}>Test Download</Button>
+        <Button compact basic onClick={() => console.log(instruments)}>instruments</Button>
+        <Button compact basic onClick={() => loadNoteSequenceAndVisualDataOntoTimeline(data)}>Manual reload</Button>
+        <Button compact basic onClick={() => console.log(loadedSynths.current)}>current synths</Button>
+        <Button compact basic onClick={() => loadedSynths.current['acoustic_guitar_nylon_2'] = new Tone.Sampler(instrumentSamples.acoustic_guitar_nylon).toDestination()}>manual add a synth</Button>
+        <input name='changeVol1' id='instr 1' type="range" min='-20' max='20' step='1' defaultValue={'0'} onChange={onChangeVolume1} />
+        <input name='changeVol1' id='instr 1' type="range" min='-1' max='1' step='0.1' defaultValue={'0'} onChange={onChangePanning1} />
+        <input name='changeVol2' id='instr 2' type="range" min='-20' max='20' step='1' defaultValue={'0'} onChange={onChangeVolume2} />
+        {/* <input name='changeVol1' id='instr 1' type="range" min='-1' max='1' step='0.1' defaultValue={'0'} onChange={onChangePanning2} /> */}
+        <input name='changeVol1' id='instr 1' type="range" min='-20' max='20' step='1' defaultValue={'0'} onChange={onChangeVolumeMaster} />
         </>
     )
 }

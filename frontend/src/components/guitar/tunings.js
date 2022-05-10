@@ -29,10 +29,9 @@ export const tuningOptionsGuitar = [
 
 export const tuningOptionsBass = [
     {key: 'Standard Bass 4', text: 'Bass: EADG', value: ['G2', 'D2', 'A1', 'E1']},
-    {key: 'Drop D Bass', text: 'Bass: Drop D', value: ['G2', 'D2', 'A1', 'D1']},
     {key: 'Standard Bass 5', text: 'Bass: BEADG', value: ['G2', 'D2', 'A1', 'E1', 'B0']},
     {key: 'Standard Bass 6', text: 'Bass: F#BEADG', value: ['G2', 'D2', 'A1', 'E1', 'B0', 'F#0']},
-    {key: 'Standard Bass 4', text: 'Bass: EADG', value: ['G2', 'D2', 'A1', 'E1']},
-    {key: 'Standard Bass 4', text: 'Bass: EADG', value: ['G2', 'D2', 'A1', 'E1']},
+    {key: 'Drop D Bass', text: 'Bass: Drop D', value: ['G2', 'D2', 'A1', 'D1']},
+
 ]
 
