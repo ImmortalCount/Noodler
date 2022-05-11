@@ -19,6 +19,9 @@ import { setPlayHighlight } from '../../store/actions/playHighlightActions';
 import { tuningOptionsGuitar, tuningOptionsBass } from './tunings';
 import { instrumentOptions } from './instruments';
 import { setGlobalInstruments } from '../../store/actions/globalInstrumentsActions';
+import { downloadTabAsTextFile } from './tabfunctions';
+import TabDownloadModal from '../modal/TabDownloadModal'
+import AudioDownloadModal from '../modal/AudioDownloadModal';
 
 
 export default function GuitarSVG({masterInstrumentArray, activelyDisplayedInstruments}) {
@@ -53,6 +56,12 @@ export default function GuitarSVG({masterInstrumentArray, activelyDisplayedInstr
 
     const playImportData = useSelector(state => state.playImport)
     const {playImport} = playImportData
+
+    const mixerData = useSelector(state => state.mixer)
+    const {mixer} = mixerData
+
+    const tabData = useSelector(state => state.tab)
+    const {tab} = tabData
 
     var initialLoad = useRef(true)
 
@@ -1054,6 +1063,7 @@ function displayNotes(input){
 function loopOn(){
     Tone.Transport.loopStart = 0;
     Tone.Transport.loopEnd = loopLengthCreator(data);
+    console.log(loopLengthCreator(data))
     if (Tone.Transport.loop !== true){
         Tone.Transport.loop = true;
         setLoop(true)
@@ -1145,9 +1155,15 @@ const onChangeInstrument = (e, {id, value}) => {
     setInstruments(clone)
   }
 
-  const onChangeVolume = (e) => {
-      console.log(e.target.value)
+
+  function changeVolumeFromMixerInput(){
+    if (mixer){
+        let thisInstrumentSynth = loadedSynths.current[mixer['synthSource']]
+        thisInstrumentSynth.volume.value = mixer['value']
+    }
   }
+
+  changeVolumeFromMixerInput()
 
   const onChangeVolume1 = (e) => {
     let thisInstrumentSynth = loadedSynths.current[instruments[0]['synthSource']]
@@ -1162,16 +1178,16 @@ const onChangeInstrument = (e, {id, value}) => {
       Tone.getDestination().volume.value = e.target.value
   }
 
-  let panner = useRef(new Tone.PingPongDelay({wet: 0.5, delayTime: "8n", feedback: 0.5}).toDestination())
-  let thisInstrumentSynth = loadedSynths.current[instruments[0]['synthSource']]
-  thisInstrumentSynth.connect(panner.current, Tone.Destination)
+//   let panner = useRef(new Tone.Reverb(5.0).toDestination())
+//   let thisInstrumentSynth = loadedSynths.current[instruments[0]['synthSource']]
+//   thisInstrumentSynth.connect(panner.current, Tone.Destination)
 
 
-  const onChangePanning1 = (e) => {
-      panner.current.wet.value = e.target.value;
-//    panner.current.pan.value = e.target.value;
-// panner.current.dispose()
-  }
+//   const onChangePanning1 = (e) => {
+//       panner.current.wet.value = e.target.value;
+// //    panner.current.pan.value = e.target.value;
+// // panner.current.dispose()
+//   }
 
   const onChangePanning2 = (e) => {
     let thisInstrumentSynth = loadedSynths.current[instruments[1]['synthSource']]
@@ -1270,7 +1286,7 @@ function mapGuitarSVGContainers(instruments){
             </Segment>
             <Button compact basic onClick={()=> handleFretChange('up', idx)} > <Icon name ='right arrow'/></Button>
         </Button.Group>
-        <Button compact basic onClick={() => downloadSVGAsPNGUsingID(idx)}><Icon name='download'/></Button>
+        <Button compact basic onClick={() => downloadAsPng(idx)}><Icon name='download'/></Button>
         </>}
         <div className='guitarDiv' id={`divGuitar${idx}`}></div>
         </div>
@@ -1343,21 +1359,6 @@ const handlePause = () => {
     lastPosition.current = Tone.Time(Tone.Transport.position).toSeconds()
 }
 
-// function downloadSVGasPDFusingID(IdNumber){
-//     //thanks Purushoth
-//     let svg = document.getElementById(`divGuitar${IdNumber}`).innerHTML
-
-//     var canvas = document.createElement('canvas');
-//     canvg(canvas, svg);
-//     var imgData = canvas.toDataURL('image/png');
-//     // Generate PDF
-//     var doc = new jsPDF('p', 'pt', 'a4');
-//     doc.addImage(imgData, 'PNG', 40, 40, 75, 75);
-//     doc.save('test.pdf');
-//     var blob = new Blob([doc], {type: "application/pdf;charset=utf-8"})
-//     FileSaver.saveAs(blob, IdNumber + '.pdf')
-// }
-
 async function downloadSVGasPDFusingID(ID) {
     let svg = document.getElementById(`divGuitar${ID}`).childNodes[0]
     const pdf = new jsPDF("l", "pt", [1900, 500]);
@@ -1388,36 +1389,7 @@ async function downloadSVGAsPNGUsingID(ID){
 }
 
 
-
-
-function testDownload(ID){
-    const canvasRef = document.createElement('canvas')
-    let svgString = new XMLSerializer().serializeToString(document.getElementById(`divGuitar${ID}`).childNodes[0]) 
-    let width = 2000;
-    let height = 600;
-        canvasRef.setAttribute('width', width)
-        canvasRef.setAttribute('height', height)
-        let ctx = canvasRef.getContext("2d")
-        var img = new Image();
-        let imgsrc =
-      "data:image/svg+xml;base64," +
-      btoa(unescape(encodeURIComponent(svgString)));
-
-      img.onload = () => {
-        ctx.clearRect(0, 0, width, height);
-        ctx.fillStyle = "white";
-        ctx.fillRect(0, 0, width, height);
-        ctx.drawImage(img, 0, 0, width, height);
-  
-        var blob = new Blob([canvasRef], {type: "image/png"})
-        FileSaver.saveAs(blob, 'test.png');
-      };
-  
-      img.src = imgsrc;
-}
-
-function testDownload2(){
-    let ID = 0;
+function downloadAsPng(ID){
     let width = 2000;
     let height = 400;
     let name = 'TestDownload2'
@@ -1454,6 +1426,41 @@ function disposeOfASynth(synthName){
     synthName.dispose();
     delete loadedSynths.current[synthName]
 }
+
+function handleRecord(name){
+if (name === undefined){
+    name = '1'
+}
+setLoop(false)
+Tone.Transport.stop()
+Tone.Transport.loop = false;
+let endOfAudio = loopLengthCreator(data) * 1000
+const recorder = new Tone.Recorder();
+recorder.start();
+Tone.getDestination().connect(recorder)
+playHandler()
+setTimeout(async () => {
+	const recording = await recorder.stop();
+	const url = URL.createObjectURL(recording);
+	const anchor = document.createElement("a");
+	anchor.download = name + ".webm";
+	anchor.href = url;
+	anchor.click();
+}, endOfAudio);
+}
+
+function downloadTab(){
+    downloadTabAsTextFile(tab['tab'], tab['name'])
+}
+
+function previewTab(){
+    let stringArr = tab['tab'].split('\n')
+    return (
+        stringArr.map(stringArr =>
+            <div>{stringArr}</div>)
+    )
+}
+
     return (
         <>
         {mapGuitarSVGContainers(instruments)}
@@ -1467,15 +1474,9 @@ function disposeOfASynth(synthName){
         <Button compact basic onClick={() => globalPositionChange('down')}><Icon name='arrow down'/></Button>
         <Button compact basic onClick={() => globalPositionChange('up')}><Icon name='arrow up'/></Button>
         <Button compact basic onClick={() => handleSeeAllPositions()}><Icon name='arrows alternate vertical'/></Button>
-        <Button compact basic onClick={() => console.log(instruments)}>instruments</Button>
-        <Button compact basic onClick={() => loadNoteSequenceAndVisualDataOntoTimeline(data)}>Manual reload</Button>
-        <Button compact basic onClick={() => console.log(loadedSynths.current)}>current synths</Button>
-        <Button compact basic onClick={() => loadedSynths.current['acoustic_guitar_nylon_2'] = new Tone.Sampler(instrumentSamples.acoustic_guitar_nylon).toDestination()}>manual add a synth</Button>
-        <input name='changeVol1' id='instr 1' type="range" min='-20' max='20' step='1' defaultValue={'0'} onChange={onChangeVolume1} />
-        <input name='changeVol1' id='instr 1' type="range" min='-1' max='1' step='0.1' defaultValue={'0'} onChange={onChangePanning1} />
-        <input name='changeVol2' id='instr 2' type="range" min='-20' max='20' step='1' defaultValue={'0'} onChange={onChangeVolume2} />
-        {/* <input name='changeVol1' id='instr 1' type="range" min='-1' max='1' step='0.1' defaultValue={'0'} onChange={onChangePanning2} /> */}
-        <input name='changeVol1' id='instr 1' type="range" min='-20' max='20' step='1' defaultValue={'0'} onChange={onChangeVolumeMaster} />
+        <AudioDownloadModal tab={tab} handleRecord={handleRecord} length={loopLengthCreator(data) * 1000}/>
+        <TabDownloadModal tab={tab}/>
+        <Button compact basic onClick={() => handleSeeAllPositions()}>bpm</Button>
         </>
     )
 }

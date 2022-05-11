@@ -7,6 +7,7 @@ import {Menu, Icon} from 'semantic-ui-react';
 import GuitarSVG from '../../components/guitar/GuitarSVG'
 import Explorer from '../../components/finder/Explorer'
 import { useSelector } from 'react-redux'
+import Mixer from '../../pages/mixer/Mixer'
 
 export default function MainPage() {
     const [activeTabs, setActiveTabs] = useState(['explorer', 'player' ])
@@ -130,11 +131,11 @@ function Midbar() {
                 active={activeTabs.includes('palette')}
                 onClick={onClickHandler}
                 />
-                {/* <Menu.Item
+                <Menu.Item
                 name='mixer'
                 active={activeTabs.includes('mixer')}
                 onClick={onClickHandler}
-                /> */}
+                />
                 <Menu.Item
                 name='player'
                 active={activeTabs.includes('player')}
@@ -179,6 +180,10 @@ function Midbar() {
             <Lab
             masterInstrumentArray = {masterInstrumentArray}
             display = {activeTabs.includes('lab') }
+            />
+            <Mixer
+            masterInstrumentArray = {masterInstrumentArray}
+            display = {activeTabs.includes('mixer')}
             />
             <Palette display= {activeTabs.includes('palette')} />
             </div>

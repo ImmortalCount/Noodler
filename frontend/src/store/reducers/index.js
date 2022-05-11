@@ -12,6 +12,8 @@ import { playImportReducer } from "./playImportReducer.js";
 import { playHighlightReducer } from "./playHighlightReducer.js";
 import { mapChordsToPlayerReducer } from "./mapChordsToPlayerReducer.js";
 import { globalInstrumentsReducer } from "./globalInstrumentsReducer.js";
+import { mixerReducer } from "./mixerReducer.js";
+import { tabReducer } from './tabReducer.js';
 
 const reducers = combineReducers({
     module: moduleDataReducer,
@@ -28,7 +30,9 @@ const reducers = combineReducers({
     playImport: playImportReducer,
     playHighlight: playHighlightReducer,
     mapChordsToPlayer: mapChordsToPlayerReducer,
-    globalInstruments: globalInstrumentsReducer
+    globalInstruments: globalInstrumentsReducer,
+    mixer: mixerReducer,
+    tab: tabReducer,
 })
 
 export default reducers

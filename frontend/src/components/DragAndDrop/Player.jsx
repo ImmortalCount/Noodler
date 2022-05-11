@@ -11,6 +11,7 @@ import { DataPrototype } from './dataPrototypes';
 import * as Tone from 'tone';
 import { setSongImportData } from '../../store/actions/songImportDataActions';
 import ExportModal from '../modal/ExportModal';
+import { setTab } from '../../store/actions/tabActions';
 
 export default function Player ({masterInstrumentArray, display}) {
     const [instrumentFocus, setInstrumentFocus] = useState(0);
@@ -92,6 +93,8 @@ export default function Player ({masterInstrumentArray, display}) {
         const sentData = convertModuleDataIntoPlayableSequence(data)
         console.log(sentData, '!!!')
         sendModuleData(JSON.stringify({markers: markers, data: sentData})) 
+        let tab = convertToTab()
+        dispatch(setTab({tab: tab, name: name}))
     }, [data, bpm]);
 
 
@@ -745,7 +748,16 @@ const handleDownloadTab = () =>{
     let cleanData = removeSilentDataForTabProcessing(data)
     let dataFromPlayer = convertModuleDataIntoPlayableSequence(cleanData, tunings, instrumentNames)
     let tab = generateTabFromModules(dataFromPlayer, tunings, instrumentNames, name, user)
-    console.log(tab)
+    downloadTabAsTextFile(tab, 'download')
+}
+
+function convertToTab(){
+    let tunings = getTuningsFromGlobalInstruments(globalInstruments)
+    let instrumentNames = getNamesFromGlobalInstruments(globalInstruments)
+    let cleanData = removeSilentDataForTabProcessing(data)
+    let dataFromPlayer = convertModuleDataIntoPlayableSequence(cleanData, tunings, instrumentNames)
+    let tab = generateTabFromModules(dataFromPlayer, tunings, instrumentNames, name, user)
+    return tab
 }
 
     return (
@@ -761,7 +773,7 @@ const handleDownloadTab = () =>{
         <Menu.Item basic active={edit} onClick={handleDownloadTab}>Download Tab</Menu.Item>
         <Menu.Item basic active={songOptions} onClick={()=> setSongOptions(!songOptions)}>Bpm </Menu.Item>
         <Menu.Item basic active={showDescription} onClick={() => setShowDescription(!showDescription)}> Desc</Menu.Item>
-        <Menu.Item basic active={showDescription} onClick={() => console.log('beep boop')}> Set Recommended Scales</Menu.Item>
+        <Menu.Item basic active={showDescription} onClick={() => console.log(globalInstruments)}> Set Recommended Scales</Menu.Item>
         <Button.Group>
         <ExportModal
         dataType={'Song'}
