@@ -18,8 +18,8 @@ export default function TabDownloadModal({tab}) {
     function previewTab(){
         let stringArr = tab['tab'].split('\n')
         return (
-            stringArr.map(stringArr =>
-                <div style={{fontFamily: 'monospace'}}>{stringArr}</div>)
+            stringArr.map((stringArr, idx) =>
+                <div key={idx} style={{fontFamily: 'monospace'}}>{stringArr}</div>)
         )
     }
 

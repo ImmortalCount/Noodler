@@ -22,6 +22,7 @@ import { setGlobalInstruments } from '../../store/actions/globalInstrumentsActio
 import { downloadTabAsTextFile } from './tabfunctions';
 import TabDownloadModal from '../modal/TabDownloadModal'
 import AudioDownloadModal from '../modal/AudioDownloadModal';
+import BpmModal from '../modal/BpmModal';
 
 
 export default function GuitarSVG({masterInstrumentArray, activelyDisplayedInstruments}) {
@@ -44,7 +45,6 @@ export default function GuitarSVG({masterInstrumentArray, activelyDisplayedInstr
     const [activeEdits, setActiveEdits] = useState([])
     const [moduleMarkers, setModuleMarkers] = useState(moduleMarkerCreator(data))
     const [allModuleMarkers, setAllModuleMarkers] = useState(moduleMarkerCreatorAll(data))
-    const [labDisplay, setLabDisplay] = useState(false)
     
     const dispatch = useDispatch()
 
@@ -63,6 +63,9 @@ export default function GuitarSVG({masterInstrumentArray, activelyDisplayedInstr
     const tabData = useSelector(state => state.tab)
     const {tab} = tabData
 
+    const displayFocusData = useSelector(state => state.displayFocus)
+    const {displayFocus} = displayFocusData
+
     var initialLoad = useRef(true)
 
     var loadedSynths = useRef(currentSynths)
@@ -80,6 +83,13 @@ export default function GuitarSVG({masterInstrumentArray, activelyDisplayedInstr
         "electric_bass_finger"
     ]
 
+    useEffect(() => {
+        if (displayFocus === 'lab'){
+            displayNotes(noteDisplay)
+        } else {
+            displayNotes()
+        }
+    }, [displayFocus])
 
     useEffect(() => {
         handleInstrumentUpdate();
@@ -157,7 +167,7 @@ export default function GuitarSVG({masterInstrumentArray, activelyDisplayedInstr
     useEffect(() => {
         if (noteDisplay && (Tone.Time(Tone.Transport.position).toSeconds() === 0 && Tone.Transport.state === 'stopped')){
             displayNotes(noteDisplay)
-            setLabDisplay(true)
+            // setLabDisplay(true)
         } else {
             return
         }
@@ -712,7 +722,7 @@ function playHandler(){
 
 function returnPosition(note, tuning, manualPosition){
     let position;
-    if (manualPosition === undefined){
+    if (manualPosition === undefined || manualPosition.length === 0){
         position = globalPosition.current
     } else {
         position = manualPosition
@@ -1030,6 +1040,7 @@ function displayNotes(input){
             } else {
                 console.log('here 1162')
                 let manualPosition = data[i]['data'][0]['position']
+                console.log(data[i]['data'][0]['position'], 'man pos!!')
                 let nameArray = noteStringHandler(data[i]['data'][currentModuleIndex]['notes'][0][0])
                 let pos = returnPosition(data[i]['data'][currentModuleIndex]['notes'][0][0], instruments[i]['tuning'], manualPosition);
                 // var tabArray = []
@@ -1320,7 +1331,7 @@ function handleSeeAllPositions(){
     } else if (globalPosition.current === -1) {
         globalPosition.current = 0
     }
-    if (labDisplay){
+    if (displayFocus === 'lab'){
         displayNotes(noteDisplay)
     } else {
         displayNotes()
@@ -1338,7 +1349,7 @@ function globalPositionChange(direction){
             globalPosition.current--
         }
     }
-    if (labDisplay){
+    if (displayFocus === 'lab'){
         displayNotes(noteDisplay)
     } else {
         displayNotes()
@@ -1476,7 +1487,8 @@ function previewTab(){
         <Button compact basic onClick={() => handleSeeAllPositions()}><Icon name='arrows alternate vertical'/></Button>
         <AudioDownloadModal tab={tab} handleRecord={handleRecord} length={loopLengthCreator(data) * 1000}/>
         <TabDownloadModal tab={tab}/>
-        <Button compact basic onClick={() => handleSeeAllPositions()}>bpm</Button>
+        <BpmModal/>
+        <Button compact basic onClick={() => console.log(displayFocus)}>TEST</Button>
         </>
     )
 }

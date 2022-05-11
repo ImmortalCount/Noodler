@@ -3,7 +3,7 @@ import Player from '../../components/DragAndDrop/Player'
 import Lab from '../../components/lab/Lab'
 import Navbar from '../../components/navbar/Navbar'
 import Palette from '../../components/palette/Palette'
-import {Menu, Icon} from 'semantic-ui-react';
+import {Menu, Icon, Button} from 'semantic-ui-react';
 import GuitarSVG from '../../components/guitar/GuitarSVG'
 import Explorer from '../../components/finder/Explorer'
 import { useSelector } from 'react-redux'
@@ -86,13 +86,16 @@ export default function MainPage() {
     function mapMenuItems(){
             return (
                 masterInstrumentArray.map((instrument, idx) => 
-                <Menu.Item
+                <Button
+                basic
                 name={instrument}
-                active={activeTabs.includes(instrument)}
+                active={activelyDisplayedInstruments.includes(idx)}
                 onClick={onClickHandlerInstr}
                 key={'mappedInstr_' + idx}
                 id={'mappedInstr_' + idx}
-                />
+                >
+                {instrument}
+                </Button>
                 )
             )
     }
@@ -101,60 +104,64 @@ export default function MainPage() {
 function Midbar() {
         return (
             <Menu>
-                {/* <Menu.Item
-                name='options'
-                active={activeTabs.includes('options')}
-                onClick={onClickHandler}
-                /> */}
-                {/* <Menu.Item
-                name='test'
-                active
-                onClick={() => console.log(activeTabs)}
-                /> */}
-                <Menu.Item
+                <Button.Group>
+                <Button
+                basic
                 name='explorer'
                 active={activeTabs.includes('explorer')}
                 onClick={onClickHandler}
-                />
-                {/* <Menu.Item
-                name='social'
-                active={activeTabs.includes('social')}
-                onClick={onClickHandler}
-                /> */}
-                <Menu.Item
+                >
+                Explorer
+                </Button>
+                <Button
+                basic
                 name='lab'
                 active={activeTabs.includes('lab')}
                 onClick={onClickHandler}
-                />
-                <Menu.Item
+                >
+                Lab
+                </Button>
+                <Button
+                basic
                 name='palette'
                 active={activeTabs.includes('palette')}
                 onClick={onClickHandler}
-                />
-                <Menu.Item
+                >
+                Palette
+                </Button>
+                <Button
+                basic
                 name='mixer'
                 active={activeTabs.includes('mixer')}
                 onClick={onClickHandler}
-                />
-                <Menu.Item
+                >
+                Mixer
+                </Button>
+                <Button
+                basic
                 name='player'
                 active={activeTabs.includes('player')}
                 onClick={onClickHandler}
-                />
+                >
+                Player
+                </Button>
+                </Button.Group>
                 <Menu.Menu position='right'>
+                <Button.Group>
                 {mapMenuItems()}
-                <Menu.Item
-                name='add'
+                <Button
+                basic
                 onClick={() => guitarAddHandler()}
                 >
                 <Icon name='add'/>
-                </Menu.Item>
-                <Menu.Item
-                name='subtract'
+                </Button>
+                <Button
+                basic
                 onClick={() => guitarSubtractHandler()}
                 >
                 <Icon name='minus'/>
-                </Menu.Item>
+                </Button>
+                </Button.Group>
                 </Menu.Menu>
     
             </Menu>

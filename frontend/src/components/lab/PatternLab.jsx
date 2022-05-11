@@ -13,6 +13,7 @@ import { scaleHandler, updateLinkedArrays } from './utils';
 import { keyMap } from './keymap';
 import { setPlayImport } from '../../store/actions/playImportActions';
 import { setNoteDisplay } from '../../store/actions/noteDisplayActions';
+import { setDisplayFocus as setDisplayFocusAction } from '../../store/actions/displayFocusActions';
 import ExportModal from '../modal/ExportModal';
 
 
@@ -170,6 +171,10 @@ useEffect(() => {
     dispatch(setLabData(newInfo))
     dispatch(setNoteDisplay(convertScaleForDispatch()))
   }, [name, instrumentDisplay, data, displayFocus, displayAll, positionType, patternType])
+
+  useEffect(() => {
+    dispatch(setDisplayFocusAction('lab'))
+  }, [playAll, instrumentDisplay ])
 
 function convertScaleForDispatch(){
     let clone = sortAllChordsByPitch(notes)
@@ -455,6 +460,10 @@ function playAll(){
         intervals.current.push(setTimeout(() => setPlaying(false), totalTime));
     }
     
+}
+
+function setDisplay(){
+    dispatch(setNoteDisplay(convertScaleForDispatch()))
 }
 
 function generateRandomMelody(){
@@ -1153,7 +1162,6 @@ const handleEditOptions = () => {
         <>
         <Menu>
         <Menu.Item onClick={() => handleSharpsOrFlats()}>{options === 'sharps' ? '#' : 'b'}</Menu.Item>
-        <Menu.Item onClick={() => console.log(pattern)}>Test</Menu.Item>
          <Menu.Item onClick={() => {playAll(); setPlaying(true)}}><Icon name={playing ? 'stop': 'play'}/></Menu.Item>
          <Button.Group>
          <Button basic onClick={()=> generateRandomMelody()}> Generate </Button>
@@ -1227,11 +1235,14 @@ const handleEditOptions = () => {
             </Dropdown.Item>
         </Dropdown.Menu>
         </Dropdown>
+        <Button.Group>
+        <Button basic compact onClick={() => setDisplay()}>Display</Button>
         <Dropdown
             simple 
             item
-            text = 'Display   ' 
+            className='button icon'
        >
+
           <Dropdown.Menu>
           <Dropdown.Header>Display Options</Dropdown.Header>
               <Dropdown.Divider/>
@@ -1244,6 +1255,8 @@ const handleEditOptions = () => {
              {mapMenuItems()}
           </Dropdown.Menu>
         </Dropdown>
+        </Button.Group>
+
         <Menu.Item onClick={() => setShowDescription(!showDescription)}> Desc </Menu.Item>
         <Menu.Item onClick={importChordsFromChordLab}> Import </Menu.Item>
         <Button.Group>

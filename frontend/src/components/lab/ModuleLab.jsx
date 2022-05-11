@@ -9,6 +9,7 @@ import { polySynth } from './synths';
 import { setNoteDisplay } from '../../store/actions/noteDisplayActions';
 import { setPlayImport } from '../../store/actions/playImportActions';
 import ExportModal from '../modal/ExportModal'
+import { setDisplayFocus } from '../../store/actions/displayFocusActions';
 
 export default function ModuleLab({importedModuleData, masterInstrumentArray}) {
     const [name, setName] = useState('Module 1')
@@ -19,10 +20,9 @@ export default function ModuleLab({importedModuleData, masterInstrumentArray}) {
     const [inputFocus, setInputFocus] = useState(false)
     const [description, setDescription] = useState('')
     const [showDescription, setShowDescription] = useState(false)
-    const [instrumentDisplay, setInstrumentDisplay] = useState(-2)
+    const [instrumentDisplay, setInstrumentDisplay] = useState(-1)
     const [displayAll, setDisplayAll] = useState(false)
     const [playType, setPlayType] = useState('Melody')
-    const [displayFocus, setDisplayFocus] = useState(0)
     const [playing, setPlaying] = useState(false)
     const user = JSON.parse(localStorage.getItem('userInfo'))
 
@@ -31,6 +31,10 @@ export default function ModuleLab({importedModuleData, masterInstrumentArray}) {
     useEffect(() => {
         dispatch(setNoteDisplay(convertModuleForDispatch()))
     }, [instrumentDisplay, displayAll])
+
+    useEffect(() => {
+        dispatch(setDisplayFocus('lab'))
+      }, [playModule, instrumentDisplay ])
 
 
     function convertModuleForDispatch(){
@@ -97,7 +101,7 @@ export default function ModuleLab({importedModuleData, masterInstrumentArray}) {
             desc: '',
             type: 'fluid',
             length: 0,
-            pattern: [7, 8, 9, 18, 14, 13, 11, 12],
+            pattern: [0,1,2,3,4,5,6,7],
             positionType: 'unlocked',
             position: [],
             author: '',
@@ -368,11 +372,13 @@ for (var o = 0; o < 10; o++){
                 highlight: 1,
                 data: [{speed: 1, notes: sequence, position: pos}]
             }
-            console.log(totalTime)
             Tone.start()
             Tone.Transport.cancel()
             dispatch(setPlayImport([returnObj]))
             Tone.Transport.start()
+
+            intervals.current.push(setTimeout(() => setInstrumentDisplay(-2), totalTime - 100))
+            intervals.current.push(setTimeout(() => setInstrumentDisplay(previousInstrumentDisplay), totalTime))
             intervals.current.push(setTimeout(() => Tone.Transport.stop(), totalTime));
             intervals.current.push(setTimeout(() => setPlaying(false), totalTime));
         }
@@ -536,6 +542,10 @@ for (var o = 0; o < 10; o++){
             )
         )
 } 
+    function setDisplay(){
+        dispatch(setDisplayFocus('lab'))
+        dispatch(setNoteDisplay(convertModuleForDispatch()))
+    }
 
     return (
         <>
@@ -543,7 +553,6 @@ for (var o = 0; o < 10; o++){
          <Menu.Item onClick={() => {playModule(); setPlaying(true)}} ><Icon name={playing ? 'stop': 'play'}/></Menu.Item>  
          <Dropdown onChange={onChangeDropdown} options={options === 'sharps' ? dropdownOptionsKeySharp : dropdownOptionsKeyFlat} text = {`Key: ${key}`} simple item/>
          <Menu.Item onClick={() => setShowDescription(!showDescription)}> Desc </Menu.Item>
-         <Menu.Item onClick={() => console.log(position, positionType, 'pos postype')}> Test </Menu.Item>
          <Dropdown
             simple 
             item
@@ -554,10 +563,12 @@ for (var o = 0; o < 10; o++){
                 <Dropdown.Item selected={playType === 'Chord'} onClick={() => setPlayType('Chord')}> Chord </Dropdown.Item>
           </Dropdown.Menu>
         </Dropdown>
+        <Button.Group>
+        <Button basic compact onClick={() => setDisplay()}>Display</Button>
          <Dropdown
             simple 
             item
-            text = 'Display   ' 
+            className='button icon' 
        >
           <Dropdown.Menu>
           <Dropdown.Header>Display Options</Dropdown.Header>
@@ -571,6 +582,8 @@ for (var o = 0; o < 10; o++){
              {mapMenuItems()}
           </Dropdown.Menu>
         </Dropdown>
+        </Button.Group>
+        
          <Button.Group>
         <ExportModal
         dataType={'Module'}

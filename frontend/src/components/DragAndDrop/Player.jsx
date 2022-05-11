@@ -12,6 +12,8 @@ import * as Tone from 'tone';
 import { setSongImportData } from '../../store/actions/songImportDataActions';
 import ExportModal from '../modal/ExportModal';
 import { setTab } from '../../store/actions/tabActions';
+import { setDisplayFocus } from '../../store/actions/displayFocusActions';
+import { setPlayHighlight } from '../../store/actions/playHighlightActions';
 
 export default function Player ({masterInstrumentArray, display}) {
     const [instrumentFocus, setInstrumentFocus] = useState(0);
@@ -47,6 +49,9 @@ export default function Player ({masterInstrumentArray, display}) {
 
     const globalInstrumentData = useSelector(state => state.globalInstruments)
     const {globalInstruments} = globalInstrumentData
+
+    const displayFocusData = useSelector(state => state.displayFocus)
+    const {displayFocus} = displayFocusData
 
     var highlight = useRef(false)
 
@@ -88,14 +93,23 @@ export default function Player ({masterInstrumentArray, display}) {
         }
     }, [songImport])
 
+    useEffect(() => {
+        handleUpdate()
+    }, [masterInstrumentArray])
+
     useEffect (()=>{
         setModuleMarkers()
         const sentData = convertModuleDataIntoPlayableSequence(data)
-        console.log(sentData, '!!!')
         sendModuleData(JSON.stringify({markers: markers, data: sentData})) 
         let tab = convertToTab()
         dispatch(setTab({tab: tab, name: name}))
-    }, [data, bpm]);
+    }, [data, Tone.Transport.bpm.value, globalInstruments]);
+
+    useEffect(() => {
+        if (displayFocus !== 'player'){
+            highlight.current = false
+        }
+    }, [displayFocus])
 
 
 
@@ -497,6 +511,7 @@ const cardClickHandler = e => {
         }
     } 
     highlight.current = true
+    dispatch(setDisplayFocus('player'))
 }
 
 function moduleAdd(){
@@ -660,9 +675,7 @@ function moduleSubtract(){
 
 
 
-useEffect(() => {
-    handleUpdate()
-}, [masterInstrumentArray])
+
 
 function handleUpdate(){
     var clone = [...data]
@@ -712,9 +725,11 @@ const handleDescriptionChange = e => {
 function getNamesFromGlobalInstruments(globalInstruments){
     //only instruments labelled  chord or melody can pass through
     let returnArr = []
-    for (let i = 0; i < globalInstruments.length; i++){
-        if (data[i]['mode'] === 'chord' || data[i]['mode'] === 'melody'){
-            returnArr.push(globalInstruments[i]['name'])
+    for (let i = 0; i < masterInstrumentArray.length; i++){
+        if (data[i]){
+            if (data[i]['mode'] === 'chord' || data[i]['mode'] === 'melody'){
+                returnArr.push(globalInstruments[i]['name'])
+            }
         }
     }
     return returnArr
@@ -724,9 +739,11 @@ function getNamesFromGlobalInstruments(globalInstruments){
 function getTuningsFromGlobalInstruments(globalInstruments){
      //only instruments labelled  chord or melody can pass through
     let returnArr = []
-    for (let i = 0; i < globalInstruments.length; i++){
-        if (data[i]['mode'] === 'chord' || data[i]['mode'] === 'melody'){
-            returnArr.push(globalInstruments[i]['tuning'])
+    for (let i = 0; i < masterInstrumentArray.length; i++){
+        if (data[i]){
+            if (data[i]['mode'] === 'chord' || data[i]['mode'] === 'melody'){
+                returnArr.push(globalInstruments[i]['tuning'])
+            }
         }
     }
     return returnArr
@@ -769,11 +786,8 @@ function convertToTab(){
         </Button.Group>
         {mapDropdowns()}
         <Menu.Item basic active={edit} onClick={()=> setEdit(!edit)}>Edit</Menu.Item>
-        <Menu.Item basic active={edit} onClick={()=> console.log(data)}>Test</Menu.Item>
-        <Menu.Item basic active={edit} onClick={handleDownloadTab}>Download Tab</Menu.Item>
-        <Menu.Item basic active={songOptions} onClick={()=> setSongOptions(!songOptions)}>Bpm </Menu.Item>
+        <Menu.Item basic active={edit} onClick={()=> console.log(globalInstruments)}>globalInstruments</Menu.Item>
         <Menu.Item basic active={showDescription} onClick={() => setShowDescription(!showDescription)}> Desc</Menu.Item>
-        <Menu.Item basic active={showDescription} onClick={() => console.log(globalInstruments)}> Set Recommended Scales</Menu.Item>
         <Button.Group>
         <ExportModal
         dataType={'Song'}
@@ -810,6 +824,8 @@ function convertToTab(){
             <Button active ={activeButton === 'delete'}compact basic onClick ={() => handleControls('delete')}>Delete</Button> 
             <Button compact basic onClick ={() => moduleSubtract()}>Module--</Button>
             <Button compact basic onClick ={() => moduleAdd()}>Module++</Button>
+            <Button active={activeButton === 'setScale'} compact basic onClick={() => handleControls('setScale')}>Set Rec Scale</Button>
+           {activeButton === 'setScale' && <Button compact basic onClick={() => handleControls('setScale')}>All</Button>}
         </Button.Group>}
         <div id='instrumentDisplay'>
             {superMapCards()}

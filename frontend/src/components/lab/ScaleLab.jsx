@@ -11,6 +11,7 @@ import '../../../public/Do_Mayor_armadura.svg'
 import { keySynth } from './synths';
 import { setNoteDisplay } from '../../store/actions/noteDisplayActions';
 import { setPlayImport } from '../../store/actions/playImportActions';
+import { setDisplayFocus } from '../../store/actions/displayFocusActions';
 
 export default function ScaleLab({importedScaleData, masterInstrumentArray}) {
     const [playing, setPlaying] = useState(false);
@@ -27,7 +28,7 @@ export default function ScaleLab({importedScaleData, masterInstrumentArray}) {
     const [exportPool, setExportPool] = useState('global')
     const [inputFocus, setInputFocus] = useState(false)
     const [displayName, setDisplayName] = useState('C major')
-    const [instrumentDisplay, setInstrumentDisplay] = useState(-2)
+    const [instrumentDisplay, setInstrumentDisplay] = useState(-1)
     const [localDisplay, setLocalDisplay] = useState(true)
     const isMuted = false;
     const user = JSON.parse(localStorage.getItem('userInfo'))
@@ -183,6 +184,10 @@ useEffect(() => {
   dispatch(setNoteDisplay(convertScaleForDispatch()))
 }, [instrumentDisplay, notes])
 
+useEffect(() => {
+  dispatch(setDisplayFocus('lab'))
+}, [playNoteSequence, instrumentDisplay ])
+
 function convertScaleForDispatch(){
   var arrOfObj = []
   var dispatchObj = {data: [{speed: 1, notes: [['']], position: []}], displayOnly: true, highlight: []}
@@ -321,6 +326,10 @@ function convertScaleForDispatch(){
         setScaleDataBinary(chromaReturn);
         setNotes(scaleHandler(returnScale, options));
       }
+    }
+
+    function setDisplay(){
+      dispatch(setNoteDisplay(convertScaleForDispatch()))
     }
 
     function handleRandomClick(){
@@ -835,10 +844,12 @@ const handleScaleDescriptionChange = e => {
       <Button basic compact onClick={() => toggleModes('next', notes)}><Icon name='caret right'/></Button>
       </Button.Group>
         <Menu.Item onClick={() => setShowDescription(!showDescription)}>Desc</Menu.Item>
+        <Button.Group>
+        <Button basic compact onClick={() => setDisplay()}>Display</Button>
         <Dropdown
        simple 
        item
-       text = 'Display   ' 
+       className='button icon'
        >
         <Dropdown.Menu>
             <Dropdown.Header>Local Display</Dropdown.Header>
@@ -852,6 +863,7 @@ const handleScaleDescriptionChange = e => {
              <Dropdown.Divider/>
           </Dropdown.Menu>
         </Dropdown>
+        </Button.Group>
         <Button.Group>
         <ExportModal
         dataType={'Scale'}

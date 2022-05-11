@@ -12,6 +12,7 @@ import { setNoteDisplay } from '../../store/actions/noteDisplayActions';
 import { setPlayImport } from '../../store/actions/playImportActions';
 import { turnChordIntoModule} from './chordMapGenerator'
 import { mapChordsToPlayer } from '../../store/actions/mapChordsToPlayerActions';
+import { setDisplayFocus as setDisplayFocusAction } from '../../store/actions/displayFocusActions';
 import ExportModal from '../modal/ExportModal'
 import MapModal from '../modal/MapModal';
 
@@ -34,7 +35,7 @@ export default function ChordLab({importedChordData, masterInstrumentArray}) {
     const [voicing, setVoicing] = useState([0])
     const [progression, setProgression] = useState(1)
     const [progressionType, setProgressionType] = useState('number')
-    const [instrumentDisplay, setInstrumentDisplay] = useState(-2)
+    const [instrumentDisplay, setInstrumentDisplay] = useState(-1)
     const [chromaticNotes, setChromaticNotes] = useState(['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B'])
     const [edit, setEdit] = useState(false)
     const isMuted = false;
@@ -128,9 +129,14 @@ export default function ChordLab({importedChordData, masterInstrumentArray}) {
         dispatch(setLabData(newInfo))
     }, [data])
 
+
     useEffect(() => {
         dispatch(setNoteDisplay(convertChordsForDispatch()))
       }, [instrumentDisplay, data, displayFocus, displayAll])
+
+      useEffect(() => {
+        dispatch(setDisplayFocusAction('lab'))
+      }, [playChords, instrumentDisplay ])
       
     function convertChordsForDispatch(){
         let clone = sortAllChordsByPitch(chords)
@@ -274,6 +280,10 @@ export default function ChordLab({importedChordData, masterInstrumentArray}) {
     function handleProgressionChange(progression, progressionType){
         setProgression(progression)
         setProgressionType(progressionType)
+    }
+
+    function setDisplay(){
+        dispatch(setNoteDisplay(convertChordsForDispatch()))
     }
 
     
@@ -1290,11 +1300,13 @@ export default function ChordLab({importedChordData, masterInstrumentArray}) {
         </Dropdown>
          <Menu.Item onClick={handleEdit}> Edit </Menu.Item>     
          <Menu.Item onClick={() => setShowDescription(!showDescription)}> Desc </Menu.Item>
-            <Dropdown
+         <Button.Group>
+         <Button basic compact onClick={() => setDisplay()}>Display</Button>
+         <Dropdown
             simple 
             item
-            text = 'Display   ' 
-       >
+            className= 'button icon' 
+            >
           <Dropdown.Menu>
           <Dropdown.Header>Display Options</Dropdown.Header>
               <Dropdown.Divider/>
@@ -1307,6 +1319,7 @@ export default function ChordLab({importedChordData, masterInstrumentArray}) {
              {mapMenuItems()}
           </Dropdown.Menu>
         </Dropdown>
+         </Button.Group>
          <MapModal
          mapObj={modalMapObjArr}
          handleMapChords={handleMapChords}
