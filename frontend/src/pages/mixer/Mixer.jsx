@@ -4,7 +4,7 @@ import { useSelector, useDispatch} from 'react-redux';
 import { setMixer } from '../../store/actions/mixerActions';
 import {Container} from 'semantic-ui-react'
 
-export default function Mixer({display, masterInstrumentArray}) {
+export default function Mixer({display}) {
   const globalInstrumentsData = useSelector(state => state.globalInstruments)
   const {globalInstruments} = globalInstrumentsData
 
@@ -32,7 +32,7 @@ export default function Mixer({display, masterInstrumentArray}) {
           {globalInstruments.name}
           </h3>
           <div>
-            Volume
+            Volume 
           </div>
           <input id={idx} type="range" min='-20' max='20' step='1' defaultValue={'0'} onChange={onChangeVolume}/>
         </div>

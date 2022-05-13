@@ -165,8 +165,8 @@ function createScaleSVG(){
     createScaleSVG()
     let newInfo = {...labInfo}
     const scaleDataPrototype = {
-        name: displayName,
-        scaleName: displayName,
+        name: rootNote + ' ' + scaleName,
+        scaleName: rootNote + ' ' + scaleName,
         binary: scaleDataBinary,
         number: scaleNumber,
         desc: description,

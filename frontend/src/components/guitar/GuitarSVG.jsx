@@ -23,6 +23,8 @@ import { downloadTabAsTextFile } from './tabfunctions';
 import TabDownloadModal from '../modal/TabDownloadModal'
 import AudioDownloadModal from '../modal/AudioDownloadModal';
 import BpmModal from '../modal/BpmModal';
+import FretboardDownloadModal from '../modal/FretboardDownloadModal'
+import { setGlobalPosition } from '../../store/actions/globalPositionActions';
 
 
 export default function GuitarSVG({masterInstrumentArray, activelyDisplayedInstruments}) {
@@ -1170,7 +1172,11 @@ const onChangeInstrument = (e, {id, value}) => {
   function changeVolumeFromMixerInput(){
     if (mixer){
         let thisInstrumentSynth = loadedSynths.current[mixer['synthSource']]
-        thisInstrumentSynth.volume.value = mixer['value']
+        if (mixer['value'] === '-20'){
+            thisInstrumentSynth.volume.value = -Infinity;
+        } else {
+            thisInstrumentSynth.volume.value = mixer['value']
+        }
     }
   }
 
@@ -1297,7 +1303,11 @@ function mapGuitarSVGContainers(instruments){
             </Segment>
             <Button compact basic onClick={()=> handleFretChange('up', idx)} > <Icon name ='right arrow'/></Button>
         </Button.Group>
-        <Button compact basic onClick={() => downloadAsPng(idx)}><Icon name='download'/></Button>
+        <FretboardDownloadModal
+        instruments={instruments}
+        idx = {idx}
+        downloadAsPng = {downloadAsPng}
+        />
         </>}
         <div className='guitarDiv' id={`divGuitar${idx}`}></div>
         </div>
@@ -1354,6 +1364,7 @@ function globalPositionChange(direction){
     } else {
         displayNotes()
     }
+    dispatch(setGlobalPosition(globalPosition.current))
     
 }
 
@@ -1400,10 +1411,9 @@ async function downloadSVGAsPNGUsingID(ID){
 }
 
 
-function downloadAsPng(ID){
+function downloadAsPng(ID, name){
     let width = 2000;
     let height = 400;
-    let name = 'TestDownload2'
     var svgString = new XMLSerializer().serializeToString(document.getElementById(`divGuitar${ID}`).childNodes[0]);
     const canvas = document.createElement('canvas')
     canvas.setAttribute('width', width)
@@ -1488,7 +1498,7 @@ function previewTab(){
         <AudioDownloadModal tab={tab} handleRecord={handleRecord} length={loopLengthCreator(data) * 1000}/>
         <TabDownloadModal tab={tab}/>
         <BpmModal/>
-        <Button compact basic onClick={() => console.log(displayFocus)}>TEST</Button>
+        <Button compact basic onClick={() => console.log(instruments)}>TEST</Button>
         </>
     )
 }

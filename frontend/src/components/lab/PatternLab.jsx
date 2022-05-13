@@ -34,9 +34,9 @@ const [octave, setOctave] = useState(3)
 const [generatePatternLength, setGeneratePatternLength] = useState(8)
 const [manipulate, setManipulate] = useState(false)
 const [playNoteOnClick, setPlayNoteOnClick] = useState(true)
-const [instrumentDisplay, setInstrumentDisplay] = useState(-2) 
+const [instrumentDisplay, setInstrumentDisplay] = useState(-1) 
 const [displayFocus, setDisplayFocus] = useState(1)
-const [displayAll, setDisplayAll] = useState(false)
+const [displayAll, setDisplayAll] = useState(true)
 const [positionType, setPositionType] = useState('unlocked')
 const [patternType, setPatternType] = useState('fluid')
 const [exportPool, setExportPool] = useState('global')
@@ -142,8 +142,11 @@ function patternAndScaleToNotes(patternArr){
 //Upon importing
 useEffect(() => {
     if (importedPatternData['pattern'] !== undefined){
+        console.log(importedPatternData, 'IMPORTED PATTERN DATA!')
         setPattern(importedPatternData['pattern'])
+        setPatternType(importedPatternData['type'])
         setName(importedPatternData['patternName'])
+        setPositionType(importedPatternData['positionType'])
         handleSetData(patternAndScaleToNotes(importedPatternData['pattern']), importedPatternData['position'])
     }
 }, [importedPatternData])

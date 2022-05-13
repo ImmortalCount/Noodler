@@ -15,10 +15,80 @@ export default function Palette({display}) {
         "Chords",
         "Patterns",
         "Rhythms",
+        "Keys"
     ]
 
+    const keyList = [
+        {
+            keyName: 'Key: C',
+            root: 'C'
+        },
+        {
+            keyName: 'Key: C#',
+            root: 'C#'
+        },
+        {
+            keyName: 'Key: Db',
+            root: 'Db'
+        },
+        {
+            keyName: 'Key: D',
+            root: 'D'
+        },
+        {
+            keyName: 'Key: D#',
+            root: 'D#'
+        },
+        {
+            keyName: 'Key: Eb',
+            root: 'Eb'
+        },
+        {
+            keyName: 'Key: E',
+            root: 'E'
+        },
+        {
+            keyName: 'Key: F',
+            root: 'F'
+        },
+        {
+            keyName: 'Key: F#',
+            root: 'F#'
+        },
+        {
+            keyName: 'Key: Gb',
+            root: 'Gb'
+        },
+        {
+            keyName: 'Key: G',
+            root: 'G'
+        },
+        {
+            keyName: 'Key: G#',
+            root: 'G#'
+        },
+        {
+            keyName: 'Key: Ab',
+            root: 'Ab'
+        },
+        {
+            keyName: 'Key: A',
+            root: 'A'
+        },
+        {
+            keyName: 'Key: A#',
+            root: 'A#'
+        },
+        {
+            keyName: 'Key: Bb',
+            root: 'Bb'
+        },
+        {
+            keyName: 'Key: B',
+            root: 'B'
+        },
 
-
+    ]
 
     var [storage, setStorage] = useState(
         {
@@ -28,6 +98,7 @@ export default function Palette({display}) {
                 "Chords": [],
                 "Patterns": [],
                 "Rhythms": [],
+                "Keys": keyList,
             },
             "Collections": {
                 "Modules": ['A Module Collection', 'B Module Collection'],
@@ -41,6 +112,14 @@ export default function Palette({display}) {
 
     const [activeTab, setActiveTab] = useState(0)
     const [activeSubTab, setActiveSubTab] = useState(1)
+
+    const handleDeleteItem = (idx) => {
+        let cloneStorage = JSON.parse(JSON.stringify(storage))
+        let subState = activeSubTabStates[activeSubTab]
+        let subArr = cloneStorage['Components'][subState]
+        subArr.splice(idx, 1)
+        setStorage(cloneStorage)
+    }
 
     function mapRegularComponents(arr, type){
         var name;
@@ -75,13 +154,45 @@ export default function Palette({display}) {
             name = 'moduleName'
             dataClass = 'moduleData'
             color = 'wheat'
-        } else {
+        } else if (type === 'Keys'){
+            groupTag = 'keys'
+            name = 'keyName'
+            dataClass = 'keyData'
+            color = 'teal'
+        }
+        
+        else {
             return
         } 
 
         return (
-            arr.map((arr, idx) => 
-            <div id={'palette_' + groupTag + '_' + idx} key={'palette_' + groupTag + '_' + idx} draggable onDragStart = {dragStartHandler} onDrag = {dragHandler} onDragOver = {dragOverHandler} onDragLeave={dragLeaveHandler} onDrop = {dropHandler}  className={dataClass} style={{marginTop: '10px', marginBottom: '10px', height: '25px', width: '175px',backgroundColor: color}}>{arr[name]}</div>
+            arr.map((item, idx) => 
+            <div 
+            id={'palette_' + groupTag + '_' + idx} 
+            key={'palette_' + groupTag + '_' + idx} 
+            draggable 
+            onDragStart = {dragStartHandler} 
+            onDrag = {dragHandler} 
+            onDragOver = {dragOverHandler} 
+            onDragLeave={dragLeaveHandler} 
+            onDrop = {dropHandler}  
+            className={dataClass} 
+            style={{marginTop: '10px', 
+            marginBottom: '10px',
+            height: '25px', 
+            width: '175px',
+            backgroundColor: color, 
+            display:'flex', 
+            flexDirection:'row', 
+            justifyContent: 'space-between'}}
+            >
+            <div>
+            {item[name]}
+            </div>
+            <div>
+            {dataClass !== 'keyData' && <Icon onClick={() => handleDeleteItem(idx)} name='times'/>}
+            </div>
+            </div>
             )
         )
             

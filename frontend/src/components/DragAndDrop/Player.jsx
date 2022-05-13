@@ -53,6 +53,9 @@ export default function Player ({masterInstrumentArray, display}) {
     const displayFocusData = useSelector(state => state.displayFocus)
     const {displayFocus} = displayFocusData
 
+    const globalPositionData = useSelector(state => state.globalPosition)
+    const {globalPosition} = globalPositionData
+
     var highlight = useRef(false)
 
     const {sendModuleData} = bindActionCreators(actionCreators, dispatch);
@@ -103,7 +106,7 @@ export default function Player ({masterInstrumentArray, display}) {
         sendModuleData(JSON.stringify({markers: markers, data: sentData})) 
         let tab = convertToTab()
         dispatch(setTab({tab: tab, name: name}))
-    }, [data, Tone.Transport.bpm.value, globalInstruments]);
+    }, [data, Tone.Transport.bpm.value, globalInstruments, globalPosition]);
 
     useEffect(() => {
         if (displayFocus !== 'player'){
@@ -382,12 +385,12 @@ const dragStartHandler = e => {
         const instrumentID = thisID[2]
         const cardID = thisID[1]
         if (e.target.className === 'moduleData'){
-            var obj = {id: e.currentTarget.id, className: e.target.className, message: 
+            let obj = {id: e.currentTarget.id, className: e.target.className, message: 
                 data[instrumentID]['data'][cardID], 
                 type: 'player'}
             e.dataTransfer.setData('text', JSON.stringify(obj));
         } else {
-            var obj = {id: e.currentTarget.id, className: e.target.className, message: 
+            let obj = {id: e.currentTarget.id, className: e.target.className, message: 
                 data[instrumentID]['data'][cardID]['data'][e.target.className], 
                 type: 'player'}
             e.dataTransfer.setData('text', JSON.stringify(obj));
@@ -548,6 +551,7 @@ function moduleSubtract(){
             moduleName={cardData.name}
             romanNumeralName={setRomanNumeralsByKey(cardData.data.chordData.chord, cardData.data.keyData.root)}
             chordName={cardData.data.chordData.chordName}
+            chordPositionType={cardData.data.chordData.positionType}
             patternType={cardData.data.patternData.type}
             positionType={cardData.data.patternData.positionType}
             rhythmName={cardData.data.rhythmData.rhythmName}
@@ -773,7 +777,7 @@ function convertToTab(){
     let instrumentNames = getNamesFromGlobalInstruments(globalInstruments)
     let cleanData = removeSilentDataForTabProcessing(data)
     let dataFromPlayer = convertModuleDataIntoPlayableSequence(cleanData, tunings, instrumentNames)
-    let tab = generateTabFromModules(dataFromPlayer, tunings, instrumentNames, name, user)
+    let tab = generateTabFromModules(dataFromPlayer, tunings, instrumentNames, globalPosition, name, user)
     return tab
 }
 
@@ -786,7 +790,7 @@ function convertToTab(){
         </Button.Group>
         {mapDropdowns()}
         <Menu.Item basic active={edit} onClick={()=> setEdit(!edit)}>Edit</Menu.Item>
-        <Menu.Item basic active={edit} onClick={()=> console.log(globalInstruments)}>globalInstruments</Menu.Item>
+        <Menu.Item basic active={edit} onClick={()=> console.log(globalPosition)}>globalPosition</Menu.Item>
         <Menu.Item basic active={showDescription} onClick={() => setShowDescription(!showDescription)}> Desc</Menu.Item>
         <Button.Group>
         <ExportModal

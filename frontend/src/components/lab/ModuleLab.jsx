@@ -609,6 +609,7 @@ for (var o = 0; o < 10; o++){
             id={'moduleCard'}
             romanNumeralName={setRomanNumeralsByKey(chord, key)}
             chordName={labInfo && labInfo['chordLab'] && labInfo['chordLab']['name'] ? labInfo['chordLab']['name']: initState['chordLab']['name']}
+            chordPositionType={labInfo && labInfo['chordLab'] && labInfo['chordLab']['positionType'] ? labInfo['chordLab']['positionType']: initState['chordLab']['positionType']}
             rhythmName={labInfo && labInfo['rhythmLab'] && labInfo['rhythmLab']['name'] ? labInfo['rhythmLab']['name']: initState['rhythmLab']['name']}
             patternName={labInfo && labInfo['patternLab'] && labInfo['patternLab']['name'] ? labInfo['patternLab']['name']: initState['patternLab']['name']}
             patternType={labInfo && labInfo['patternLab'] && labInfo['patternLab']['type'] ? labInfo['patternLab']['type']: initState['patternLab']['type']}

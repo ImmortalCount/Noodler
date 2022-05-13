@@ -15,6 +15,7 @@ import { globalInstrumentsReducer } from "./globalInstrumentsReducer.js";
 import { mixerReducer } from "./mixerReducer.js";
 import { tabReducer } from './tabReducer.js';
 import { displayFocusReducer } from "./displayFocusReducer.js";
+import { globalPositionReducer } from "./globalPositionReducer.js";
 
 const reducers = combineReducers({
     module: moduleDataReducer,
@@ -35,6 +36,7 @@ const reducers = combineReducers({
     mixer: mixerReducer,
     tab: tabReducer,
     displayFocus: displayFocusReducer,
+    globalPosition: globalPositionReducer
 })
 
 export default reducers

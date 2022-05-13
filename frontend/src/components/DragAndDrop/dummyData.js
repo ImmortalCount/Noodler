@@ -555,7 +555,8 @@ export const initialDataType2 = [
                 chordName: 'CM',
                 name: 'CM',
                 chord: ['C3', 'E3', 'G3'],
-                position: []
+                position: [],
+                positionType: 'locked'
             },
             rhythmData: {
                 rhythmName: 'Str8 8s',

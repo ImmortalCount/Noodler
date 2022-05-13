@@ -58,6 +58,7 @@ export default function ChordLab({importedChordData, masterInstrumentArray}) {
 
     //Convert notes and position data into DATA
     function handleSetData(chords, position){
+        console.log(position, 'POSITION FROM chord lab')
         var clone = JSON.parse(JSON.stringify(chords))
         clone = sortAllChordsByPitch(clone)
         if (position === undefined){
@@ -107,6 +108,7 @@ export default function ChordLab({importedChordData, masterInstrumentArray}) {
         returnArr.push(importedChordData['chord'])
         setExportNames([importedChordData['chordName']])
         handleSetData(returnArr, importedChordData['position'])
+        setPositionType(importedChordData['positionType'])
         }
         
     }, [importedChordData])
@@ -119,7 +121,8 @@ export default function ChordLab({importedChordData, masterInstrumentArray}) {
             desc: description,
             chord: chords.length !==0 ? chords[0] : [],
             chords: chords,
-            position: [],
+            position: position,
+            positionType: positionType,
             author: '',
             authorId: '',
             dataType: 'chord',
@@ -127,7 +130,7 @@ export default function ChordLab({importedChordData, masterInstrumentArray}) {
         }
         newInfo['chordLab'] = chordDataPrototype
         dispatch(setLabData(newInfo))
-    }, [data])
+    }, [data, positionType, exportNames])
 
 
     useEffect(() => {
@@ -536,7 +539,7 @@ export default function ChordLab({importedChordData, masterInstrumentArray}) {
             clone[x][y] = note + (octave + 1)
         }
         if (noteOptions === 'chromatic'){
-            var chromaIndex = allChromaticNotes.indexOf(chords[x][y])
+            let chromaIndex = allChromaticNotes.indexOf(chords[x][y])
             if (allChromaticNotes.indexOf(chords[x][y]) === -1){
                 chromaIndex = allChromaticNotes.indexOf(Note.enharmonic(chords[x][y]))
         }
@@ -585,7 +588,7 @@ export default function ChordLab({importedChordData, masterInstrumentArray}) {
         clone[x][y] = note + (octave - 1)
         }
         if (noteOptions === 'chromatic'){
-        var chromaIndex = allChromaticNotes.indexOf(chords[x][y])
+        let chromaIndex = allChromaticNotes.indexOf(chords[x][y])
         if (allChromaticNotes.indexOf(chords[x][y]) === -1){
             chromaIndex = allChromaticNotes.indexOf(Note.enharmonic(chords[x][y]))
         }
@@ -991,7 +994,8 @@ export default function ChordLab({importedChordData, masterInstrumentArray}) {
         var obj = {id: e.target.id, className: 'chordData', message: {
             chordName: exportName,
             chord: exportChord,
-            position: []
+            position: [position[idx]],
+            positionType: positionType
         }, type: 'chordLab'}
         e.dataTransfer.setData('text', JSON.stringify(obj));
     };
@@ -1007,7 +1011,9 @@ export default function ChordLab({importedChordData, masterInstrumentArray}) {
         var obj = {id: 'special', className: 'chordData', message: {
             chordName: exportName,
             chord: exportChord,
-            position: []
+            position: [position[0]],
+            positionType: positionType
+
         }, type: 'chordLabExport'}
         e.dataTransfer.setData('text', JSON.stringify(obj));
     }
@@ -1202,6 +1208,15 @@ export default function ChordLab({importedChordData, masterInstrumentArray}) {
           {chord: ['A3', 'C4', 'E4'], name: 'Am'},
           {chord: ['B3', 'D4', 'F4'], name: 'Bm'},
       ]
+
+      const handlePositionType = () => {
+        if (positionType === 'locked'){
+            return 'lock'
+        }
+        if (positionType === 'unlocked'){
+            return ''
+        }
+      }
       //====
     return (
         <>
@@ -1300,6 +1315,7 @@ export default function ChordLab({importedChordData, masterInstrumentArray}) {
         </Dropdown>
          <Menu.Item onClick={handleEdit}> Edit </Menu.Item>     
          <Menu.Item onClick={() => setShowDescription(!showDescription)}> Desc </Menu.Item>
+         <Menu.Item onClick={() => console.log(position)}> Test </Menu.Item>
          <Button.Group>
          <Button basic compact onClick={() => setDisplay()}>Display</Button>
          <Dropdown
@@ -1352,7 +1368,7 @@ export default function ChordLab({importedChordData, masterInstrumentArray}) {
             {mapChords()}
         </div>
         <div>
-            <div draggable onClick={() => setInputFocus(-1)} onDragStart={dragStartHandlerSpecial} style={{height: '25px', width: '125px', backgroundColor: 'lightsalmon', display: !(inputFocus === -1) ? '': 'none' }}>{chords.length !== 0 ? exportNames?.[0] ? exportNames[0] : handleChordName(chords[0]) : 'N/A'}</div>
+            <div draggable onClick={() => setInputFocus(-1)} onDragStart={dragStartHandlerSpecial} style={{height: '25px', width: '125px', backgroundColor: 'lightsalmon', display: !(inputFocus === -1) ? '': 'none' }}>{chords.length !== 0 ? exportNames?.[0] ? exportNames[0] : handleChordName(chords[0]) : 'N/A'}<Icon name={handlePositionType()}/></div>
             <Input type='text'
             id={'input_patternLab'}
             ref={input => input && input.focus()}

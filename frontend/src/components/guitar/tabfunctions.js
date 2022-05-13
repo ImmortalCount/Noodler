@@ -22,7 +22,7 @@ function flattenNotes(notes, returnArr){
     }   
 //figure this out tomorrow
 //returns arr of arrays for each instrument
-export function turnNoteDataIntoPositionData(dataFromPlayerToGuitar, tuningArr){
+export function turnNoteDataIntoPositionData(dataFromPlayerToGuitar, tuningArr, globalPosition){
     var arrOfNotes = [];
     for (let i = 0; i < dataFromPlayerToGuitar.length; i++){
         let arrForThisInstrument = [];
@@ -34,7 +34,7 @@ export function turnNoteDataIntoPositionData(dataFromPlayerToGuitar, tuningArr){
             for (let k = 0; k < notesForThisModule.length; k++){
                 let position;
                 if (positionForThisModule[k] === undefined){
-                    position = 0
+                    position = globalPosition
                 } else {
                     position = positionForThisModule[k]
                 }
@@ -47,9 +47,9 @@ export function turnNoteDataIntoPositionData(dataFromPlayerToGuitar, tuningArr){
     return arrOfNotes
 }
 
-function convertPlayerDataToModules(dataFromPlayerToGuitar, tuningArr, instrumentArr){
+function convertPlayerDataToModules(dataFromPlayerToGuitar, tuningArr, instrumentArr, globalPosition){
 
-    let arrOfPositionArrs = turnNoteDataIntoPositionData(dataFromPlayerToGuitar, tuningArr)
+    let arrOfPositionArrs = turnNoteDataIntoPositionData(dataFromPlayerToGuitar, tuningArr, globalPosition)
 
     let arrOfReturnObj = [];
     
@@ -61,7 +61,7 @@ function convertPlayerDataToModules(dataFromPlayerToGuitar, tuningArr, instrumen
     return arrOfReturnObj
 }
 
-export function generateTabFromModules(dataFromPlayer, tuningArr, instrumentArr, title, author){
+export function generateTabFromModules(dataFromPlayer, tuningArr, instrumentArr,globalPosition, title, author){
     if (title === undefined){
         title = 'Unnamed'
     }
@@ -69,7 +69,7 @@ export function generateTabFromModules(dataFromPlayer, tuningArr, instrumentArr,
         author = 'Anonymous'
     }
 
-    dataFromPlayer = convertPlayerDataToModules(dataFromPlayer, tuningArr, instrumentArr)
+    dataFromPlayer = convertPlayerDataToModules(dataFromPlayer, tuningArr, instrumentArr, globalPosition)
 
     console.log(dataFromPlayer)
 
