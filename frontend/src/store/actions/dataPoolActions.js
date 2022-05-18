@@ -53,6 +53,39 @@ export const insertData = (musicData) => async (dispatch) => {
     }
 }
 
+export const updateData = (musicData) => async (dispatch) => {
+    try {
+        dispatch({
+            type: DATA_POOL_UPDATE_REQUEST
+        })
+
+        const config = {
+            headers: {
+                'Content-Type': 'application/json'
+            },
+        }
+
+        const data = await http.put(
+            'data',
+            (musicData),
+            config
+        )
+
+        dispatch({
+            type: DATA_POOL_UPDATE_SUCCESS,
+            payload: data,
+        })
+
+    } catch (error) {
+        dispatch({
+            type: DATA_POOL_UPDATE_FAIL,
+            payload: error.response && error.response.data.message 
+            ? error.response.data.message 
+            : error.message
+        })
+    }
+}
+
 export const getMusicData = (requestData) => async (dispatch) => {
     try {
         dispatch({type: DATA_POOL_LIST_REQUEST})

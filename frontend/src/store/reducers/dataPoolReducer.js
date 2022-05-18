@@ -15,7 +15,6 @@ import {
     DATA_POOL_UPDATE_REQUEST, 
     DATA_POOL_UPDATE_SUCCESS, 
     DATA_POOL_UPDATE_FAIL, 
-    DATA_POOL_UPDATE_RESET, 
     } from '../constants/dataPoolConstants.js'
 
     export const dataListReducer = (state = { orders: []}, action ) => {
@@ -51,9 +50,29 @@ import {
                 return {
                     loading: false,
                     dataInsert: action.payload,
-                    // dataInsert: {message: 'WHAT IS GOING ON?'}
                 }
             case DATA_POOL_INSERT_FAIL:
+                return {
+                    loading: false,
+                    error: action.payload,
+                }
+            default: 
+                return state
+        }
+    }
+
+    export const dataUpdateReducer =  (state = {}, action) => {
+        switch (action.type){
+            case DATA_POOL_UPDATE_REQUEST:
+                return {
+                    loading: true,
+                }
+            case DATA_POOL_UPDATE_SUCCESS:
+                return {
+                    loading: false,
+                    dataUpdate: action.payload,
+                }
+            case DATA_POOL_UPDATE_FAIL:
                 return {
                     loading: false,
                     error: action.payload,

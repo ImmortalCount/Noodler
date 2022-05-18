@@ -1,4 +1,5 @@
 let music_data
+import { ObjectId } from "mongodb"
 
 export default class musicDataActions {
   static async injectDB(conn) {
@@ -16,15 +17,22 @@ export default class musicDataActions {
     try {
       const dataName = dataObject.name
       const authorId = dataObject.authorId
+      const pool = dataObject.pool
+      let poolName;
+      if (pool === authorId){
+        poolName = 'local'
+      } else {
+        poolName = pool
+      }
       const identicalItem = await music_data.findOne(
-        {authorId: authorId, name: dataName}
+        {authorId: authorId, name: dataName, pool: pool}
       )
       const isUnique = (identicalItem === null)
       if (!isUnique){
-        return {message: `You have already uploaded ${dataName}`}
+        return {message: `You have already uploaded a file named ${dataName} to ${poolName} pool.`, success: false}
       } else {
         await music_data.insertOne(dataObject)
-        return {message: `${dataName} successfully uploaded`, success: true}
+        return {message: `${dataName} successfully uploaded to ${poolName} pool`, success: true}
       }
 
     } catch (e) {
@@ -35,10 +43,11 @@ export default class musicDataActions {
 
   static async updateMusicData(dataObject) {
     try {
-      const updateData = await music_data.updateOne(
-        {dataObject},
+      const dataName = dataObject.name
+      await music_data.replaceOne(
+        {_id: ObjectId(dataObject['_id'])},{dataObject}
       )
-      return updateData
+      return {message: `${dataName} was successfully updated`, success: true}
     } catch (e) {
       console.error(`Unable to update music_data: ${e}`)
       return { error: e }

@@ -44,6 +44,7 @@ const [inputFocus, setInputFocus] = useState(false)
 const [chromaticNotes, setChromaticNotes] = useState(['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B'])
 const [description, setDescription] = useState('')
 const [showDescription, setShowDescription] = useState(false)
+const [opened, setOpened] = useState(false)
 const isMuted = false;
 const user = JSON.parse(localStorage.getItem('userInfo'))
 
@@ -1079,7 +1080,7 @@ function patternExtraction(){
 const exportObj = {
         name: name,
         patternName: name,
-        desc: '',
+        desc: description,
         type: 'fluid',
         length: notes.length,
         dataType: 'pattern',
@@ -1263,9 +1264,10 @@ const handleEditOptions = () => {
         <Menu.Item onClick={() => setShowDescription(!showDescription)}> Desc </Menu.Item>
         <Menu.Item onClick={importChordsFromChordLab}> Import </Menu.Item>
         <Button.Group>
-        <ExportModal
+        <Button basic onClick={() => setOpened(true)}>Export</Button>
+        {/* <ExportModal
         dataType={'Pattern'}
-        exportObj={exportObj}/>
+        exportObj={exportObj}/> */}
         </Button.Group>
         </Menu>
         {(edit && !manipulate) && 
@@ -1315,6 +1317,14 @@ const handleEditOptions = () => {
         {showDescription && <Form>
         <TextArea onInput={handleDescriptionChange} id={'desc_chordLab'} ref={input => input && input.focus()} placeholder='Description...' value={description} />
         </Form>}
+        <ExportModal
+        dataType={'pattern'}
+        exportObj={exportObj}
+        opened={opened}
+        setOpened={setOpened}
+        changeParentName={setName}
+        changeParentDesc={setDescription}
+        />
         </>
     )
 }

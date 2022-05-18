@@ -9,6 +9,15 @@ export default class musicDataController{
             res.status(500).json({error: e.message})
         }
     }
+
+    static async updateMusicModule(req, res, next){
+        try{
+            const reply = await musicDataActions.updateMusicData(req.body)
+            res.status(201).json(reply)
+        } catch (e){
+            res.status(500).json({error: e.message})
+        }
+    }
     static async getMusicModules(req, res, next){
         let dataRequest = {}
             dataRequest.dataType = req.query.dataType
