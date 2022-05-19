@@ -156,6 +156,7 @@ const onDragStart = (e) => {
                 <List.Content>
                 <List.Header > <Icon name='play' size='small'/>{displayData.name}</List.Header>
                 <List.Description >type: {displayData.dataType}</List.Description>
+                <List.Description >desc: {displayData.desc.length === 0 ? 'N/A' : displayData.desc}</List.Description>
                 <List.Description >pool: {displayData.pool === userID ? 'local' : displayData.pool}</List.Description>
                 <List.Description >author: {displayData.author}</List.Description>
                 </List.Content>

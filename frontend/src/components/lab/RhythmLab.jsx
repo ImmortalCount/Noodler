@@ -29,7 +29,7 @@ export default function RhythmLab({importedRhythmData}) {
     const [showDescription, setShowDescription] = useState(false)
     const [barLength, setBarLength] = useState(4)
     const [nestingDepth, setNestingDepth] = useState(0)
-    const [depth, setDepth] = useState(0)
+    const [opened, setOpened] = useState(false)
     const user = JSON.parse(localStorage.getItem('userInfo'))
     const isMuted = false;
     const dispatch = useDispatch()
@@ -62,7 +62,7 @@ useEffect(() => {
         const rhythmDataPrototype = {
             name: name,
             rhythmName: name,
-            desc: '',
+            desc: description,
             rhythm: JSON.parse(JSON.stringify(notes)),
             length: moduleLengthDisplay,
             notes: noteSlots,
@@ -845,7 +845,7 @@ const onChangeModuleLength = e => {
 const exportObj = {
     name: name,
     rhythmName: name,
-    desc: '',
+    desc: description,
     rhythm: notes,
     length: moduleLengthDisplay,
     speed: playConstant,
@@ -931,9 +931,7 @@ const threeFourEighthNotes = [['O', 'O'], ['O', 'O'], ['O', 'O']]
          <Menu.Item onClick={()=> setStretchCompress(!stretchCompress)}>  Stretch/Compress </Menu.Item>      
          <Menu.Item onClick={() => setShowDescription(!showDescription)}> Desc </Menu.Item>
          <Button.Group>
-        <ExportModal
-        dataType={'Rhythm'}
-        exportObj={exportObj}/>
+         <Button basic onClick={() => setOpened(true)}>Export</Button>
         </Button.Group>
         </Menu>
         {edit && <Button.Group>
@@ -971,6 +969,14 @@ const threeFourEighthNotes = [['O', 'O'], ['O', 'O'], ['O', 'O']]
         {showDescription && <Form>
         <TextArea onInput={handleDescriptionChange} id={'desc_chordLab'} ref={input => input && input.focus()} placeholder='Description...' value={description} />
         </Form>}
+        <ExportModal
+        dataType={'rhythm'}
+        exportObj={exportObj}
+        opened={opened}
+        setOpened={setOpened}
+        changeParentName={setName}
+        changeParentDesc={setDescription}
+        />
         </>
     )
 }

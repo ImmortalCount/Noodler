@@ -38,6 +38,7 @@ export default function ChordLab({importedChordData, masterInstrumentArray}) {
     const [instrumentDisplay, setInstrumentDisplay] = useState(-1)
     const [chromaticNotes, setChromaticNotes] = useState(['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B'])
     const [edit, setEdit] = useState(false)
+    const [opened, setOpened] = useState(false)
     const isMuted = false;
     const user = JSON.parse(localStorage.getItem('userInfo'))
 
@@ -1135,13 +1136,19 @@ export default function ChordLab({importedChordData, masterInstrumentArray}) {
 
         setGenerateChordOptions(clone)
     }
+    let exportName;
+        if (exportNames[0]){
+            exportName = exportNames[0]
+        } else {
+            exportName = handleChordName(chords[0])
+        }
 
     const exportObj = {
-        name: exportNames ? exportNames[0] : Chord.detect(chords[0])[0] ? Chord.detect(chords[0])[0]: '',
-        chordName: exportNames ? exportNames[0] : Chord.detect(chords[0])[0] ? Chord.detect(chords[0])[0]: '',
-        desc: '',
+        name: exportName,
+        chordName: exportName,
+        desc: description,
         chord: chords[0],
-        position: [],
+        position: position?.[0] ? [position[0]] : [],
         author: user?.['name'],
         authorId: user?.['_id'],
         dataType: 'chord',
@@ -1216,6 +1223,12 @@ export default function ChordLab({importedChordData, masterInstrumentArray}) {
         if (positionType === 'unlocked'){
             return ''
         }
+      }
+
+      function changeFirstChordName(name){
+        let clone = JSON.parse(JSON.stringify(exportNames))
+        clone[0] = name
+        setExportNames(clone)
       }
       //====
     return (
@@ -1315,7 +1328,6 @@ export default function ChordLab({importedChordData, masterInstrumentArray}) {
         </Dropdown>
          <Menu.Item onClick={handleEdit}> Edit </Menu.Item>     
          <Menu.Item onClick={() => setShowDescription(!showDescription)}> Desc </Menu.Item>
-         <Menu.Item onClick={() => console.log(position)}> Test </Menu.Item>
          <Button.Group>
          <Button basic compact onClick={() => setDisplay()}>Display</Button>
          <Dropdown
@@ -1341,9 +1353,7 @@ export default function ChordLab({importedChordData, masterInstrumentArray}) {
          handleMapChords={handleMapChords}
          />  
          <Button.Group>
-         <ExportModal
-        dataType={'Chord'}
-        exportObj={exportObj}/>
+         <Button basic onClick={() => setOpened(true)}>Export</Button>
         </Button.Group>  
         </Menu>
         {edit && <Button.Group>
@@ -1377,6 +1387,14 @@ export default function ChordLab({importedChordData, masterInstrumentArray}) {
             style={{display: inputFocus === -1 ? '': 'none' }}
             />
         </div>
+        <ExportModal
+        dataType={'chord'}
+        exportObj={exportObj}
+        opened={opened}
+        setOpened={setOpened}
+        changeParentName={changeFirstChordName}
+        changeParentDesc={setDescription}
+        />
         </>
     ) 
 }

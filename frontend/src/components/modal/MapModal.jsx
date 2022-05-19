@@ -1,8 +1,6 @@
 import React, { useState } from "react";
 import { Button, Dropdown } from "semantic-ui-react";
-import { useDispatch, useSelector } from 'react-redux';
 import "./modal.css";
-import { insertData } from '../../store/actions/dataPoolActions';
 
 function MapModal({mapObj, handleMapChords}) {
   const [isOpen, setIsOpen] = useState(false);
@@ -28,8 +26,6 @@ function MapModal({mapObj, handleMapChords}) {
     { key: 'diatonic', text: 'diatonic', value: 'diatonic'},
     { key: 'modal', text: 'modal', value: 'modal'},
   ]
-
-  const dispatch = useDispatch()
 
   const mapMapObj = () => {
     return mapObj.map((chords, idx) => <div key={idx}>

@@ -911,8 +911,8 @@ function displayNotes(input){
                     }
                 }
             //global position
-            if (data[i]['data'][currentModuleIndex] === undefined){
-                return
+            if (data[i]['data'][currentModuleIndex] === undefined || instruments[i] === undefined){
+                break
             }
             let displayOnly = data[i]['displayOnly'];
             let currentArray;

@@ -21,9 +21,10 @@ export default function ModuleLab({importedModuleData, masterInstrumentArray}) {
     const [description, setDescription] = useState('')
     const [showDescription, setShowDescription] = useState(false)
     const [instrumentDisplay, setInstrumentDisplay] = useState(-1)
-    const [displayAll, setDisplayAll] = useState(false)
+    const [displayAll, setDisplayAll] = useState(true)
     const [playType, setPlayType] = useState('Melody')
     const [playing, setPlaying] = useState(false)
+    const [opened, setOpened] = useState(false)
     const user = JSON.parse(localStorage.getItem('userInfo'))
 
     const dispatch = useDispatch()
@@ -509,7 +510,7 @@ for (var o = 0; o < 10; o++){
     const exportObj = {
         name: name,
         moduleName: name,
-        desc: '',
+        desc: description,
         author: user?.['name'],
         authorId: user?.['_id'],
         dataType: 'module',
@@ -585,9 +586,8 @@ for (var o = 0; o < 10; o++){
         </Button.Group>
         
          <Button.Group>
-        <ExportModal
-        dataType={'Module'}
-        exportObj={exportObj}/>
+         <Button basic onClick={() => setOpened(true)}>Export</Button>
+        
         </Button.Group>
         </Menu>
         <div>
@@ -621,6 +621,14 @@ for (var o = 0; o < 10; o++){
         {showDescription && <Form>
         <TextArea onInput={handleDescriptionChange} id={'desc_chordLab'} ref={input => input && input.focus()} placeholder='Description...' value={description} />
         </Form>}
+        <ExportModal
+         dataType={'module'}
+         exportObj={exportObj}
+         opened={opened}
+         setOpened={setOpened}
+         changeParentName={setName}
+         changeParentDesc={setDescription}
+         />
         </>
     )
     

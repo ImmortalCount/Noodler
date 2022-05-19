@@ -290,7 +290,7 @@ if (chromaticScale.indexOf(root) === -1){
 return chordPosition
 }
 
-function setRecommendedScale(chord, key){
+export function setRecommendedScale(chord, key){
     const root = Note.pitchClass(chord[0])
     const chordType = determineChordType(chord)   
     const chordPosition = determineChordPositionInKey(chord, key)
@@ -323,6 +323,23 @@ function setRecommendedScale(chord, key){
     }
 }
 
+export function turnScaleNameIntoScaleData(scaleName){
+    let binArr = Scale.get(scaleName).chroma.split("")
+    for (let i = 0; i < binArr.length; i++){
+        binArr[i] = Number(binArr[i])
+    }
+    let scaleDataPrototype = {
+        scaleName: scaleName,
+        name: scaleName,
+        desc: '',
+        scale: Scale.get(scaleName).notes,
+        length: Scale.get(scaleName).notes.length,
+        binary: binArr,
+        number: Scale.get(scaleName).setNum,
+    }
+    return scaleDataPrototype
+}
+
 export function turnChordIntoModule(chord, key, chordName, moduleName, position){
 
     let scaleName = setRecommendedScale(chord, key)
@@ -342,7 +359,9 @@ export function turnChordIntoModule(chord, key, chordName, moduleName, position)
     let scaleDataPrototype = {
         scaleName: scaleName,
         name: scaleName,
+        desc: '',
         scale: Scale.get(scaleName).notes,
+        length: Scale.get(scaleName).notes.length,
         binary: binArr,
         number: Scale.get(scaleName).setNum,
     }

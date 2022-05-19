@@ -30,6 +30,7 @@ export default function ScaleLab({importedScaleData, masterInstrumentArray}) {
     const [displayName, setDisplayName] = useState('C major')
     const [instrumentDisplay, setInstrumentDisplay] = useState(-1)
     const [localDisplay, setLocalDisplay] = useState(true)
+    const [opened, setOpened] = useState(false)
     const isMuted = false;
     const user = JSON.parse(localStorage.getItem('userInfo'))
 
@@ -730,8 +731,9 @@ function convertScaleForDispatch(){
 const exportObj = {
       name: rootNote + ' ' + scaleName,
       scaleName: rootNote + ' ' + scaleName,
+      scaleType: scaleName,
       binary: scaleDataBinary,
-      desc: '',
+      desc: description,
       number: scaleNumber,
       scale: notes,
       type: 'normal',
@@ -865,9 +867,7 @@ const handleScaleDescriptionChange = e => {
         </Dropdown>
         </Button.Group>
         <Button.Group>
-        <ExportModal
-        dataType={'Scale'}
-        exportObj={exportObj}/>
+        <Button basic onClick={() => setOpened(true)}>Export</Button>
         </Button.Group>
       </Menu>
         <div>
@@ -1182,6 +1182,14 @@ const handleScaleDescriptionChange = e => {
         </Form.Field>
       </Form>
         </div>
+        <ExportModal
+        dataType={'scale'}
+        exportObj={exportObj}
+        opened={opened}
+        setOpened={setOpened}
+        changeParentName={setScaleName}
+        changeParentDesc={setDescription}
+        />
         </>
     )
 }

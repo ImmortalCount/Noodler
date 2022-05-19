@@ -14,9 +14,11 @@ import ExportModal from '../modal/ExportModal';
 import { setTab } from '../../store/actions/tabActions';
 import { setDisplayFocus } from '../../store/actions/displayFocusActions';
 import { setPlayHighlight } from '../../store/actions/playHighlightActions';
+import { setRecommendedScale, turnScaleNameIntoScaleData } from '../lab/chordMapGenerator';
 
 export default function Player ({masterInstrumentArray, display}) {
     const [instrumentFocus, setInstrumentFocus] = useState(0);
+    const [opened, setOpened] = useState(false)
     const [mainModule, setMainModule] = useState(0)
     const [data, setData] = useState([{mode: 'melody', highlight: [], data: initialDataType2}])
     const [markers, setMarkers] = useState([])
@@ -90,7 +92,8 @@ export default function Player ({masterInstrumentArray, display}) {
             setData(songImport['data'])
             setName(songImport['name'])
             setDescription(songImport['desc'])
-            setBpm(songImport['bpm'])
+            console.log(songImport['bpm'])
+            Tone.Transport.bpm.value = songImport['bpm']
         } else {
             return
         }
@@ -497,23 +500,41 @@ const dropHandlerBackground = e => {
     }
 }
 
+function setRecommendedScaleAll(){
+    
+    var clone = JSON.parse(JSON.stringify(data))
+    for (let i = 0; i < clone[instrumentFocus]['data'].length; i++){
+        const chord = clone[instrumentFocus]['data'][i]['data']['chordData']['chord']
+        const key = clone[instrumentFocus]['data'][i]['data']['keyData']['root']
+        let recScale = setRecommendedScale(chord, key)
+        clone[instrumentFocus]['data'][i]['data']['scaleData'] = turnScaleNameIntoScaleData(recScale)
+    }
+    setData(clone)
+}
+
 const cardClickHandler = e => {
     var ex2 = e.currentTarget.id.split('_')
     var endIndex = Number(ex2[1])
     var endInstrument = Number(ex2[2])
+    var clone = JSON.parse(JSON.stringify(data))
 
     Tone.Transport.position = markers[endInstrument][endIndex]
 
     if (controls.current === 'delete'){
-        var clone = JSON.parse(JSON.stringify(data))
         if (clone[endInstrument]['data'].length === 1){
             return
         } else {
             clone[endInstrument]['data'].splice(endIndex, 1)
-        setData(clone)
         }
     } 
+    if (controls.current === 'setScale'){
+        const chord = clone[endInstrument]['data'][endIndex]['data']['chordData']['chord']
+        const key = clone[endInstrument]['data'][endIndex]['data']['keyData']['root']
+        let recScale = setRecommendedScale(chord, key)
+        clone[endInstrument]['data'][endIndex]['data']['scaleData'] = turnScaleNameIntoScaleData(recScale)
+    }
     highlight.current = true
+    setData(clone)
     dispatch(setDisplayFocus('player'))
 }
 
@@ -621,11 +642,11 @@ function moduleSubtract(){
     
 
     var currentlyPlayingValue = useRef([])
+    let thisInterval = useRef([])
+
 
     useEffect(() => {
-        const thisInterval = setInterval(function checkCurrentTimeAndSetCurrentlyPlaying() {
-            let state = Tone.Transport.state
-            let startingPos = Tone.Time(Tone.Transport.position).toSeconds() === 0
+        thisInterval.current = setInterval(function checkCurrentTimeAndSetCurrentlyPlaying() {
         
          if (highlight.current) {
             let currentTime = Tone.Time(Tone.Transport.position).toSeconds()
@@ -645,14 +666,17 @@ function moduleSubtract(){
                 setCurrentlyPlaying(playingArr)
             }
         } else {
+            if (currentlyPlayingValue.current.length === 0){
+                return
+            }
             setCurrentlyPlaying([])
             currentlyPlayingValue.current = []
             return
         }
     }, 50)
-        return () => {
-          clearInterval(thisInterval);
-        };
+        // return () => {
+        //   clearInterval(thisInterval.current);
+        // };
       }, [])
 
     
@@ -699,17 +723,31 @@ function handleUpdate(){
     }
 }
 
-const exportObj = {
+let exportObj = useRef({
     name: name,
     desc: description,
-    bpm: bpm,
+    bpm: Tone.Transport.bpm.value,
     author: user?.['name'],
     authorId: user?.['_id'],
     dataType: 'song',
     pool: exportPool,
     instruments: songInfo,
     data: data,
-}
+})
+
+useEffect(() => {
+    exportObj.current = {
+    name: name,
+    desc: description,
+    bpm: Tone.Transport.bpm.value,
+    author: user?.['name'],
+    authorId: user?.['_id'],
+    dataType: 'song',
+    pool: exportPool,
+    instruments: songInfo,
+    data: data,
+    }
+}, [data, songInfo, exportPool, description, name, Tone.Transport.bpm.value])
 
   //BPM
 const handleBPMChange = e => {
@@ -763,14 +801,14 @@ function removeSilentDataForTabProcessing(data){
     return returnArr
 }
 
-const handleDownloadTab = () =>{
-    let tunings = getTuningsFromGlobalInstruments(globalInstruments)
-    let instrumentNames = getNamesFromGlobalInstruments(globalInstruments)
-    let cleanData = removeSilentDataForTabProcessing(data)
-    let dataFromPlayer = convertModuleDataIntoPlayableSequence(cleanData, tunings, instrumentNames)
-    let tab = generateTabFromModules(dataFromPlayer, tunings, instrumentNames, name, user)
-    downloadTabAsTextFile(tab, 'download')
-}
+// const handleDownloadTab = () =>{
+//     let tunings = getTuningsFromGlobalInstruments(globalInstruments)
+//     let instrumentNames = getNamesFromGlobalInstruments(globalInstruments)
+//     let cleanData = removeSilentDataForTabProcessing(data)
+//     let dataFromPlayer = convertModuleDataIntoPlayableSequence(cleanData, tunings, instrumentNames)
+//     let tab = generateTabFromModules(dataFromPlayer, tunings, instrumentNames, name, user)
+//     downloadTabAsTextFile(tab, 'download')
+// }
 
 function convertToTab(){
     let tunings = getTuningsFromGlobalInstruments(globalInstruments)
@@ -781,6 +819,8 @@ function convertToTab(){
     return tab
 }
 
+console.log('rerendered')
+
     return (
         <>
         <div style={{display: display ? '' : 'none'}} onDrop={dropHandlerBackground} >
@@ -790,12 +830,9 @@ function convertToTab(){
         </Button.Group>
         {mapDropdowns()}
         <Menu.Item basic active={edit} onClick={()=> setEdit(!edit)}>Edit</Menu.Item>
-        <Menu.Item basic active={edit} onClick={()=> console.log(globalPosition)}>globalPosition</Menu.Item>
         <Menu.Item basic active={showDescription} onClick={() => setShowDescription(!showDescription)}> Desc</Menu.Item>
         <Button.Group>
-        <ExportModal
-        dataType={'Song'}
-        exportObj={exportObj}/>
+        <Button basic onClick={() => setOpened(true)}>Export</Button>
         </Button.Group>
         </Menu>
         <div>
@@ -812,13 +849,6 @@ function convertToTab(){
         <TextArea onInput={handleDescriptionChange} id={'desc_scaleLab'} ref={input => input && input.focus()} placeholder='Description...' value={description} />
         </Form>}
         </div>
-        
-
-        {songOptions &&
-        <>
-         <div>Bpm: {bpm}</div>
-        <input type="range" min='1' max='500' step='1' defaultValue={bpm} onChange={handleBPMChange}/>
-        </>}
         {edit && <Button.Group>
             <Button active ={activeButton === 'swap'}compact basic onClick ={() => handleControls('swap')}>Swap</Button>
             <Button active ={activeButton === 'replace'} compact basic onClick ={() => handleControls('replace')}>Replace</Button>
@@ -829,13 +859,20 @@ function convertToTab(){
             <Button compact basic onClick ={() => moduleSubtract()}>Module--</Button>
             <Button compact basic onClick ={() => moduleAdd()}>Module++</Button>
             <Button active={activeButton === 'setScale'} compact basic onClick={() => handleControls('setScale')}>Set Rec Scale</Button>
-           {activeButton === 'setScale' && <Button compact basic onClick={() => handleControls('setScale')}>All</Button>}
+           {activeButton === 'setScale' && <Button compact basic onClick={() => setRecommendedScaleAll()}>All</Button>}
         </Button.Group>}
         <div id='instrumentDisplay'>
             {superMapCards()}
         </div>
         </div>
-        
+        <ExportModal
+         dataType={'song'}
+         exportObj={exportObj.current}
+         opened={opened}
+         setOpened={setOpened}
+         changeParentName={setName}
+         changeParentDesc={setDescription}
+         />
         </>
     )
 }

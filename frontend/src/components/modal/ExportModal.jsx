@@ -23,7 +23,11 @@ function ExportModal({dataType, exportObj, opened, setOpened, changeParentName, 
 
   useEffect(() => {
     if (exportObj){
-      setName(exportObj.name)
+      if (dataType === 'scale'){
+        setName(exportObj.scaleType)
+      } else {
+        setName(exportObj.name)
+      }
       setDesc(exportObj.desc)
     }
   }, [exportObj])
@@ -73,7 +77,10 @@ function ExportModal({dataType, exportObj, opened, setOpened, changeParentName, 
     'patternName',
     'desc',
     'instruments',
-    'data'
+    'data', 
+    'pool',
+    'scaleType',
+    'dataType'
   ]
 
 function handleSetName(name){
@@ -96,6 +103,18 @@ function handleSetDesc(desc){
 }
   }
 
+function handleBackgroundColor(){
+  let colors = {
+    'chord': 'lightsalmon',
+    'scale': 'lightcoral',
+    'pattern': 'lightblue',
+    'rhythm': 'lightseagreen',
+    'module': 'wheat',
+    'song': 'lightgreen'
+  }
+  return colors[dataType]
+}
+
 
   return (
     <>
@@ -103,21 +122,21 @@ function handleSetDesc(desc){
         <>
           <div className="overlay"></div>
           <div className="modal">
-            <header style={{backgroundColor: 'lightblue'}} className="modal__header">
-              <h2>Export {dataType} '{name}' to {poolDisplay}</h2>
+            <header style={{backgroundColor: handleBackgroundColor()}} className="modal__header">
+              <h2>Export {dataType} '{dataType === 'scale' ? exportObj.name :  name}' to {poolDisplay}</h2>
               <button onClick={closeModal} className="close-button">&times;</button>
             </header>
             <main className="modal__main">
              {messageDisplay && <h3>{dataInsert?.data?.message}</h3>}
              {updateDisplay && <h3>{dataUpdate?.data?.message}</h3>}
              {messageDisplay && dataInsert?.data?.success === false && <div>
-               <h3>Update {name}?</h3>
+               <h3>Update {dataType === 'scale' ? exportObj.name :  name}?</h3>
                <div>
                <Button onClick={handleUpdate}> Yes</Button> <Button onClick={handleDeclineUpdate}>No</Button>
                </div>
                </div>}
              <div onClick={() => setInputFocus(!inputFocus)} style={{display: !inputFocus ? '': 'none' }}>
-            <h3>Name: {name}</h3>
+            <h3>Name: {dataType === 'scale' ? exportObj.name :  name}</h3>
         </div>
             <Input type='text'
             value={name}
@@ -128,7 +147,7 @@ function handleSetDesc(desc){
             style={{display: inputFocus ? '': 'none' }}
             />
               <div onClick={() => setTextAreaFocus(!textAreaFocus)} style={{display: !textAreaFocus ? '': 'none' }}>
-              <h3>Description: {desc}</h3>
+              <h3>Description: {desc.length === 0 ? 'N/A' : desc}</h3>
               </div>
               <TextArea
                 value={desc}
@@ -181,7 +200,8 @@ function handleSetDesc(desc){
              </div>
             </main>
             <Button loading={loading} onClick={handleExport}>Export</Button>
-            <Button loading={loading} onClick={() => console.log(dataInsert?.data?.success)}>Test</Button>
+            <Button loading={loading} onClick={() => console.log(exportObj)}>Test</Button>
+            <Button loading={loading} onClick={() => exportObj['pool'] = 'local'}>Change</Button>
           </div>
         </>
       )}

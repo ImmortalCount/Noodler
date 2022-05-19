@@ -420,6 +420,7 @@ export const initialDataType2 = [
             chordData: {
                 chordName: 'Dm',
                 name: 'Dm',
+                desc: '',
                 chord: ['D3', 'F3', 'A3'],
                 position: []
             },
@@ -427,6 +428,7 @@ export const initialDataType2 = [
                 rhythmName: 'Str8 8s',
                 rhythm: [['O', 'O'], ['O', 'O'], ['O', 'O'], ['O', 'O']],
                 speed: 1,
+                desc: '',
                 length: 4,
                 notes: 8
             },
@@ -435,15 +437,18 @@ export const initialDataType2 = [
                 patternName: 'Arp up-Scale Down',
                 pattern: [[0], [2], [4], [7], [6], [5], [4], [3]],
                 type: 'fluid',
+                desc: '',
                 length: 8,
                 position: [0, 0, 0, 0, 0, 0, 0, 0],
-                positionType: 'locked'
+                positionType: 'unlocked'
             },
             scaleData: {
                 scaleName: 'D Dorian',
                 name: 'D Dorian',
+                desc: '',
                 scale: ['D', 'E', 'F', 'G', 'A', 'B', 'C'],
                 binary: [1, 0, 1, 1, 0, 1, 0, 1, 0, 1, 1, 0],
+                length: 7,
                 number: 2902
             },
             keyData: {
@@ -464,6 +469,7 @@ export const initialDataType2 = [
             chordData: {
                 name: 'GM',
                 chordName: 'GM',
+                desc: '',
                 chord: ['G3', 'B3', 'D4'],
                 position: []
             },
@@ -471,6 +477,7 @@ export const initialDataType2 = [
                 rhythmName: 'Str8 8s',
                 rhythm: [['O', 'O'], ['O', 'O'], ['O', 'O'], ['O', 'O']],
                 speed: 1,
+                desc: '',
                 length: 4,
                 notes: 8
             },
@@ -479,16 +486,19 @@ export const initialDataType2 = [
                 patternName: 'Arp up-Scale Down',
                 pattern: [[0], [2], [4], [7], [6], [5], [4], [3]],
                 type: 'fluid',
+                desc: '',
                 length: 8,
                 position: [1, 1 , 1, 1, 1, 1, 1, 1],
-                positionType: 'locked'
+                positionType: 'unlocked'
             },
             scaleData: {
                 scaleName: 'G Mixolydian',
                 name: 'G Mixolydian',
+                desc: '',
                 scale: ['G', 'A', 'B', 'C', 'D', 'E', 'F'],
                 binary: [1, 0, 1, 0, 1, 1, 0, 1, 0, 1, 1, 0],
-                number: 2774
+                number: 2774,
+                length: 7,
             },
             keyData: {
                 keyName: 'Key: C',
@@ -510,11 +520,13 @@ export const initialDataType2 = [
                 chordName: 'CM',
                 name: 'CM',
                 chord: ['C3', 'E3', 'G3'],
+                desc: '',
                 position: []
             },
             rhythmData: {
                 rhythmName: 'Str8 8s',
                 rhythm: [['O', 'O'], ['O', 'O'], ['O', 'O'], ['O', 'O']],
+                desc: '',
                 speed: 1,
                 length: 4,
                 notes: 8
@@ -523,16 +535,19 @@ export const initialDataType2 = [
                 name: 'Arp up-Scale Down',
                 patternName: 'Arp up-Scale Down',
                 pattern: [[0], [2], [4], [7], [6], [5], [4], [3]],
+                desc: '',
                 type: 'fluid',
                 position: [2, 2, 2, 2, 2, 2, 2, 2],
                 length: 8,
-                positionType: 'locked'
+                positionType: 'unlocked'
             },
             scaleData: {
                 scaleName: 'C Major',
                 name: 'C Major',
+                desc: '',
                 scale: ['C', 'D', 'E', 'F', 'G', 'A', 'B'],
                 binary: [1, 0, 1, 0, 1, 1, 0, 1, 0, 1, 0, 1],
+                length: 7,
                 number: 2773
             },
             keyData: {
@@ -555,13 +570,15 @@ export const initialDataType2 = [
                 chordName: 'CM',
                 name: 'CM',
                 chord: ['C3', 'E3', 'G3'],
+                desc: '',
                 position: [],
-                positionType: 'locked'
+                positionType: 'unlocked'
             },
             rhythmData: {
                 rhythmName: 'Str8 8s',
                 rhythm: [['O', 'O'], ['O', 'O'], ['O', 'O'], ['O', 'O']],
                 speed: 1,
+                desc: '',
                 length: 4,
                 notes: 8
             },
@@ -570,14 +587,17 @@ export const initialDataType2 = [
                 patternName: 'Arp up-Scale Down',
                 pattern: [[0], [2], [4], [7], [6], [5], [4], [3]],
                 type: 'fluid',
+                desc: '',
                 length: 8,
                 position: [3, 3, 3, 3, 3, 3, 3, 3],
-                positionType: 'locked'
+                positionType: 'unlocked'
             },
             scaleData: {
                 scaleName: 'C Major',
                 name: 'C Major',
+                desc: '',
                 scale: ['C', 'D', 'E', 'F', 'G', 'A', 'B'],
+                length: 7,
                 binary: [1, 0, 1, 0, 1, 1, 0, 1, 0, 1, 0, 1],
                 number: 2773
             },
