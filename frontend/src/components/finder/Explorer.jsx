@@ -128,6 +128,19 @@ const onDragStart = (e) => {
             setPageNumber(pageNumber + 1)
         }
     }
+
+    const lengthAllowed = 25
+    function stringOverflowHandler(str){
+        if (typeof str === 'string'){
+            if (str.length > lengthAllowed){
+                return str.substring(0, lengthAllowed) + '...'
+            } else {
+                return str
+            }
+        } else {
+            return;
+        } 
+    }
     
 
     return (
@@ -151,12 +164,12 @@ const onDragStart = (e) => {
             {loading && <h3>Loading...</h3>}
             {error && <h3>Error</h3>}
             <List>
-                {displayData?.data.dataResults.map((displayData, idx) => (
+                {displayData?.data?.dataResults?.map((displayData, idx) => (
                 <List.Item id={idx + '_explorer'} key={idx + '_explorer'} className={'explorer'} style={{ marginTop: '5px', marginBottom: '5px', maxWidth: '300px',backgroundColor: returnColor(displayData.dataType)}}draggable onDrag={onDrag} onDragStart ={onDragStart}>
                 <List.Content>
-                <List.Header > <Icon name='play' size='small'/>{displayData.name}</List.Header>
+                <List.Header > <Icon name='play' size='small'/>{stringOverflowHandler(displayData.name)}</List.Header>
                 <List.Description >type: {displayData.dataType}</List.Description>
-                <List.Description >desc: {displayData.desc.length === 0 ? 'N/A' : displayData.desc}</List.Description>
+                <List.Description >desc: {displayData.desc.length === 0 ? 'N/A' : stringOverflowHandler(displayData.desc)}</List.Description>
                 <List.Description >pool: {displayData.pool === userID ? 'local' : displayData.pool}</List.Description>
                 <List.Description >author: {displayData.author}</List.Description>
                 </List.Content>

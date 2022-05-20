@@ -99,7 +99,7 @@ export default class musicDataActions {
       }
       
     try {
-      const dataResults = await music_data.find(query).skip(countPerPage * pageNumber).limit(10).toArray()
+      const dataResults = await music_data.find(query).sort({_id: -1}).skip(countPerPage * pageNumber).limit(10).toArray()
       const count = await music_data.find(query).count();
      const returnObj = {}
      returnObj['dataResults'] = dataResults

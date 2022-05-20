@@ -1,5 +1,5 @@
 
-import { Midi, Scale, Note} from '@tonaljs/tonal';
+import { Midi, Scale, Note, Chord} from '@tonaljs/tonal';
 
 // let Midi;
 
@@ -215,7 +215,6 @@ const scales = {
     
 }
 
-console.log()
 
 const allScalesTest = {
     'dorian': [0, 2, 3, 5, 7, 9, 10],
@@ -281,8 +280,12 @@ export function determineChordPositionInKey(chord, key){
 let chordPosition;
 const root = Note.pitchClass(chord[0])
 let chromaticScale = Scale.get(key + ' chromatic').notes
+let enharmonicChromaticScale = [];
+for (let i = 0; i < chromaticScale.length; i++){
+    enharmonicChromaticScale.push(Note.enharmonic(chromaticScale[i]))
+}
 if (chromaticScale.indexOf(root) === -1){
-    chordPosition =  chromaticScale.indexOf(Note.enharmonic(root))
+    chordPosition =  enharmonicChromaticScale.indexOf(root)
 } else {
     chordPosition = chromaticScale.indexOf(root)
 }
@@ -323,6 +326,46 @@ export function setRecommendedScale(chord, key){
     }
 }
 
+export function setRecommendedDiatonicScale(chord, key, masterScale){
+    let scaleDataArr = returnAllModesFromScaleAsScaleData(masterScale)
+    let index;
+    let root = Note.pitchClass(chord[0])
+    let included = masterScale.includes(root)
+    let enharmonicallyIncluded = masterScale.includes(Note.enharmonic(root))
+    let scaleName = '';
+            
+        if (included){
+            index = masterScale.indexOf(root)
+            scaleName = scaleDataArr[index]['name']
+        }
+        if (enharmonicallyIncluded){
+            index = masterScale.indexOf(Note.enharmonic(root))
+            scaleName = scaleDataArr[index]['name']
+        }
+        
+        if (!included && !enharmonicallyIncluded){
+            scaleName = setRecommendedScale(chord, key)
+        }
+        return scaleName
+}
+
+export function convertScaleToChroma(scale){
+    let root = scale[0]
+    let chroma =  [];
+    let chromaticScale = Scale.get(root + ' chromatic').notes
+
+    for (let i = 0; i < chromaticScale.length; i++){
+        let included = scale.includes(chromaticScale[i])
+        let enharmonicallyIncluded = scale.includes(Note.enharmonic(chromaticScale[i]))
+        if (included || enharmonicallyIncluded){
+            chroma.push(1)
+        } else {
+            chroma.push(0)
+        }
+    }   
+    return chroma
+}
+
 export function turnScaleNameIntoScaleData(scaleName){
     let binArr = Scale.get(scaleName).chroma.split("")
     for (let i = 0; i < binArr.length; i++){
@@ -340,7 +383,163 @@ export function turnScaleNameIntoScaleData(scaleName){
     return scaleDataPrototype
 }
 
+export function turnScaleArrayIntoScaleData(scale){
+    let root =  scale[0]
+    let binArr = convertScaleToChroma(scale)
+    var digit = parseInt(binArr.join(""), 2)
+    let scaleName = ''
+        if (Scale.get(binArr.join("")).name === ''){
+          scaleName = digit;
+          } else {
+          scaleName = Scale.get(binArr.join("")).name;
+          }
+
+    let scaleDataPrototype = {
+        scaleName: root + ' ' + scaleName,
+        name: root + ' ' + scaleName,
+        desc: '',
+        scale: scale,
+        length: scale.length,
+        binary: binArr,
+        number: digit
+    }
+    return scaleDataPrototype
+}
+
+
+
+export function returnAllModesFromScale(scale){
+    let scaleArr = [];
+    for (let i = 0; i < scale.length; i++){
+        let thisScale = [...scale]
+        for (let j = 0; j < i; j++){
+            let x = thisScale.shift()
+            thisScale.push(x)
+        }
+        scaleArr.push(thisScale)
+    }
+    return scaleArr
+}
+
+export function returnAllModesFromScaleAsScaleData(scale){
+    let modes = returnAllModesFromScale(scale)
+    let returnObjs = []
+    for (let i = 0; i < modes.length; i++){
+        returnObjs.push(turnScaleArrayIntoScaleData(modes[i]))
+    }
+    return returnObjs
+}
+
+export function matchScaleIndexToChord(masterScale, chord){
+    let index;
+    let root = chord[0]
+    let included = masterScale.includes(root)
+    let enharmonicallyIncluded = masterScale.includes(Note.enharmonic(root))
+
+    if (included){
+        index = masterScale.indexOf(root)
+    }
+    if (enharmonicallyIncluded){
+        index = masterScale.indexOf(Note.enharmonic(root))
+    }
+
+    if (!included && !enharmonicallyIncluded){
+        index = 0;
+    }
+
+}
+
+export function turnChordsIntoModules(chords, exportNames, key, positions, masterScale, type){
+    if (type === 'modal'){
+        let returnArr = []
+        for (let i = 0; i < chords.length; i++){
+            let name = (exportNames[i] !== null && exportNames[i] !== undefined) ? exportNames[i] : Chord.detect(chords[i])[0] ? Chord.detect(chords[i])[0] : Note.pitchClass(chords[i][0])  + ' ???'
+            let position = positions[i]
+            let dispatchObj = turnChordIntoModule(chords[i], key , name, 'module ' + (i + 4), position)
+            returnArr.push(dispatchObj)
+        }
+        return returnArr
+    }
+
+    if (type === 'diatonic'){
+        let returnArr = []
+        let scaleDataArr = returnAllModesFromScaleAsScaleData(masterScale)
+        for (let i = 0; i < chords.length; i++){
+            let chordName = (exportNames[i] !== null && exportNames[i] !== undefined) ? exportNames[i] : Chord.detect(chords[i])[0] ? Chord.detect(chords[i])[0] : Note.pitchClass(chords[i][0])  + ' ???'
+            let position = positions[i]
+            let chord = chords[i]
+            if (position === undefined){
+                position = [];
+            }
+            let moduleName = 'module ' + (i + 4)
+
+            let index;
+            let root = Note.pitchClass(chord[0])
+            let included = masterScale.includes(root)
+            let enharmonicallyIncluded = masterScale.includes(Note.enharmonic(root))
+            let scaleDataPrototype;
+            
+            if (included){
+                index = masterScale.indexOf(root)
+                scaleDataPrototype = scaleDataArr[index]
+            }
+            if (enharmonicallyIncluded){
+                index = masterScale.indexOf(Note.enharmonic(root))
+                scaleDataPrototype = scaleDataArr[index]
+            }
+            
+            //if the chord root cannot be found, use the modal method to return the scale
+            if (!included && !enharmonicallyIncluded){
+                let scaleName = setRecommendedScale(chord, key)
+                //convert binary str to binary arr
+                let binArr = Scale.get(scaleName).chroma.split("")
+                for (let i = 0; i < binArr.length; i++){
+                    binArr[i] = Number(binArr[i])
+                }
+            
+                scaleDataPrototype = {
+                    scaleName: scaleName,
+                    name: scaleName,
+                    desc: '',
+                    scale: Scale.get(scaleName).notes,
+                    length: Scale.get(scaleName).notes.length,
+                    binary: binArr,
+                    number: Scale.get(scaleName).setNum,
+                }
+            }
+            
+            let chordDataPrototype = {
+                chordName: chordName,
+                name: chordName,
+                chord: chord,
+                position: position
+            }
+        
+            let keyDataPrototype = {
+                keyName: 'Key: ' + key,
+                root: key
+            }
+        
+            let moduleClone = JSON.parse(JSON.stringify(modulePrototype)) 
+            moduleClone['data']['scaleData'] = scaleDataPrototype
+            moduleClone['data']['chordData'] = chordDataPrototype
+            moduleClone['data']['keyData'] = keyDataPrototype
+            moduleClone['name'] = moduleName
+            moduleClone['moduleName'] = moduleName
+
+            returnArr.push(moduleClone)
+        }
+        return returnArr;
+    }
+
+}
+
+
+
+console.log(returnAllModesFromScaleAsScaleData(['C#', 'D', 'F', 'A', 'B']))
+
 export function turnChordIntoModule(chord, key, chordName, moduleName, position){
+    //type can equal modal or diatonic
 
     let scaleName = setRecommendedScale(chord, key)
     if (position === undefined){
@@ -365,7 +564,6 @@ export function turnChordIntoModule(chord, key, chordName, moduleName, position)
         binary: binArr,
         number: Scale.get(scaleName).setNum,
     }
-    console.log(scaleName, Scale.get(scaleName).notes)
 
     let chordDataPrototype = {
         chordName: chordName,
@@ -389,4 +587,7 @@ export function turnChordIntoModule(chord, key, chordName, moduleName, position)
     return moduleClone
 }
 
-console.log(turnChordIntoModule(['C3', 'E3', 'G3'], 'C', 'C major', 'Module x'))
+
+
+
+

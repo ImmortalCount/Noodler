@@ -10,7 +10,7 @@ import { polySynth } from './synths';
 import { scaleHandler } from './utils';
 import { setNoteDisplay } from '../../store/actions/noteDisplayActions';
 import { setPlayImport } from '../../store/actions/playImportActions';
-import { turnChordIntoModule} from './chordMapGenerator'
+import { turnChordIntoModule, turnChordsIntoModules} from './chordMapGenerator'
 import { mapChordsToPlayer } from '../../store/actions/mapChordsToPlayerActions';
 import { setDisplayFocus as setDisplayFocusAction } from '../../store/actions/displayFocusActions';
 import ExportModal from '../modal/ExportModal'
@@ -1196,25 +1196,23 @@ export default function ChordLab({importedChordData, masterInstrumentArray}) {
           }
       }
 
-      const handleMapChords = () => {
-        let returnArr = []
-        for (let i = 0; i < chords.length; i++){
-            let name = exportNames[i] !== null ? exportNames[i] : Chord.detect(chords[i])[0] ? Chord.detect(chords[i])[0] : Note.pitchClass(chords[i][0])  + ' ???'
-            let dispatchObj = turnChordIntoModule(chords[i], 'C', name, 'module ' + (i + 4))
-            returnArr.push(dispatchObj)
-        }
+      const handleMapChords = (key, type) => {
+        let returnArr = turnChordsIntoModules(chords, exportNames, key, position, scaleNotes, type)
         dispatch(mapChordsToPlayer(returnArr))
       }
 
-      const modalMapObjArr = [
-          {chord: ['C3', 'E3', 'G3'], name: 'CM'},
-          {chord: ['D3', 'F3', 'A3'], name: 'Dm'},
-          {chord: ['E3', 'G3', 'B3'], name: 'Em'},
-          {chord: ['F3', 'A3', 'C4'], name: 'FM'},
-          {chord: ['G3', 'B3', 'D4'], name: 'GM'},
-          {chord: ['A3', 'C4', 'E4'], name: 'Am'},
-          {chord: ['B3', 'D4', 'F4'], name: 'Bm'},
-      ]
+      function createModalMapObjArr(){
+        let returnArr = []
+        for (let i = 0; i < chords.length; i++){
+            let name = (exportNames[i] !== null && exportNames[i] !== undefined) ? exportNames[i] : Chord.detect(chords[i])[0] ? Chord.detect(chords[i])[0] : Note.pitchClass(chords[i][0])  + ' ???'
+            let chord = chords[i]
+            let dispatchObj = {name, chord}
+            returnArr.push(dispatchObj)
+        }
+        return returnArr;
+      }
+
+      const modalMapObjArr = createModalMapObjArr();
 
       const handlePositionType = () => {
         if (positionType === 'locked'){
@@ -1327,6 +1325,7 @@ export default function ChordLab({importedChordData, masterInstrumentArray}) {
         </Dropdown.Menu>
         </Dropdown>
          <Menu.Item onClick={handleEdit}> Edit </Menu.Item>     
+         <Menu.Item onClick={() => console.log(createModalMapObjArr())}> Test </Menu.Item>     
          <Menu.Item onClick={() => setShowDescription(!showDescription)}> Desc </Menu.Item>
          <Button.Group>
          <Button basic compact onClick={() => setDisplay()}>Display</Button>
@@ -1351,6 +1350,7 @@ export default function ChordLab({importedChordData, masterInstrumentArray}) {
          <MapModal
          mapObj={modalMapObjArr}
          handleMapChords={handleMapChords}
+         masterScale={scaleNotes}
          />  
          <Button.Group>
          <Button basic onClick={() => setOpened(true)}>Export</Button>
