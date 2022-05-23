@@ -124,6 +124,9 @@ export function generateTabFromModules(dataFromPlayer, tuningArr, instrumentArr,
                 }
             }
             for (let c = 0; c < dataFromPlayer[a]['data'][b].length; c++){
+                if (dataFromPlayer[a]['data'][b][c] === undefined){
+                    continue
+                }
                 //note/chord level
                 let stringsAlreadyUsed = []
                 for (let d = 0; d < dataFromPlayer[a]['data'][b][c].length; d++){
