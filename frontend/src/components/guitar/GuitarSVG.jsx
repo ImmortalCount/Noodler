@@ -97,19 +97,16 @@ export default function GuitarSVG({masterInstrumentArray, activelyDisplayedInstr
         handleInstrumentUpdate();
     }, [masterInstrumentArray])
 
-    var lastPosition = useRef(0)
+    const lastPosition = useRef(0)
     const refData = useRef('')
     const refInstruments = useRef('')
-
 
     useEffect(() => {
         refData.current = data
         refInstruments.current = instruments
-    }, [data, instruments])
-
-    useEffect(() => {
         loadNoteSequenceAndVisualDataOntoTimeline(data)
         displayNotes()
+        synthCleanup()
     }, [data, instruments])
 
     useEffect(() => {
@@ -146,6 +143,22 @@ export default function GuitarSVG({masterInstrumentArray, activelyDisplayedInstr
         
     }, [state])
 
+    // if (songImport){
+    //     importSynths(songImport['instruments'])
+    //     // setInstruments(songImport['instruments'])
+    // }
+
+    useEffect(() => {
+        if (songImport){
+            // loadASynth('acoustic_bass', 'acoustic_bass')
+            importSynths(songImport['instruments'])
+            setInstruments(songImport['instruments'])
+            dispatch(setGlobalInstruments(songImport['instruments']))
+        } else {
+            return
+        }
+    }, [songImport])
+
     useEffect (()=>{
         createGuitarSVG();
         dispatch(setSongData(instruments))
@@ -157,14 +170,6 @@ export default function GuitarSVG({masterInstrumentArray, activelyDisplayedInstr
     }, [instruments]);
     //====================================
     //=====Update instruments
-
-    useEffect(() => {
-        if (songImport){
-            setInstruments(songImport['instruments'])
-        } else {
-            return
-        }
-    }, [songImport])
 
     useEffect(() => {
         if (noteDisplay && (Tone.Time(Tone.Transport.position).toSeconds() === 0 && Tone.Transport.state === 'stopped')){
@@ -187,6 +192,23 @@ export default function GuitarSVG({masterInstrumentArray, activelyDisplayedInstr
         initialLoad.current = false;
     }, [])
 
+    function synthCleanup(){
+        let synthSourcesInUse = [];
+        let unsedSynths = [];
+        for (let i = 0; i < instruments.length; i++){
+            synthSourcesInUse.push(instruments[i].synthSource)
+        }
+        let loadedSynthsArr = Object.keys(loadedSynths.current)
+        for (let j = 0; j < loadedSynthsArr.length; j++){
+            if (!synthSourcesInUse.includes(loadedSynthsArr[j])){
+                unsedSynths.push(loadedSynthsArr[j])
+            }
+        }
+        for (let k = 0; k < unsedSynths.length; k++){
+            disposeOfASynth(unsedSynths[k])
+        }
+    }
+
 
 
     //----Check if the position has moved while paused
@@ -199,6 +221,15 @@ function findIndex(name){
         }
     }
 
+function importSynths(importedInstrumentArray){
+    for (let i = 0; i < importedInstrumentArray.length; i++){
+        let instrumentType = importedInstrumentArray[i]['instrument']
+        let newSynth = nameOfNewSynthSource(instrumentType, instruments)
+            console.log(typeof instrumentType)
+            console.log(typeof newSynth)
+        loadASynth(newSynth, instrumentType) 
+    }
+}
     //--------------------
 
 function createGuitarSVG(){
@@ -1164,6 +1195,8 @@ const onChangeInstrument = (e, {id, value}) => {
     clone[idx]['name'] = name;
     clone[idx]['synthSource'] = newSynth
 
+    console.log(newSynth, 'new Synth')
+    console.log(value, 'instrumentType')
     loadASynth(newSynth, value)
     setInstruments(clone)
   }
@@ -1448,7 +1481,7 @@ function loadASynth(synthName, synthType){
 }
 
 function disposeOfASynth(synthName){
-    synthName.dispose();
+    loadedSynths.current[synthName].dispose();
     delete loadedSynths.current[synthName]
 }
 
@@ -1503,6 +1536,9 @@ function previewTab(){
         <TabDownloadModal tab={tab}/>
         <BpmModal/>
         <Button compact basic onClick={() => console.log(instruments)}>TEST</Button>
+        <Button compact basic onClick={() => console.log(loadedSynths.current)}>LOADED SYNTHS</Button>
+        <Button compact basic onClick={() => synthCleanup()}>SYNTH CLEANUP</Button>
+        <Button compact basic onClick={() => disposeOfASynth('acoustic_guitar_nylon')}>DISPOSEOFASYNTH</Button>
         </>
     )
 }

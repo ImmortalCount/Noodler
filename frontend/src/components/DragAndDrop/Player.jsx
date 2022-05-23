@@ -851,6 +851,7 @@ function getNamesFromGlobalInstruments(globalInstruments){
 
 
 function getTuningsFromGlobalInstruments(globalInstruments){
+    console.log(globalInstruments, masterInstrumentArray)
      //only instruments labelled  chord or melody can pass through
     let returnArr = []
     for (let i = 0; i < masterInstrumentArray.length; i++){
@@ -873,7 +874,8 @@ function removeSilentDataForTabProcessing(data){
     return returnArr
 }
 
-function convertToTab(){
+function convertToTab(){ 
+    console.log(globalInstruments)
     let tunings = getTuningsFromGlobalInstruments(globalInstruments)
     let instrumentNames = getNamesFromGlobalInstruments(globalInstruments)
     let cleanData = removeSilentDataForTabProcessing(data)
@@ -893,7 +895,7 @@ function convertToTab(){
         <Menu.Item basic active={edit} onClick={()=> setEdit(!edit)}>Edit</Menu.Item>
         <Menu.Item basic active={edit} onClick={()=> setHideModuleName(!hideModuleName)}>View</Menu.Item>
         <Menu.Item basic active={edit} onClick={()=> setTitleLock(!titleLock)}>Title Lock{titleLock ? 'on' : 'off'}</Menu.Item>
-        <Menu.Item basic active={edit} onClick={()=> console.log(data)}>Test</Menu.Item>
+        <Menu.Item basic active={edit} onClick={()=> console.log(globalInstruments)}>Test</Menu.Item>
         <Menu.Item basic active={showDescription} onClick={() => setShowDescription(!showDescription)}> Desc</Menu.Item>
         <Button.Group>
         <Button basic onClick={() => setOpened(true)}>Export</Button>
