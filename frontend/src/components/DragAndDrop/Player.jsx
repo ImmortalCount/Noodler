@@ -878,7 +878,7 @@ function convertToTab(){
     let instrumentNames = getNamesFromGlobalInstruments(globalInstruments)
     let cleanData = removeSilentDataForTabProcessing(data)
     let dataFromPlayer = convertModuleDataIntoPlayableSequence(cleanData, tunings, instrumentNames)
-    let tab = generateTabFromModules(dataFromPlayer, tunings, instrumentNames, globalPosition, name, user)
+    let tab = generateTabFromModules(dataFromPlayer, tunings, instrumentNames, globalPosition, name, user?.['name'])
     return tab
 }
 
