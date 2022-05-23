@@ -1196,9 +1196,9 @@ export default function ChordLab({importedChordData, masterInstrumentArray}) {
           }
       }
 
-      const handleMapChords = (key, type) => {
-        let returnArr = turnChordsIntoModules(chords, exportNames, key, position, scaleNotes, type)
-        dispatch(mapChordsToPlayer(returnArr))
+      const handleMapChords = (key, type, instruments, mappingType) => {
+        let modules = turnChordsIntoModules(chords, exportNames, key, position, scaleNotes, type)
+        dispatch(mapChordsToPlayer({modules: modules, instruments: instruments, mappingType: mappingType}))
       }
 
       function createModalMapObjArr(){
@@ -1325,7 +1325,7 @@ export default function ChordLab({importedChordData, masterInstrumentArray}) {
         </Dropdown.Menu>
         </Dropdown>
          <Menu.Item onClick={handleEdit}> Edit </Menu.Item>     
-         <Menu.Item onClick={() => console.log(createModalMapObjArr())}> Test </Menu.Item>     
+         <Menu.Item onClick={() => console.log(masterInstrumentArray)}> Test </Menu.Item>     
          <Menu.Item onClick={() => setShowDescription(!showDescription)}> Desc </Menu.Item>
          <Button.Group>
          <Button basic compact onClick={() => setDisplay()}>Display</Button>
@@ -1351,6 +1351,7 @@ export default function ChordLab({importedChordData, masterInstrumentArray}) {
          mapObj={modalMapObjArr}
          handleMapChords={handleMapChords}
          masterScale={scaleNotes}
+         masterInstrumentArray={masterInstrumentArray}
          />  
          <Button.Group>
          <Button basic onClick={() => setOpened(true)}>Export</Button>

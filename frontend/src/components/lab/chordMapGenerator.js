@@ -455,7 +455,7 @@ export function turnChordsIntoModules(chords, exportNames, key, positions, maste
         for (let i = 0; i < chords.length; i++){
             let name = (exportNames[i] !== null && exportNames[i] !== undefined) ? exportNames[i] : Chord.detect(chords[i])[0] ? Chord.detect(chords[i])[0] : Note.pitchClass(chords[i][0])  + ' ???'
             let position = positions[i]
-            let dispatchObj = turnChordIntoModule(chords[i], key , name, 'module ' + (i + 4), position)
+            let dispatchObj = turnChordIntoModule(chords[i], key , name, 'module ' + (i), position)
             returnArr.push(dispatchObj)
         }
         return returnArr
@@ -471,7 +471,7 @@ export function turnChordsIntoModules(chords, exportNames, key, positions, maste
             if (position === undefined){
                 position = [];
             }
-            let moduleName = 'module ' + (i + 4)
+            let moduleName = 'module ' + (i)
 
             let index;
             let root = Note.pitchClass(chord[0])

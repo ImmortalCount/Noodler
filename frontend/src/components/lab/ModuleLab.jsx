@@ -530,6 +530,10 @@ for (var o = 0; o < 10; o++){
     const handleDescriptionChange = e => {
         setDescription(e.target.value)
       }
+    
+    function handleChangeModuleName(name){
+          setName(name)
+      }
 
     function mapMenuItems(){
         return (
@@ -590,24 +594,13 @@ for (var o = 0; o < 10; o++){
         
         </Button.Group>
         </Menu>
-        <div>
-        <div onClick={() => setInputFocus(!inputFocus)} style={{display: !inputFocus ? '': 'none' }}>
-            {name}
-        </div>
-            <Input type='text'
-            value={name}
-            id={'input_moduleLab'}
-            ref={input => input && input.focus()}
-            onInput={e => setName(e.target.value)}
-            onBlur={() => setInputFocus(false)}
-            style={{display: inputFocus ? '': 'none' }}
-            />
-        </div>
         <DragAndFillCard
             onDragStart = {dragStartHandler}
             onDrag = {dragHandler}
             id={'moduleCard'}
             romanNumeralName={setRomanNumeralsByKey(chord, key)}
+            moduleName={name}
+            handleChangeModuleName={handleChangeModuleName}
             chordName={labInfo && labInfo['chordLab'] && labInfo['chordLab']['name'] ? labInfo['chordLab']['name']: initState['chordLab']['name']}
             chordPositionType={labInfo && labInfo['chordLab'] && labInfo['chordLab']['positionType'] ? labInfo['chordLab']['positionType']: initState['chordLab']['positionType']}
             rhythmName={labInfo && labInfo['rhythmLab'] && labInfo['rhythmLab']['name'] ? labInfo['rhythmLab']['name']: initState['rhythmLab']['name']}
@@ -618,6 +611,7 @@ for (var o = 0; o < 10; o++){
             countName={labInfo && labInfo['rhythmLab'] && labInfo['rhythmLab']['length'] ? labInfo['rhythmLab']['length'] : initState['rhythmLab']['length']}
             keyName={`Key: ${key}`}
             />
+        
         {showDescription && <Form>
         <TextArea onInput={handleDescriptionChange} id={'desc_chordLab'} ref={input => input && input.focus()} placeholder='Description...' value={description} />
         </Form>}

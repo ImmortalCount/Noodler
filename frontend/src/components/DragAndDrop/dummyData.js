@@ -409,8 +409,8 @@ export const initialData4 = [
 
 export const initialDataType2 = [
     {   
-        name: 'module A',
-        moduleName: 'module A',
+        name: '1',
+        moduleName: '1',
         desc: '',
         author: '',
         authorId: '',
@@ -425,6 +425,7 @@ export const initialDataType2 = [
                 position: []
             },
             rhythmData: {
+                name: 'Str8 8s',
                 rhythmName: 'Str8 8s',
                 rhythm: [['O', 'O'], ['O', 'O'], ['O', 'O'], ['O', 'O']],
                 speed: 1,
@@ -458,8 +459,8 @@ export const initialDataType2 = [
         }
     },
     {   
-        name: 'module B',
-        moduleName: 'module B',
+        name: '2',
+        moduleName: '2',
         desc: '',
         author: '',
         authorId: '',
@@ -508,8 +509,8 @@ export const initialDataType2 = [
         }
     },
     {
-        name: 'module C',
-        moduleName: 'module C',
+        name: '3',
+        moduleName: '3',
         desc: '',
         author: '',
         authorId: '',
@@ -558,8 +559,8 @@ export const initialDataType2 = [
         }  
     },
     {
-        name: 'module D',
-        moduleName: 'module D',
+        name: '4',
+        moduleName: '4',
         desc: '',
         author: '',
         authorId: '',

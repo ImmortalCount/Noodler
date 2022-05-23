@@ -33,6 +33,8 @@ export default function Player ({masterInstrumentArray, display}) {
     const [description, setDescription] = useState('')
     const [showDescription, setShowDescription] = useState(false)
     const [inputFocus, setInputFocus] = useState(false)
+    const [hideModuleName, setHideModuleName] = useState(false)
+    const [titleLock, setTitleLock] = useState(false)
     const user = JSON.parse(localStorage.getItem('userInfo'))
     var controls = useRef('swap')
     const dispatch = useDispatch();
@@ -62,20 +64,48 @@ export default function Player ({masterInstrumentArray, display}) {
 
     const {sendModuleData} = bindActionCreators(actionCreators, dispatch);
 
-    function addModulesToData(data, modules){
+    //instruments is binary array
+    function overWriteModulesToData(data, modules, instruments){
         let cloneData = JSON.parse(JSON.stringify(data))
-        let mappedModules = modules
         for (let i = 0; i < cloneData.length; i++){
-            cloneData[i]['data'] = [];
-            for (let j = 0; j < mappedModules.length; j++){
-                cloneData[i]['data'].push(mappedModules[j])
+            if (instruments[i] === 1){
+                cloneData[i]['data'] = [];
+                for (let j = 0; j < modules.length; j++){
+                    cloneData[i]['data'].push(modules[j])
+                }
+            } 
+        }
+        setData(cloneData)
+    }
+
+    //instruments is a binary array
+    function appendModulesToData(data, modules, instruments){
+        let cloneData = JSON.parse(JSON.stringify(data))
+        for (let i = 0; i < cloneData.length; i++){
+            if (instruments[i] === 1){
+                for (let j = 0; j < modules.length; j++){
+                    cloneData[i]['data'].push(modules[j])
+                }
             }
         }
         setData(cloneData)
     }
+
+    function handleMapChordsToPlayer(mapChordsToPlayer){
+        let modules = mapChordsToPlayer['modules']
+        let mappingType = mapChordsToPlayer['mappingType']
+        let instruments = mapChordsToPlayer['instruments']
+        if (mappingType === 'overwrite'){
+            overWriteModulesToData(data, modules, instruments)
+        }
+        if (mappingType === 'append'){
+            appendModulesToData(data, modules, instruments)
+        }
+    }
+
     useEffect(() => {
         if (mapChordsToPlayer){
-            addModulesToData(data, mapChordsToPlayer)
+            handleMapChordsToPlayer(mapChordsToPlayer)
         } else {
             return
         }
@@ -420,7 +450,7 @@ const dropHandler = e => {
         var message = xferData['message']
         var type = xferData['type']
         var className = xferData['className']
-        //moduleExplorerExport or moduleLab
+        //imported data
         if (type === 'moduleLab' || type === 'moduleExplorerExport' || type === 'modulePaletteExport'){
            clone[endInstrument]['data'][endIndex] = message
         } else if (type === 'player') {
@@ -429,16 +459,30 @@ const dropHandler = e => {
         var startInstrument = Number(ex1[2])
         if (controls.current === 'replace'){
             if (className === 'moduleData'){
-                clone[endInstrument]['data'][endIndex] = clone[startInstrument]['data'][startIndex] 
+                if (titleLock){
+                    clone[endInstrument]['data'][endIndex]['data'] = clone[startInstrument]['data'][startIndex]['data']
+                }else {
+                    clone[endInstrument]['data'][endIndex] = clone[startInstrument]['data'][startIndex] 
+                }
             } else {
                 clone[endInstrument]['data'][endIndex]['data'][className] = clone[startInstrument]['data'][startIndex]['data'][className] 
             }
         } else if (controls.current === 'swap'){
             var placeholder;
             if (className === 'moduleData'){
-                placeholder = clone[endInstrument]['data'][endIndex]
-                clone[endInstrument]['data'][endIndex] = clone[startInstrument]['data'][startIndex];
-                clone[startInstrument]['data'][startIndex] = placeholder
+                if (titleLock){
+                    let endInstrumentName = clone[endInstrument]['data'][endIndex]['name']
+                    let startInstrumentName = clone[startInstrument]['data'][startIndex]['name']
+                    placeholder = clone[endInstrument]['data'][endIndex]
+                    clone[endInstrument]['data'][endIndex] = clone[startInstrument]['data'][startIndex];
+                    clone[endInstrument]['data'][endIndex]['name'] = endInstrumentName
+                    clone[startInstrument]['data'][startIndex] = placeholder
+                    clone[startInstrument]['data'][startIndex]['name'] = startInstrumentName
+                } else {
+                    placeholder = clone[endInstrument]['data'][endIndex]
+                    clone[endInstrument]['data'][endIndex] = clone[startInstrument]['data'][startIndex];
+                    clone[startInstrument]['data'][startIndex] = placeholder
+                }
             } else {
                 placeholder = clone[endInstrument]['data'][endIndex]['data'][className]
                 clone[endInstrument]['data'][endIndex]['data'][className] = clone[startInstrument]['data'][startIndex]['data'][className];
@@ -446,17 +490,28 @@ const dropHandler = e => {
             }
         } else if (controls.current === 'fill'){
             if (className === 'moduleData'){
-                for (var i = endIndex; i < clone[endInstrument]['data'].length;i++){
-                    clone[endInstrument]['data'][i] = clone[startInstrument]['data'][startIndex] 
+                if (titleLock){
+                    for (let i = endIndex; i < clone[endInstrument]['data'].length;i++){
+                        clone[endInstrument]['data'][i]['data'] = clone[startInstrument]['data'][startIndex]['data']
+                    }
+                } else {
+                    for (let i = endIndex; i < clone[endInstrument]['data'].length;i++){
+                        clone[endInstrument]['data'][i] = clone[startInstrument]['data'][startIndex] 
+                    }
                 }
             } else {
-                for (var j = endIndex; j < clone[endInstrument]['data'].length;j++){
+                for (let j = endIndex; j < clone[endInstrument]['data'].length;j++){
                     clone[endInstrument]['data'][j]['data'][className] = clone[startInstrument]['data'][startIndex]['data'][className]
                 }
             }
         } else if (controls.current === 'reverseFill'){
             if (className === 'moduleData'){
-                for (var k = endIndex; k > -1; k--){
+                if (titleLock){
+                for (let k = endIndex; k > -1; k--){
+                    clone[endInstrument]['data'][k]['data'] = clone[startInstrument]['data'][startIndex]['data']
+                }
+                }
+                for (let k = endIndex; k > -1; k--){
                     clone[endInstrument]['data'][k] = clone[startInstrument]['data'][startIndex] 
                 }
             } else {
@@ -466,10 +521,25 @@ const dropHandler = e => {
             }
         } else if (controls.current === 'reOrder'){
             if (className === 'moduleData'){
-            var xfer;
-            xfer = clone[startInstrument]['data'][startIndex]
-            clone[startInstrument]['data'].splice(startIndex, 1)
-            clone[endInstrument]['data'].splice(endIndex, 0, xfer)
+            if (titleLock){
+                let startingNames = [];
+                for (let i = 0; i < clone[endInstrument]['data'].length; i++){
+                    startingNames.push(clone[endInstrument]['data'][i]['name'])
+                }
+                let xfer;
+                xfer = clone[startInstrument]['data'][startIndex]
+                clone[startInstrument]['data'].splice(startIndex, 1)
+                clone[endInstrument]['data'].splice(endIndex, 0, xfer)
+                for (let j = 0; j < clone[endInstrument]['data'].length; j++){
+                    clone[endInstrument]['data'][j]['name'] = startingNames[j]
+                }
+            } else {
+                let xfer;
+                xfer = clone[startInstrument]['data'][startIndex]
+                clone[startInstrument]['data'].splice(startIndex, 1)
+                clone[endInstrument]['data'].splice(endIndex, 0, xfer)
+            }
+            
             } else {
                 return
             }
@@ -484,14 +554,9 @@ const dropHandler = e => {
 
 const dropHandlerBackground = e => {
     e.preventDefault();
-    var clone = JSON.parse(JSON.stringify(data))
     var xferData = JSON.parse(e.dataTransfer.getData("text"));
-    var ex2 = e.currentTarget.id.split('_')
-    var endIndex = Number(ex2[1])
-    var endInstrument = Number(ex2[2])
     var message = xferData['message']
     var type = xferData['type']
-    var className = xferData['className']
 
     if (type === 'songExplorerExport'){
         dispatch(setSongImportData(message))
@@ -540,7 +605,8 @@ const cardClickHandler = e => {
 
 function moduleAdd(){
     var clone = JSON.parse(JSON.stringify(data))
-    var lastModule = clone[instrumentFocus]['data'][clone[instrumentFocus]['data'].length - 1]
+    var lastModule = JSON.parse(JSON.stringify(clone[instrumentFocus]['data'][clone[instrumentFocus]['data'].length - 1]))
+    lastModule['name'] = '' + (clone[instrumentFocus]['data'].length + 1)
     clone[instrumentFocus]['data'].push(lastModule)
     setData(clone)
 }
@@ -554,7 +620,6 @@ function moduleSubtract(){
         return
     }
 }
-
     //----------------------------------MAP COMPONENTS
 
     function mapCards(cardData, instrument){
@@ -568,6 +633,10 @@ function moduleSubtract(){
             dropHandler = {dropHandler}
             id={'Cards_' + idx + '_' + instrument}
             key={'Cards_' + idx + '_' + instrument}
+            idx={idx}
+            instrument={instrument}
+            hideModuleName = {hideModuleName}
+            handleChangeModuleName = {handleChangeModuleName}
             currentlyPlaying = {currentlyPlaying.includes(idx + '_' + instrument)}
             moduleName={cardData.name}
             romanNumeralName={setRomanNumeralsByKey(cardData.data.chordData.chord, cardData.data.keyData.root)}
@@ -702,8 +771,11 @@ function moduleSubtract(){
     }
 
 
-
-
+function handleChangeModuleName(newName, instrument, index){
+    var clone = JSON.parse(JSON.stringify(data))
+    clone[instrument]['data'][index]['name'] = newName
+    setData(clone) 
+}
 
 function handleUpdate(){
     var clone = [...data]
@@ -801,15 +873,6 @@ function removeSilentDataForTabProcessing(data){
     return returnArr
 }
 
-// const handleDownloadTab = () =>{
-//     let tunings = getTuningsFromGlobalInstruments(globalInstruments)
-//     let instrumentNames = getNamesFromGlobalInstruments(globalInstruments)
-//     let cleanData = removeSilentDataForTabProcessing(data)
-//     let dataFromPlayer = convertModuleDataIntoPlayableSequence(cleanData, tunings, instrumentNames)
-//     let tab = generateTabFromModules(dataFromPlayer, tunings, instrumentNames, name, user)
-//     downloadTabAsTextFile(tab, 'download')
-// }
-
 function convertToTab(){
     let tunings = getTuningsFromGlobalInstruments(globalInstruments)
     let instrumentNames = getNamesFromGlobalInstruments(globalInstruments)
@@ -818,7 +881,6 @@ function convertToTab(){
     let tab = generateTabFromModules(dataFromPlayer, tunings, instrumentNames, globalPosition, name, user)
     return tab
 }
-
 
     return (
         <>
@@ -829,6 +891,9 @@ function convertToTab(){
         </Button.Group>
         {mapDropdowns()}
         <Menu.Item basic active={edit} onClick={()=> setEdit(!edit)}>Edit</Menu.Item>
+        <Menu.Item basic active={edit} onClick={()=> setHideModuleName(!hideModuleName)}>View</Menu.Item>
+        <Menu.Item basic active={edit} onClick={()=> setTitleLock(!titleLock)}>Title Lock{titleLock ? 'on' : 'off'}</Menu.Item>
+        <Menu.Item basic active={edit} onClick={()=> console.log(data)}>Test</Menu.Item>
         <Menu.Item basic active={showDescription} onClick={() => setShowDescription(!showDescription)}> Desc</Menu.Item>
         <Button.Group>
         <Button basic onClick={() => setOpened(true)}>Export</Button>

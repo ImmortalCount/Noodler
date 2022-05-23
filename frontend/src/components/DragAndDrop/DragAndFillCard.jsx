@@ -1,6 +1,33 @@
 import { Icon } from "semantic-ui-react";
+import { useState } from "react";
+import { Input } from "semantic-ui-react";
 
-export default function DragAndFillCard({onDrag, onDragStart, dragOverHandler, dropHandler, chordName, rhythmName, patternName, scaleName, id, romanNumeralName, countName, keyName, moduleName, currentlyPlaying, onClick, patternType, positionType, chordPositionType}) {
+export default function DragAndFillCard({
+    onDrag, 
+    onDragStart, 
+    dragOverHandler, 
+    dropHandler, 
+    chordName, 
+    rhythmName, 
+    patternName, 
+    scaleName, 
+    id, 
+    romanNumeralName, 
+    countName, 
+    keyName,
+    moduleName, 
+    currentlyPlaying, 
+    onClick, 
+    patternType, 
+    positionType, 
+    chordPositionType, 
+    hideModuleName, 
+    idx, 
+    instrument,
+    handleChangeModuleName
+}) {
+    const [inputFocus, setInputFocus] = useState(false)
+    const [name, setName] = useState(moduleName)
     const lengthAllowed = 20;
     function stringOverflowHandler(str){
         if (typeof str === 'string'){
@@ -42,10 +69,32 @@ export default function DragAndFillCard({onDrag, onDragStart, dragOverHandler, d
             return 'lock'
         }
     }
+
+    function handleOnBlur(){
+        if (name.length !== 0){
+            handleChangeModuleName(name, instrument, idx)
+        }
+        setInputFocus(false)
+    }
+
     return (
         <>
-        <div>{stringOverflowHandler(moduleName)}
-            <div id= {id} className="moduleData" onClick={onClick} onDrag={onDrag} onDragStart ={onDragStart} onDrop={dropHandler} onDragOver={dragOverHandler} draggable='true' style={{borderStyle: 'solid', borderWidth: currentlyPlaying ? '8px' : '2px', borderColor:  currentlyPlaying ? 'orange' : 'black', width: '175px' }}>
+        <div style={{width: '175px'}}>
+            <div className="moduleName" style={{display: hideModuleName ? 'none': '' , textAlign: 'center'}}>
+            
+            <div onClick={() => setInputFocus(true)} style={{display: !inputFocus ? '': 'none' }}>
+            {stringOverflowHandler(moduleName)}
+        </div>
+            <Input type='text'
+            value={name}
+            id={'input_moduleLab'}
+            ref={input => input && input.focus()}
+            onInput={e => setName(e.target.value)}
+            onBlur={() => handleOnBlur()}
+            style={{display: inputFocus ? '': 'none' }}
+            />
+            </div>
+            <div id= {id} className="moduleData" onClick={onClick} onDrag={onDrag} onDragStart ={onDragStart} onDrop={dropHandler} onDragOver={dragOverHandler} draggable='true' style={{borderStyle: 'solid', borderWidth: currentlyPlaying ? '8px' : '2px', borderColor:  currentlyPlaying ? 'orange' : 'black' }}>
                 <div className="romanNumeralData" style={{textAlign: 'center'}} > {stringOverflowHandler(romanNumeralName)}</div>
                 <div className="chordData" draggable="true" style={{background: "lightsalmon"}}>{stringOverflowHandler(chordName)}<Icon name={chordPositionTypeHandler()}/></div>
                 <div className="scaleData" draggable="true" style={{background: "lightcoral"}}>{stringOverflowHandler(scaleName)}</div>

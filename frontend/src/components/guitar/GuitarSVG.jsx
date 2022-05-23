@@ -1182,18 +1182,18 @@ const onChangeInstrument = (e, {id, value}) => {
 
   changeVolumeFromMixerInput()
 
-  const onChangeVolume1 = (e) => {
-    let thisInstrumentSynth = loadedSynths.current[instruments[0]['synthSource']]
-    thisInstrumentSynth.volume.value = e.target.value
-  }
-  const onChangeVolume2 = (e) => {
-    let thisInstrumentSynth = loadedSynths.current[instruments[1]['synthSource']]
-    thisInstrumentSynth.volume.value = e.target.value
-  }
+//   const onChangeVolume1 = (e) => {
+//     let thisInstrumentSynth = loadedSynths.current[instruments[0]['synthSource']]
+//     thisInstrumentSynth.volume.value = e.target.value
+//   }
+//   const onChangeVolume2 = (e) => {
+//     let thisInstrumentSynth = loadedSynths.current[instruments[1]['synthSource']]
+//     thisInstrumentSynth.volume.value = e.target.value
+//   }
 
-  const onChangeVolumeMaster = (e) => {
-      Tone.getDestination().volume.value = e.target.value
-  }
+//   const onChangeVolumeMaster = (e) => {
+//       Tone.getDestination().volume.value = e.target.value
+//   }
 
 //   let panner = useRef(new Tone.Reverb(5.0).toDestination())
 //   let thisInstrumentSynth = loadedSynths.current[instruments[0]['synthSource']]
@@ -1206,21 +1206,21 @@ const onChangeInstrument = (e, {id, value}) => {
 // // panner.current.dispose()
 //   }
 
-  const onChangePanning2 = (e) => {
-    let thisInstrumentSynth = loadedSynths.current[instruments[1]['synthSource']]
-    thisInstrumentSynth.panning.value = e.target.value
-  }
+//   const onChangePanning2 = (e) => {
+//     let thisInstrumentSynth = loadedSynths.current[instruments[1]['synthSource']]
+//     thisInstrumentSynth.panning.value = e.target.value
+//   }
 
-function addRemoveGuitars(action){
-    var clone = [...instruments]
-    if (action === 'add'){
-        clone.push(guitarPrototype)
-        setInstruments(clone)
-    } else if (action === 'remove'){
-        clone.pop()
-        setInstruments(clone)
-    }
-}
+// function addRemoveGuitars(action){
+//     var clone = [...instruments]
+//     if (action === 'add'){
+//         clone.push(guitarPrototype)
+//         setInstruments(clone)
+//     } else if (action === 'remove'){
+//         clone.pop()
+//         setInstruments(clone)
+//     }
+// }
 
 let tempName = useRef('')
 
@@ -1229,6 +1229,10 @@ const handleInstrumentNameInput = (e) => {
 }
 
 const handleInstrumentNameChange = e => {
+    if (tempName.current.length === 0){
+        setInputFocus(null)
+        return
+    }
     var clone = [...instruments]
     const idx = Number(e.target.id.split('_')[1])
     clone[idx]['name'] = tempName.current
