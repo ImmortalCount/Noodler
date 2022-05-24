@@ -163,3 +163,20 @@ export function returnPosition(note, tuning, manualPosition){
         return positionNamer(noteStringHandler(note), tuning)[position]
     }
 }
+
+export function displayByPitchClass(notes, highlights, board){
+    for (var i = 0; i < notes.length; i++){
+        var x;
+        var y;
+        if (highlights.includes(i + 1)){
+            x = document.getElementsByClassName('notespecial_pitchClass_' + notes[i] + '_' + board);
+        } else {
+            x = document.getElementsByClassName('note_pitchClass_' + notes[i] + '_' + board);
+        }
+        y = document.getElementsByClassName('notename_pitchClass_' + notes[i] + '_' + board);
+    for (var j = 0; j < x.length; j++){
+        x[j].setAttribute('visibility', '');
+        y[j].setAttribute('visibility', '');
+    }
+    }
+}

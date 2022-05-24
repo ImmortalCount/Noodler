@@ -7,3 +7,15 @@ export const instrumentOptions = [
     {key: 'electric_guitar_jazz', text: 'Electric Guitar Jazz', value: 'electric_guitar_jazz'},
     {key: 'electric_distortion_guitar', text: 'Electric Guitar Distorted', value: 'electric_distortion_guitar'},
 ]
+
+export const guitarInstruments = [
+    "acoustic_guitar_nylon",
+    "acoustic_guitar_steel",
+    "electric_distortion_guitar",
+    "electric_guitar_clean" ,
+    "electric_guitar_jazz"
+]
+export const bassInstruments = [
+    "acoustic_bass",
+    "electric_bass_finger"
+]

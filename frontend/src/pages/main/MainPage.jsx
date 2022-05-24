@@ -4,7 +4,7 @@ import Lab from '../../components/lab/Lab'
 import Navbar from '../../components/navbar/Navbar'
 import Palette from '../../components/palette/Palette'
 import {Menu, Icon, Button} from 'semantic-ui-react';
-import GuitarSVG from '../../components/guitar/GuitarSVG'
+import Guitar from '../../components/guitar/Guitar'
 import Explorer from '../../components/finder/Explorer'
 import { useSelector } from 'react-redux'
 import Mixer from '../../pages/mixer/Mixer'
@@ -183,7 +183,7 @@ function Midbar() {
         <div>
             <Navbar/>
             <div className="tophalf"> 
-            <GuitarSVG 
+            <Guitar 
             masterInstrumentArray = {masterInstrumentArray}
             activelyDisplayedInstruments = {activelyDisplayedInstruments}
             />
