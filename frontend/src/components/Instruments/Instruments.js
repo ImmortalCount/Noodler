@@ -14,7 +14,6 @@ var instrumentSamples = {
                A5: 'MusyngKite_acoustic_bass-mp3_A5.mp3',
                A6: 'MusyngKite_acoustic_bass-mp3_A6.mp3',
                A7: 'MusyngKite_acoustic_bass-mp3_A7.mp3',
-               Ab0: 'MusyngKite_acoustic_bass-mp3_Ab0.mp3',
                Ab1: 'MusyngKite_acoustic_bass-mp3_Ab1.mp3',
                Ab2: 'MusyngKite_acoustic_bass-mp3_Ab2.mp3',
                Ab3: 'MusyngKite_acoustic_bass-mp3_Ab3.mp3',
@@ -95,7 +94,7 @@ var instrumentSamples = {
                Gb6: 'MusyngKite_acoustic_bass-mp3_Gb6.mp3',
                Gb7: 'MusyngKite_acoustic_bass-mp3_Gb7.mp3',
             },
-            baseUrl: '/soundfiles/acoustic_bass/'
+            baseUrl: '/soundfiles/acoustic_bass/',
         },
         "acoustic_guitar_nylon": {
             urls: {
@@ -627,7 +626,6 @@ var instrumentSamples = {
                A5: 'MusyngKite_electric_bass_finger-mp3_A5.mp3',
                A6: 'MusyngKite_electric_bass_finger-mp3_A6.mp3',
                A7: 'MusyngKite_electric_bass_finger-mp3_A7.mp3',
-               Ab0: 'MusyngKite_electric_bass_finger-mp3_Ab0.mp3',
                Ab1: 'MusyngKite_electric_bass_finger-mp3_Ab1.mp3',
                Ab2: 'MusyngKite_electric_bass_finger-mp3_Ab2.mp3',
                Ab3: 'MusyngKite_electric_bass_finger-mp3_Ab3.mp3',

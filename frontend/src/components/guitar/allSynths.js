@@ -15,6 +15,7 @@ const possibleSynths = {
 //synths in use
 export const currentSynths = {
     'acoustic_guitar_nylon': new Tone.Sampler(instrumentSamples.acoustic_guitar_nylon).toDestination(),
+    'acoustic_bass': new Tone.Sampler(instrumentSamples.acoustic_bass).toDestination(),
 }
 
 export function nameOfNewSynthSource(newSynthRequest, instruments){

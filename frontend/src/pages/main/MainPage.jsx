@@ -13,6 +13,7 @@ export default function MainPage() {
     const [activeTabs, setActiveTabs] = useState(['explorer', 'player' ])
     const [masterInstrumentArray, setMasterInstrumentArray] = useState(['Instr 1'])
     const [activelyDisplayedInstruments, setActivelyDisplayedInstruments] = useState([0])
+    const [groupDisplay, setGroupDisplay] = useState(false)
 
     const songImportData = useSelector(state => state.songImport)
     const {songImport} = songImportData
@@ -53,8 +54,7 @@ export default function MainPage() {
         var clone2 = [...activelyDisplayedInstruments]
         clone.push('Instr ' + (clone.length + 1))
         clone2.push(clone.length -1)
-        setMasterInstrumentArray(clone)
-        setActivelyDisplayedInstruments(clone2)
+        setMasterInstrumentArray(clone) 
     }
 
     function guitarSubtractHandler(){
@@ -74,11 +74,16 @@ export default function MainPage() {
     const onClickHandlerInstr = (e, titleProps) => {
         const instrumentNumber = Number(titleProps['id'].split('_')[1])
         var temp = [...activelyDisplayedInstruments]
-       if (activelyDisplayedInstruments.includes(instrumentNumber) === false){
-           temp.push(instrumentNumber)
-       } else {
-           temp = temp.filter(x => x !== instrumentNumber);
-       }
+        if (groupDisplay){
+            if (activelyDisplayedInstruments.includes(instrumentNumber) === false){
+                temp.push(instrumentNumber)
+            } else {
+                temp = temp.filter(x => x !== instrumentNumber);
+            }
+        } else {
+            temp = [instrumentNumber]
+        }
+       
        setActivelyDisplayedInstruments(temp)
     }
 
@@ -162,6 +167,12 @@ function Midbar() {
                 <Icon name='minus'/>
                 </Button>
                 </Button.Group>
+                <Button
+                basic
+                onClick={() => setGroupDisplay(!groupDisplay)}
+                >
+                    {groupDisplay ? 'Toggle' : 'Group'}
+                </Button>
                 </Menu.Menu>
     
             </Menu>

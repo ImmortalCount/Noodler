@@ -33,6 +33,7 @@ export default function GuitarSVG({masterInstrumentArray, activelyDisplayedInstr
     const [instruments, setInstruments] = useState([{name: 'Instr 1', instrument:'acoustic_guitar_nylon', synthSource: 'acoustic_guitar_nylon', type: 'guitar', noteColors: '', scale:[], tuning:['E4','B3','G3','D3','A2','E2'],stringNumber:6,fretNumber: 24}])
     const [module, setModule] = useState(0);
     const [inputFocus, setInputFocus] = useState(null)
+    const [loading, setLoading] = useState(false)
     const [noteColors, setNoteColors] = useState('')
     const globalPosition = useRef(0); 
     const [data, setData] = useState([
@@ -85,6 +86,7 @@ export default function GuitarSVG({masterInstrumentArray, activelyDisplayedInstr
         "electric_bass_finger"
     ]
 
+
     useEffect(() => {
         if (displayFocus === 'lab'){
             displayNotes(noteDisplay)
@@ -104,10 +106,10 @@ export default function GuitarSVG({masterInstrumentArray, activelyDisplayedInstr
     useEffect(() => {
         refData.current = data
         refInstruments.current = instruments
-        loadNoteSequenceAndVisualDataOntoTimeline(data)
         displayNotes()
         synthCleanup()
     }, [data, instruments])
+
 
     useEffect(() => {
         dispatch(setGlobalInstruments(instruments))
@@ -143,6 +145,8 @@ export default function GuitarSVG({masterInstrumentArray, activelyDisplayedInstr
         
     }, [state])
 
+
+
     // if (songImport){
     //     importSynths(songImport['instruments'])
     //     // setInstruments(songImport['instruments'])
@@ -150,7 +154,13 @@ export default function GuitarSVG({masterInstrumentArray, activelyDisplayedInstr
 
     useEffect(() => {
         if (songImport){
-            // loadASynth('acoustic_bass', 'acoustic_bass')
+            setLoading(true)
+            let checkIfLoaded = setInterval(() => {
+                if (allBuffersAreLoaded()){
+                    clearInterval(checkIfLoaded)
+                    setLoading(false)
+                }
+            }, 50)
             importSynths(songImport['instruments'])
             setInstruments(songImport['instruments'])
             dispatch(setGlobalInstruments(songImport['instruments']))
@@ -180,17 +190,32 @@ export default function GuitarSVG({masterInstrumentArray, activelyDisplayedInstr
         }
     }, [noteDisplay])
 
+    let currentlyImportingPlayImport = useRef(false)
+
     useEffect(() => {
         if (initialLoad.current === false){
+            console.error('did this fire?!!!!!!!')
             loadNoteSequenceAndVisualDataOntoTimeline(playImport)
-            // console.log(playImport, 'playImport')
-            // console.log(data, 'data')
+            currentlyImportingPlayImport.current = true
+            
         }
     }, [playImport])
+
+    // useEffect(() => {
+    //     if (initialLoad.current === false && currentlyImportingPlayImport.current === false){
+    //         console.log(currentlyImportingPlayImport.current)
+    //         loadNoteSequenceAndVisualDataOntoTimeline(data)
+    //     }
+    //     console.log('loading data')
+    // }, [data])
 
     useEffect(() => {
         initialLoad.current = false;
     }, [])
+
+    useEffect(() => {
+        currentlyImportingPlayImport.current = (false)
+    }, [playImport])
 
     function synthCleanup(){
         let synthSourcesInUse = [];
@@ -209,7 +234,16 @@ export default function GuitarSVG({masterInstrumentArray, activelyDisplayedInstr
         }
     }
 
-
+    function allBuffersAreLoaded(){
+        let state = true;
+        
+        for (const key in loadedSynths.current){
+            if (!loadedSynths.current[key].loaded){
+                state = false;
+            }
+        }
+        return state
+    }
 
     //----Check if the position has moved while paused
 
@@ -224,10 +258,8 @@ function findIndex(name){
 function importSynths(importedInstrumentArray){
     for (let i = 0; i < importedInstrumentArray.length; i++){
         let instrumentType = importedInstrumentArray[i]['instrument']
-        let newSynth = nameOfNewSynthSource(instrumentType, instruments)
-            console.log(typeof instrumentType)
-            console.log(typeof newSynth)
-        loadASynth(newSynth, instrumentType) 
+        let synthName = importedInstrumentArray[i]['synthSource']
+        loadASynth(synthName, instrumentType) 
     }
 }
     //--------------------
@@ -746,11 +778,16 @@ function handleInstrumentUpdate(){
 //======
 
 function playHandler(){
-    dispatch(setPlayHighlight(true))
-    Tone.start();
-    Tone.Transport.cancel();
-    loadNoteSequenceAndVisualDataOntoTimeline(data)
-    Tone.Transport.start();
+    if (allBuffersAreLoaded()){
+        dispatch(setPlayHighlight(true))
+        Tone.start();
+        Tone.Transport.cancel();
+        loadNoteSequenceAndVisualDataOntoTimeline(data)
+        Tone.Transport.start();
+    } else {
+        console.log('loading')
+    }
+    
 }
 
 function returnPosition(note, tuning, manualPosition){
@@ -768,6 +805,7 @@ function returnPosition(note, tuning, manualPosition){
 }
 
 function loadNoteSequenceAndVisualDataOntoTimeline(data){
+    console.log(data, 'this is the data')
     Tone.Transport.cancel();
     var playPositions = [];
     for (var j = 0; j < data.length; j++){
@@ -907,11 +945,10 @@ function loadNoteSequenceAndVisualDataOntoTimeline(data){
             }  
     }
     for (let j = 0; j < data.length; j++){
+        console.log(loadedSynths.current, instruments[j], 'what is here')
         setUpSequence(data[j]['data'], loadedSynths.current[instruments[j]['synthSource']], j, data[j]['displayOnly'])
     }
 }
-
-
 
 // Functionality for if the player is paused and you change the timeline!!
 function displayNotes(input){
@@ -1524,7 +1561,7 @@ function previewTab(){
         {mapGuitarSVGContainers(instruments)}
         <Button compact basic onClick={handleStop}><Icon name='stop'/></Button>
         <Button compact basic onClick={handlePause}><Icon name='pause'/></Button>
-        <Button compact basic onClick={() => playHandler()}><Icon name='play'/> </Button>
+        <Button compact basic loading={loading} onClick={() => playHandler()}><Icon name='play'/> </Button>
         <Button compact basic active={loop === true} onClick={()=>loopOn()}><Icon name='retweet'/></Button>
         <Button compact basic onClick={() => handlePreviousNextModulePlay('previous')} ><Icon name='fast backward'/></Button>
         <Button compact basic onClick={() => handlePreviousNextModulePlay('current')} ><Icon name='eject'/></Button>
@@ -1535,9 +1572,9 @@ function previewTab(){
         <AudioDownloadModal tab={tab} handleRecord={handleRecord} length={loopLengthCreator(data) * 1000}/>
         <TabDownloadModal tab={tab}/>
         <BpmModal/>
-        <Button compact basic onClick={() => console.log(instruments)}>TEST</Button>
-        <Button compact basic onClick={() => console.log(loadedSynths.current)}>LOADED SYNTHS</Button>
-        <Button compact basic onClick={() => synthCleanup()}>SYNTH CLEANUP</Button>
+        <Button compact basic onClick={() => console.log(data)}>TEST</Button>
+        <Button compact basic onClick={() => console.log(allBuffersAreLoaded(loadedSynths))}>LOADED SYNTHS</Button>
+        <Button compact basic onClick={() => console.log(loadedSynths.current)}>SYNTH OBJ</Button>
         <Button compact basic onClick={() => disposeOfASynth('acoustic_guitar_nylon')}>DISPOSEOFASYNTH</Button>
         </>
     )

@@ -7,6 +7,7 @@ import Docs from './pages/docs/Docs.jsx';
 import Collections from './pages/collections/Collections.jsx';
 import Pools from './pages/pools/Pools.jsx';
 import Tab from './pages/tab/Tab.jsx';
+import InstrumentTest from './components/Instruments/InstrumentTest.jsx';
 
 
 function App() {
@@ -19,7 +20,9 @@ function App() {
         <Route path='/collections' element={<Collections/>}/>
         <Route path='/pools' element={<Pools/>}/>
         <Route path='/tab' element={<Tab/>}/>
+        <Route path='/test' element={<InstrumentTest/>}/>
         <Route exact path='/' element={<MainPage/>} />
+
       </Routes>
     </Router>
     

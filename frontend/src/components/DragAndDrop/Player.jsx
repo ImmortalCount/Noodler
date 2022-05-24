@@ -104,6 +104,18 @@ export default function Player ({masterInstrumentArray, display}) {
     }
 
     useEffect(() => {
+        if (songImport){
+            setData(songImport['data'])
+            setName(songImport['name'])
+            setDescription(songImport['desc'])
+            console.log(songImport['bpm'])
+            Tone.Transport.bpm.value = songImport['bpm']
+        } else {
+            return
+        }
+    }, [songImport])
+
+    useEffect(() => {
         if (mapChordsToPlayer){
             handleMapChordsToPlayer(mapChordsToPlayer)
         } else {
@@ -117,17 +129,7 @@ export default function Player ({masterInstrumentArray, display}) {
         } 
     }, [playHighlight])
 
-    useEffect(() => {
-        if (songImport){
-            setData(songImport['data'])
-            setName(songImport['name'])
-            setDescription(songImport['desc'])
-            console.log(songImport['bpm'])
-            Tone.Transport.bpm.value = songImport['bpm']
-        } else {
-            return
-        }
-    }, [songImport])
+
 
     useEffect(() => {
         handleUpdate()
@@ -559,6 +561,8 @@ const dropHandlerBackground = e => {
     var type = xferData['type']
 
     if (type === 'songExplorerExport'){
+        Tone.Transport.cancel();
+        Tone.Transport.stop();
         dispatch(setSongImportData(message))
     } else {
         return
