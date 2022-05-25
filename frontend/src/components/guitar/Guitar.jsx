@@ -645,7 +645,6 @@ function displayNotes(input){
                 
                 
             } else if (displayOnly){
-                console.log('here 1110')
                 for (let q = 0; q < currentArray.length; q++){
                     let findNote = currentArray[q]
                     let flat = false
@@ -673,7 +672,6 @@ function displayNotes(input){
                 }
                 //if the globalPosition is set to -1 'show all notes'
             } else if (globalPosition.current < 0){
-                console.log('here 1138')
                 for (let w = 0; w < currentArray.length; w++){
                     let findNote = currentArray[w]
                     let flat = false
@@ -697,12 +695,9 @@ function displayNotes(input){
                     }
                 }
             } else {
-                console.log('here 1162')
                 let manualPosition = data[i]['data'][0]['position']
-                console.log(data[i]['data'][0]['position'], 'man pos!!')
                 let nameArray = noteStringHandler(data[i]['data'][currentModuleIndex]['notes'][0][0])
                 let pos = returnPosition(data[i]['data'][currentModuleIndex]['notes'][0][0], instruments[i]['tuning'], manualPosition);
-                // var tabArray = []
                 if (pos !== undefined){
                     for (var w = 0; w < pos.length; w++){
                         let findNote = pos[w]
@@ -734,16 +729,12 @@ function playHandler(){
         Tone.Transport.cancel();
         loadNoteSequenceAndVisualDataOntoTimeline(refData.current)
         Tone.Transport.start();
-    } else {
-        console.log('loading')
-    }
-    
+    }  
 }
 
 function loopOn(){
     Tone.Transport.loopStart = 0;
     Tone.Transport.loopEnd = loopLengthCreator(data);
-    console.log(loopLengthCreator(data))
     if (Tone.Transport.loop !== true){
         Tone.Transport.loop = true;
         setLoop(true)
@@ -833,8 +824,6 @@ const onChangeInstrument = (e, {id, value}) => {
     clone[idx]['name'] = name;
     clone[idx]['synthSource'] = newSynth
 
-    console.log(newSynth, 'new Synth')
-    console.log(value, 'instrumentType')
     loadASynth(newSynth, value)
     setInstruments(clone)
   }
@@ -1097,10 +1086,6 @@ setTimeout(async () => {
         <AudioDownloadModal tab={tab} handleRecord={handleRecord} length={loopLengthCreator(data) * 1000}/>
         <TabDownloadModal tab={tab}/>
         <BpmModal/>
-        <Button compact basic onClick={() => console.log(playImport)}>TEST</Button>
-        <Button compact basic onClick={() => console.log(allBuffersAreLoaded(loadedSynths))}>LOADED SYNTHS</Button>
-        <Button compact basic onClick={() => console.log(loadedSynths.current)}>SYNTH OBJ</Button>
-        <Button compact basic onClick={() => disposeOfASynth('acoustic_guitar_nylon')}>DISPOSEOFASYNTH</Button>
         </>
     )
 }

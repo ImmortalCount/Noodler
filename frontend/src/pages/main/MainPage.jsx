@@ -8,13 +8,18 @@ import Guitar from '../../components/guitar/Guitar'
 import Explorer from '../../components/finder/Explorer'
 import { useSelector } from 'react-redux'
 import Mixer from '../../pages/mixer/Mixer'
+import ScaleLab from '../../components/lab/ScaleLab'
+import ChordLab from '../../components/lab/ChordLab'
+import PatternLab from '../../components/lab/PatternLab'
+import RhythmLab from '../../components/lab/RhythmLab'
+import ModuleLab from '../../components/lab/ModuleLab'
 
 export default function MainPage() {
     const [activeTabs, setActiveTabs] = useState(['explorer', 'player' ])
     const [masterInstrumentArray, setMasterInstrumentArray] = useState(['Instr 1'])
     const [activelyDisplayedInstruments, setActivelyDisplayedInstruments] = useState([0])
     const [groupDisplay, setGroupDisplay] = useState(false)
-
+    const [labSplit, setLabSplit] = useState(false)
     const songImportData = useSelector(state => state.songImport)
     const {songImport} = songImportData
     const instrumentNames = useSelector(state => state.instrumentNames)
@@ -70,6 +75,11 @@ export default function MainPage() {
         }
         
     }
+    function childChangeInstr(instrumentNumber){
+        let temp = [...activelyDisplayedInstruments]
+        temp = [instrumentNumber]
+        setActivelyDisplayedInstruments(temp)
+    }
 
     const onClickHandlerInstr = (e, titleProps) => {
         const instrumentNumber = Number(titleProps['id'].split('_')[1])
@@ -110,6 +120,20 @@ function Midbar() {
         return (
             <Menu>
                 <Button.Group>
+               {!labSplit && <Button
+                basic
+                name='labSplit'
+                onClick={() => setLabSplit(!labSplit)}
+                >
+                Lab Split
+                </Button>}
+                {labSplit && <Button
+                basic
+                name='labSplit'
+                onClick={() => setLabSplit(!labSplit)}
+                >
+                Lab Join
+                </Button> }  
                 <Button
                 basic
                 name='explorer'
@@ -118,14 +142,56 @@ function Midbar() {
                 >
                 Explorer
                 </Button>
-                <Button
+               {!labSplit && <Button
                 basic
                 name='lab'
                 active={activeTabs.includes('lab')}
                 onClick={onClickHandler}
                 >
                 Lab
+                </Button>}
+               {labSplit && <> 
+                <Button
+                basic
+                name='scaleLab'
+                active={activeTabs.includes('scaleLab')}
+                onClick={onClickHandler}
+                >
+                Scale Lab
                 </Button>
+                <Button
+                basic
+                name='chordLab'
+                active={activeTabs.includes('chordLab')}
+                onClick={onClickHandler}
+                >
+                Chord Lab
+                </Button>
+                <Button
+                basic
+                name='patternLab'
+                active={activeTabs.includes('patternLab')}
+                onClick={onClickHandler}
+                >
+                Pattern Lab
+                </Button>
+                <Button
+                basic
+                name='rhythmLab'
+                active={activeTabs.includes('rhythmLab')}
+                onClick={onClickHandler}
+                >
+                Rhythm Lab
+                </Button>
+                <Button
+                basic
+                name='moduleLab'
+                active={activeTabs.includes('moduleLab')}
+                onClick={onClickHandler}
+                >
+                Module Lab
+                </Button>
+                </>}
                 <Button
                 basic
                 name='palette'
@@ -199,6 +265,32 @@ function Midbar() {
             masterInstrumentArray = {masterInstrumentArray}
             display = {activeTabs.includes('lab') }
             />
+            <ScaleLab
+            masterInstrumentArray = {masterInstrumentArray}
+            display = {activeTabs.includes('scaleLab') }
+            free = {true}
+            />
+            <ChordLab
+            masterInstrumentArray = {masterInstrumentArray}
+            display = {activeTabs.includes('chordLab') }
+            free = {true}
+            />
+            <PatternLab
+            masterInstrumentArray = {masterInstrumentArray}
+            display = {activeTabs.includes('patternLab') }
+            free = {true}
+            />
+            <RhythmLab
+            masterInstrumentArray = {masterInstrumentArray}
+            display = {activeTabs.includes('rhythmLab') }
+            free = {true}
+            />
+            <ModuleLab
+            masterInstrumentArray = {masterInstrumentArray}
+            display = {activeTabs.includes('moduleLab') }
+            free = {true}
+            />
+            
             <Mixer
             masterInstrumentArray = {masterInstrumentArray}
             display = {activeTabs.includes('mixer')}
@@ -209,6 +301,7 @@ function Midbar() {
             <Player
             masterInstrumentArray = {masterInstrumentArray}
             display = {activeTabs.includes('player')}
+            childChangeInstr = {childChangeInstr}
             />
             </div>
         </div>

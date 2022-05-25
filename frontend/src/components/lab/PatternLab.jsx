@@ -17,7 +17,7 @@ import { setDisplayFocus as setDisplayFocusAction } from '../../store/actions/di
 import ExportModal from '../modal/ExportModal';
 
 
-export default function PatternLab({importedPatternData, masterInstrumentArray}) {
+export default function PatternLab({importedPatternData, masterInstrumentArray, display, free}) {
 const [playing, setPlaying] = useState(false)
 const [data, setData] = useState([{notes: ['C3'], position: 0}, {notes: ['D3'], position: 0}, {notes: ['E3'], position: 0}, {notes: ['F3'], position: 0}, {notes: ['G3'], position: 0}, {notes: ['A3'], position: 0}, {notes: ['B3'], position: 0}, {notes: ['C4'], position: 0}])
 const notes = []
@@ -142,7 +142,7 @@ function patternAndScaleToNotes(patternArr){
 
 //Upon importing
 useEffect(() => {
-    if (importedPatternData['pattern'] !== undefined){
+    if (importedPatternData?.['pattern']){
         console.log(importedPatternData, 'IMPORTED PATTERN DATA!')
         setPattern(importedPatternData['pattern'])
         setPatternType(importedPatternData['type'])
@@ -403,7 +403,11 @@ function playAll(){
     const synthPart = new Tone.Sequence(
         function(time, note) {
           polySynth.triggerAttackRelease(noteStringHandler(note), "10hz", time)
-          var highlightedChord = document.getElementById('pattern_' + count)
+          let chordId = 'pattern_' + count
+                  if (free){
+                      chordId = 'pattern_' + count + '_free'
+                  }
+          var highlightedChord = document.getElementById(chordId)
             highlightedChord.className = 'active pattern'
             setTimeout(() => {highlightedChord.className = 'inactive pattern'}, 250)
             count++
@@ -452,7 +456,11 @@ function playAll(){
         dispatch(setPlayImport([returnObj]))
         //Manual animation for pattern lab
         for (let i = 0; i < notes.length; i++){
-            let highlightedPattern = document.getElementById('pattern_' + i)
+            let chordId = 'pattern_' + i
+            if (free){
+                chordId = 'pattern_' + i + '_free'
+            }
+            let highlightedPattern = document.getElementById(chordId)
             intervals.current.push(setTimeout(() => {highlightedPattern.className = 'active pattern'}, (i) * gap))
             intervals.current.push(setTimeout(() => {highlightedPattern.className = 'inactive pattern'}, (i + 1) * gap))
         }
@@ -904,14 +912,20 @@ const handlePlayThis = (e, x) => {
     } else {
         parentID = e.target.id;
     }
+    let indexID = parentID
+    if (free){
+        let temp = parentID.split('_')
+        temp.pop()
+        indexID = temp.join('_')
+    }
 
-    if (parentID.split('_').length === 2){
-        const x = parentID.split('_')[1]
+    if (indexID.split('_').length === 2){
+        const x = indexID.split('_')[1]
         setDisplayFocus(Number(x))
         polySynth.triggerAttackRelease(notes[x], '8n');
-    } else if (parentID.split('_').length === 3) {
-        const x = parentID.split('_')[1]
-        const y = parentID.split('_')[2]
+    } else if (indexID.split('_').length === 3) {
+        const x = indexID.split('_')[1]
+        const y = indexID.split('_')[2]
         setDisplayFocus(Number(x))
         polySynth.triggerAttackRelease(notes[x][y], '8n')
     } else {
@@ -941,9 +955,13 @@ function mapNotes(notes){
         var returnChord = [];
         var pitchClasses = [];
         for (var j = 0; j < notes[i].length; j++){
+            let noteId = 'pattern_' + i + '_' + j
+            if (free){
+                noteId = 'pattern_' + i + '_' + j + '_free'
+            }
             pitchClasses.push(Note.pitchClass(notes[i][j]))
             returnChord.push(
-                <div id={'pattern_' + i + '_' + j} style={{display: 'flex', flexDirection: 'row', height: '50px', width: '50px', backgroundColor: 'wheat', margin: '1px'}}>
+                <div id={noteId} style={{display: 'flex', flexDirection: 'row', height: '50px', width: '50px', backgroundColor: 'wheat', margin: '1px'}}>
                     {notes[i][j]}
                     {(edit && noteOptions !== 'delete') && <div style={{display: 'flex', flexDirection: 'column'}}>
                     <Icon onClick={handleClickUp} name={(noteOptions === 'insert') ? "plus" : "caret square up" }/><Icon onClick={handleClickDown} name={(noteOptions === 'insert') ? "" : "caret square up" }/>
@@ -952,9 +970,13 @@ function mapNotes(notes){
                 </div>
             )
         }
+        let chordId = 'pattern_' + i
+        if (free){
+            chordId = 'pattern_' + i + '_free'
+        }
 
         returnArr.push(
-            <div  id={'pattern_' + i} onClick={handlePlayThis} draggable onDragStart = {dragStartHandler} onDrag = {dragHandler} onDragOver = {dragOverHandler} onDragLeave={dragLeaveHandler} onDrop = {dropHandler}className='inactive chord' style={{display: 'flex', flexDirection: 'column-reverse', margin: '1px', marginBottom: '5px'}}>
+            <div  id={chordId} onClick={handlePlayThis} draggable onDragStart = {dragStartHandler} onDrag = {dragHandler} onDragOver = {dragOverHandler} onDragLeave={dragLeaveHandler} onDrop = {dropHandler}className='inactive chord' style={{display: 'flex', flexDirection: 'column-reverse', margin: '1px', marginBottom: '5px'}}>
             <div onClick={(e) => (handlePlayThis(e, true))} style={{display: 'flex', flexDirection: 'row', marginBottom: '18px'}}>
             { (edit && noteOptions !== 'delete') && <div  style={{display: 'flex', flexDirection: (noteOptions === 'insert') ? 'row' : 'column'}}>
             <Icon onClick={handleClickUpChord} name= {(noteOptions === 'insert') ? "plus" : "caret square up" }/><Icon onClick={handleClickDownChord}name= {(noteOptions === 'insert') ? "" : "caret square down" }/>
@@ -1163,7 +1185,7 @@ const handleEditOptions = () => {
   }
 
     return (
-        <>
+        <div style={ free ? {'height': '200px', display: display ? '' : 'none'} : {}}>
         <Menu>
         <Menu.Item onClick={() => handleSharpsOrFlats()}>{options === 'sharps' ? '#' : 'b'}</Menu.Item>
          <Menu.Item onClick={() => {playAll(); setPlaying(true)}}><Icon name={playing ? 'stop': 'play'}/></Menu.Item>
@@ -1325,6 +1347,6 @@ const handleEditOptions = () => {
         changeParentName={setName}
         changeParentDesc={setDescription}
         />
-        </>
+        </div>
     )
 }

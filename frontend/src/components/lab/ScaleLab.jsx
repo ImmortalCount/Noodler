@@ -6,14 +6,14 @@ import { useDispatch, useSelector } from 'react-redux';
 import { setLabData } from '../../store/actions/labDataActions';
 import { scaleHandler } from './utils';
 import ExportModal from '../modal/ExportModal';
-
 import '../../../public/Do_Mayor_armadura.svg'
 import { keySynth } from './synths';
 import { setNoteDisplay } from '../../store/actions/noteDisplayActions';
 import { setPlayImport } from '../../store/actions/playImportActions';
 import { setDisplayFocus } from '../../store/actions/displayFocusActions';
+import { createSVGElement, setAttributes } from '../svg/svgUtils';
 
-export default function ScaleLab({importedScaleData, masterInstrumentArray}) {
+export default function ScaleLab({importedScaleData, masterInstrumentArray, display, free}) {
     const [playing, setPlaying] = useState(false);
     const [scaleDataBinary, setScaleDataBinary] = useState([1,0,1,0,1,1,0,1,0,1,0,1])
     const [scaleName, setScaleName] = useState('major');
@@ -66,15 +66,14 @@ export default function ScaleLab({importedScaleData, masterInstrumentArray}) {
 
 
 function createScaleSVG(){
-    var svg = document.createElementNS("http://www.w3.org/2000/svg", 'svg');
-    svg.setAttribute("height", 300);
-    svg.setAttribute("width", 300);
-    // svg.setAttribute("fill-opacity", 0.5);
+    const svg = createSVGElement('svg')
+    const svgAttrs = {'height': 300, 'width': 300}
+    setAttributes(svg, svgAttrs)
     
-    var rect = document.createElementNS("http://www.w3.org/2000/svg", 'rect');
-    rect.setAttribute("width", "100%");
-    rect.setAttribute("height", "100%");
-    rect.setAttribute("fill", "white");
+    //container
+    const rect = createSVGElement('rect')
+    const rectAttrs = {'width': "100%", 'height': '100%', 'fill': 'white'}
+    setAttributes(rect, rectAttrs)
     svg.appendChild(rect)
     
     //for circular representation:
@@ -85,39 +84,31 @@ function createScaleSVG(){
     var radius = 100;
     var angleIncrement = 2 * Math.PI / (amountCircles) 
     //main circle
-    var mainCircle = document.createElementNS("http://www.w3.org/2000/svg", 'circle');
-        mainCircle.setAttribute('cx', xCenter );
-        mainCircle.setAttribute('cy', yCenter);
-        mainCircle.setAttribute('r', radius);
-        mainCircle.setAttribute("fill", 'transparent');
-        mainCircle.setAttribute("stroke", 'black');
-        mainCircle.setAttribute("stroke-width", '2');
-        svg.appendChild(mainCircle)
+    const mainCircle = createSVGElement('circle')
+    const mainCircleAttrs = {'cx': xCenter, 'cy': yCenter, 'r': 'radius', 'fill': 'transparent', 'stroke': 'black', "stroke-width": '2'}
+    setAttributes(mainCircle, mainCircleAttrs)
+    svg.appendChild(mainCircle)
     //inner Circles
     var noteCount = 0;
-    for (var i = 0; i < amountCircles; i++){
-        var fill;
+    for (let i = 0; i < amountCircles; i++){
+        let fill;
         if (scaleDataBinary[i] === 1){ 
             fill = 'black'
         } else {
             fill = 'white';
         }
-        var circle = document.createElementNS("http://www.w3.org/2000/svg", 'circle');
-        circle.setAttribute('cx', xCenter + (radius * Math.cos(angle)));
-        circle.setAttribute('cy', yCenter + (radius * Math.sin(angle)));
-        circle.setAttribute('r', 23);
-        circle.setAttribute("fill", fill);
-        circle.setAttribute("stroke", 'black');
-        circle.setAttribute("stroke-width", '2');
-        circle.setAttribute("class", "scale_circle")
-        circle.setAttribute("id", 'scale_' + i)
-        var noteName = document.createElementNS("http://www.w3.org/2000/svg", 'text');
-        noteName.setAttribute('x', xCenter + (radius * Math.cos(angle)));
-        noteName.setAttribute('y', yCenter + (radius * Math.sin(angle)));
-        noteName.setAttribute('text-anchor', 'middle');
-        noteName.setAttribute('fill', 'white');
-        noteName.setAttribute('dominant-baseline', 'middle');
-        noteName.setAttribute('font-size', '15px');
+        const circle = createSVGElement('circle')
+        let noteID;
+        if (free){
+          noteID = 'scale_' + i + '_1'
+        } else {
+          noteID = 'scale_' + i
+        }
+        const circleAttrs =  {'cx': xCenter + (radius * Math.cos(angle)), 'cy': yCenter + (radius * Math.sin(angle)), 'r': 23, "fill": fill, "stroke": 'black', "stroke-width": '2', "class": "scale_circle", "id": noteID}
+        setAttributes(circle, circleAttrs)
+        const noteName = createSVGElement('text')
+        const noteNameAttrs = {'x': xCenter + (radius * Math.cos(angle)), 'y': yCenter + (radius * Math.sin(angle)), 'text-anchor': 'middle', 'fill': 'white', 'dominant-baseline': 'middle', 'font-size': '15px'}
+        setAttributes(noteName, noteNameAttrs)
         if (fill === 'black'){
           noteName.textContent = notes[noteCount];
           noteCount++
@@ -127,7 +118,12 @@ function createScaleSVG(){
         angle += angleIncrement
     }
     //check if its there
-    const scaleDiv = document.getElementById('divScaleInteractive');
+    let scaleDiv;
+    if (free){
+      scaleDiv = document.getElementById('divScaleInteractive1')
+    } else {
+      scaleDiv = document.getElementById('divScaleInteractive')
+    };
     if (scaleDiv.firstChild){
         while (scaleDiv.firstChild){
             scaleDiv.removeChild(scaleDiv.firstChild)
@@ -140,7 +136,8 @@ function createScaleSVG(){
    
 
   useEffect(() => {
-    var newNotes = importedScaleData['scale']
+    if (importedScaleData){
+      var newNotes = importedScaleData['scale']
     if (newNotes !== undefined){
       var newBinary = importedScaleData['binary']
       var newName = importedScaleData['scaleName']
@@ -155,7 +152,8 @@ function createScaleSVG(){
       setDescription(newDesc)
       createScaleSVG()
     }
-    console.log(importedScaleData, '!!')
+    }
+    
   }, [importedScaleData])
 
   useEffect(() => {
@@ -539,12 +537,15 @@ function convertScaleForDispatch(){
         Tone.Transport.start();
         var position = 0;
         dispatch(setNoteDisplay())
-        
     //---Synthpart function 
             const synthPart = new Tone.Sequence(
               function(time, note) {
                   keySynth.triggerAttackRelease(note, "10hz", time)
-                var highlightedCircle = document.getElementById(notePositions[Note.pitchClass(note)])
+                let findID = notePositions[Note.pitchClass(note)]
+                if (free){
+                  findID = notePositions[Note.pitchClass(note)] + '_1'
+                }
+                var highlightedCircle = document.getElementById(findID)
                 highlightedCircle.setAttribute('r', 29)
                 intervals.current.push(setTimeout(() => {highlightedCircle.setAttribute('r', 23)}, gap))
                 //position
@@ -590,7 +591,11 @@ function convertScaleForDispatch(){
       dispatch(setPlayImport([returnObj]))
       //Manual animation for scale lab
       for (let i = 0; i < newNotes.length; i++){
-        let highlightedCircle = document.getElementById(notePositions[Note.pitchClass(newNotes[i])])
+        let findID = notePositions[Note.pitchClass(newNotes[i])]
+          if (free){
+              findID = notePositions[Note.pitchClass(newNotes[i])] + '_1'
+            }
+        let highlightedCircle = document.getElementById(findID)
         intervals.current.push(setTimeout(() => {highlightedCircle.setAttribute('r', 29)}, (i) * gap))
         intervals.current.push(setTimeout(() => {highlightedCircle.setAttribute('r', 23)}, (i + 1) * gap))
       }
@@ -752,10 +757,12 @@ const handleScaleDescriptionChange = e => {
   setDescription(e.target.value)
 }
 
+
     return (
-        <>
+        <div style={ free ? {'height': '200px', display: display ? '' : 'none'} : {}}>
         <Menu>
         <Menu.Item onClick={() => handleSharpsOrFlats()}>{options === 'sharps' ? '#' : 'b'}</Menu.Item>
+        <Menu.Item onClick={() => test()}>Test</Menu.Item>
         <Dropdown onChange={onChangeDropdown} options={options === 'sharps' ? dropdownOptionsSharp : dropdownOptionsFlat} text = {`Root: ${rootNote}`} simple item/>
         <Button.Group>
         <Button basic compact onClick={()=> {playNoteSequence(); setPlaying(true)}}><Icon name={playing ? 'stop' : 'play'}/></Button>
@@ -879,7 +886,7 @@ const handleScaleDescriptionChange = e => {
         </Form>}
         <p>{noteMapper(notes)}</p>
         </div>
-        <div style={{display: localDisplay ? '' : 'none'}} id="divScaleInteractive"></div>
+        <div style={{display: localDisplay ? '' : 'none'}} id={free ? "divScaleInteractive1" : 'divScaleInteractive'}></div>
         <div className='binaryRadioSelector' style={{flexDirection: 'row', display: localDisplay ? 'flex' : 'none'}}>
         <Form>
         <Form.Field>
@@ -1190,6 +1197,6 @@ const handleScaleDescriptionChange = e => {
         changeParentName={setScaleName}
         changeParentDesc={setDescription}
         />
-        </>
+        </div>
     )
 }

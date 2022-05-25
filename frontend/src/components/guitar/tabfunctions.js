@@ -71,8 +71,6 @@ export function generateTabFromModules(dataFromPlayer, tuningArr, instrumentArr,
 
     dataFromPlayer = convertPlayerDataToModules(dataFromPlayer, tuningArr, instrumentArr, globalPosition)
 
-    console.log(dataFromPlayer)
-
     let notesPerLine = 16;
     let breakpoints = []
     //determine breakpoints

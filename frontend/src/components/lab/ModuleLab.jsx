@@ -11,7 +11,7 @@ import { setPlayImport } from '../../store/actions/playImportActions';
 import ExportModal from '../modal/ExportModal'
 import { setDisplayFocus } from '../../store/actions/displayFocusActions';
 
-export default function ModuleLab({importedModuleData, masterInstrumentArray}) {
+export default function ModuleLab({importedModuleData, masterInstrumentArray, free, display}) {
     const [name, setName] = useState('Module 1')
     const [keyName, setKeyName] = useState('Key: C')
     const [key, setKey] = useState('C')
@@ -166,7 +166,7 @@ export default function ModuleLab({importedModuleData, masterInstrumentArray}) {
     ]
 
     useEffect(() => {
-        if (importedModuleData['name'] !== undefined){
+        if (importedModuleData?.['name']){
             setName(importedModuleData['name'])
             setDescription(importedModuleData['desc'])
         }
@@ -553,7 +553,7 @@ for (var o = 0; o < 10; o++){
     }
 
     return (
-        <>
+        <div style={ free ? {'height': '200px', display: display ? '' : 'none'} : {}}>
         <Menu>
          <Menu.Item onClick={() => {playModule(); setPlaying(true)}} ><Icon name={playing ? 'stop': 'play'}/></Menu.Item>  
          <Dropdown onChange={onChangeDropdown} options={options === 'sharps' ? dropdownOptionsKeySharp : dropdownOptionsKeyFlat} text = {`Key: ${key}`} simple item/>
@@ -623,7 +623,7 @@ for (var o = 0; o < 10; o++){
          changeParentName={setName}
          changeParentDesc={setDescription}
          />
-        </>
+        </div>
     )
     
 }

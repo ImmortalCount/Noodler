@@ -10,7 +10,7 @@ import './lab.css'
 
 
 
-export default function RhythmLab({importedRhythmData}) {
+export default function RhythmLab({importedRhythmData, display, free}) {
     const [playing, setPlaying] = useState(false)
     const initialNotes = [['O', 'O'], ['O', 'O'], ['O', 'O'], ['O', 'O']]
     const [name, setName] = useState('Rhythm 1')
@@ -39,7 +39,7 @@ export default function RhythmLab({importedRhythmData}) {
 
 //update for imported data
 useEffect(() => {
-    if (importedRhythmData['rhythm'] !== undefined){
+    if (importedRhythmData?.['rhythm']){
         setNotes(importedRhythmData['rhythm'])
         setName(importedRhythmData['rhythmName'])
         setPlayConstant(importedRhythmData['speed'])
@@ -140,12 +140,16 @@ function changePositionsUsingIDs(startingID, endingID, notes){
     var ex1 = startingID.split('_')
         var startingIDCoordinates = []
         for (var i = 2; i < ex1.length; i++){
-          startingIDCoordinates.push(Number(ex1[i]))
+            if (ex1[i] !== 'free'){
+                startingIDCoordinates.push(Number(ex1[i]))
+            }
         }
     var ex2 = endingID.split('_')
         var endingIDCoordinates = []
         for (var j = 2; j < ex2.length; j++){
-          endingIDCoordinates.push(Number(ex2[j]))
+        if (ex2[j] !== 'free'){
+            endingIDCoordinates.push(Number(ex2[j]))
+        }
         }
     
     if (childrenIDs.includes(endingID)){
@@ -259,19 +263,14 @@ function changePositionsUsingIDs(startingID, endingID, notes){
         setMappedNotes(mapNotes(clone))
 }
 
-// function spliceCheck(notes){
-//     var clone = [...notes]
-//     clone[1].splice(1, 1, 'X')
-//     setNotes(clone)
-//     setMappedNotes(mapNotes(clone))
-// }
-
 function addNoteAtPosition(endingID, notes){
     var clone = [...notes]
     var ex1 = endingID.split('_')
         var endingIDCoordinates = []
         for (var i = 2; i < ex1.length; i++){
-          endingIDCoordinates.push(Number(ex1[i]))
+            if (ex1[i] !== 'free'){
+                endingIDCoordinates.push(Number(ex1[i]))
+            }
         }
         if (endingIDCoordinates.length === 1){
             return
@@ -303,7 +302,9 @@ function removeNoteAtPosition(endingID, notes){
 
     var endingIDCoordinates = []
         for (var i = 2; i < ex1.length; i++){
-          endingIDCoordinates.push(Number(ex1[i]))
+            if (ex1[i] !== 'free'){
+                endingIDCoordinates.push(Number(ex1[i]))
+            }
         }
     if (nOfSiblings === 1){
         unDivideNotesAtPosition(parentId, notes)
@@ -349,7 +350,9 @@ function replaceNoteAtPosition(endingID, notes){
 
         var endingIDCoordinates = []
         for (var i = 2; i < ex1.length; i++){
-          endingIDCoordinates.push(Number(ex1[i]))
+            if (ex1[i] !== 'free'){
+                endingIDCoordinates.push(Number(ex1[i]))
+            }
         }
         if (endingIDCoordinates.length === 1){
             clone[endingIDCoordinates[0]] = value;
@@ -382,8 +385,10 @@ function subDivideNotesAtPosition(endingID, value, notes){
 
     var ex1 = endingID.split('_')
         var endingIDCoordinates = []
-        for (var i = 2; i < ex1.length; i++){
-          endingIDCoordinates.push(Number(ex1[i]))
+        for (let i = 2; i < ex1.length; i++){
+            if (ex1[i] !== 'free'){
+                endingIDCoordinates.push(Number(ex1[i]))
+            }
         }
         if (endingIDCoordinates.length === 1){
             clone.splice(endingIDCoordinates[0], 1, insertData)
@@ -410,7 +415,9 @@ function unDivideNotesAtPosition(endingID, notes){
    
         var endingIDCoordinates = []
         for (var i = 2; i < ex1.length; i++){
-          endingIDCoordinates.push(Number(ex1[i]))
+            if (ex1[i] !== 'free'){
+                endingIDCoordinates.push(Number(ex1[i]))
+            }  
         }
         if (endingIDCoordinates.length === 1){
             return
@@ -451,50 +458,6 @@ function shortenPattern(){
         setNotes(clone)
         setMappedNotes(mapNotes(clone))
     }
-}
-
-function mapNotesToRhythm(rhythmNotes, patternNotes){
-    var count = 0;
-    var clone = [...rhythmNotes]
-
-    function innerMapNotesToRhythm(notes){
-        for (var i = 0; i < notes.length; i++){
-            if (Array.isArray(notes[i]) === false){
-                if (notes[i] === 'O'){
-                    if (patternNotes[count] === undefined){
-                        notes[i] = 'O'
-                    } else {
-                        notes[i] = patternNotes[count]
-                        count++
-                    }
-                }
-            } else {
-                innerMapNotesToRhythm(notes[i])
-            }
-        }
-    }
-    innerMapNotesToRhythm(clone)
-    setNotes(clone)
-    setMappedNotes(mapNotes(clone))
-}
-
-function antiMapNotesToRhythm(rhythmNotes){
-    var clone = [...rhythmNotes]
-
-    function innerAntiMapNotesToRhythm(notes){
-        for (var i = 0; i < notes.length; i++){
-            if (Array.isArray(notes[i]) === false){
-                if (notes[i] !== 'O' && notes[i] !== 'X'){
-                    notes[i] = 'O'
-                }
-            } else {
-                innerAntiMapNotesToRhythm(notes[i])
-            }
-        }
-    }
-    innerAntiMapNotesToRhythm(clone)
-    setNotes(clone)
-    setMappedNotes(mapNotes(clone))
 }
 //--------------------
 
@@ -606,78 +569,74 @@ function mapNotes(notes){
     var noteOrderReturnArr = [];
     function innerMapNotes(notes){
         for (var i = 0; i < notes.length; i++){
+            let xtra = ''
+            if (free){
+                xtra = '_free'
+            }
             var level0Return = [];
             for (var j = 0; j < notes[i].length; j++){
                 if (Array.isArray(notes[i][j]) === false){
-                    level0Return.push(<div id={'rhythm_note_' + i + '_' + j} key={'rhythm_note_' + i + '_' + j} className='inactive rhythmNote' onClick={clickHandler} draggable onDragStart = {dragStartHandler} onDrag = {dragHandler} onDragOver = {dragOverHandler} onDragLeave={dragLeaveHandler} onDrop = {dropHandler} style={{height: '50px', width: '50px', margin: '10px' }}>{notes[i][j]}</div>)
-                    noteOrderReturnArr.push('rhythm_note_' + i + '_' + j)
+                    level0Return.push(<div id={'rhythm_note_' + i + '_' + j + xtra} key={'rhythm_note_' + i + '_' + j} className='inactive rhythmNote' onClick={clickHandler} draggable onDragStart = {dragStartHandler} onDrag = {dragHandler} onDragOver = {dragOverHandler} onDragLeave={dragLeaveHandler} onDrop = {dropHandler} style={{height: '50px', width: '50px', margin: '10px' }}>{notes[i][j]}</div>)
+                    noteOrderReturnArr.push('rhythm_note_' + i + '_' + j + xtra)
                 }
                 else {
                     var level1Return = [];
                     for (var k = 0; k < notes[i][j].length; k++){
                         if (Array.isArray(notes[i][j][k]) === false){
-                            level1Return.push(<div id={'rhythm_note_' + i + '_' + j + '_' + k} key={'rhythm_note_' + i + '_' + j + '_' + k} className='inactive rhythmNote' onClick={clickHandler}  draggable onDragStart = {dragStartHandler} onDrag = {dragHandler} onDragOver= {dragOverHandler} onDragLeave={dragLeaveHandler} onDrop = {dropHandler} style={{height: '50px', width: '40px', margin: '10px' }}>{notes[i][j][k]}</div>)
-                            noteOrderReturnArr.push('rhythm_note_' + i + '_' + j + '_' + k)
+                            level1Return.push(<div id={'rhythm_note_' + i + '_' + j + '_' + k + xtra} key={'rhythm_note_' + i + '_' + j + '_' + k} className='inactive rhythmNote' onClick={clickHandler}  draggable onDragStart = {dragStartHandler} onDrag = {dragHandler} onDragOver= {dragOverHandler} onDragLeave={dragLeaveHandler} onDrop = {dropHandler} style={{height: '50px', width: '40px', margin: '10px' }}>{notes[i][j][k]}</div>)
+                            noteOrderReturnArr.push('rhythm_note_' + i + '_' + j + '_' + k + xtra)
                         } else {
                             var level2Return = [];
                             for (var l = 0; l < notes[i][j][k].length; l++){
                                 if (Array.isArray(notes[i][j][k][l]) === false){
-                                    level2Return.push(<div id={'rhythm_note_' + i + '_' + j + '_' + k + '_' + l} key={'rhythm_note_' + i + '_' + j + '_' + k + '_' + l} className='inactive rhythmNote' onClick={clickHandler}  draggable onDragStart = {dragStartHandler} onDrag = {dragHandler} onDragOver = {dragOverHandler} onDragLeave={dragLeaveHandler} onDrop = {dropHandler} style={{height: '50px', width: '30px', margin: '10px' }}>{notes[i][j][k][l]}</div>)
-                                    noteOrderReturnArr.push('rhythm_note_' + i + '_' + j + '_' + k + '_' + l)
+                                    level2Return.push(<div id={'rhythm_note_' + i + '_' + j + '_' + k + '_' + l + xtra} key={'rhythm_note_' + i + '_' + j + '_' + k + '_' + l} className='inactive rhythmNote' onClick={clickHandler}  draggable onDragStart = {dragStartHandler} onDrag = {dragHandler} onDragOver = {dragOverHandler} onDragLeave={dragLeaveHandler} onDrop = {dropHandler} style={{height: '50px', width: '30px', margin: '10px' }}>{notes[i][j][k][l]}</div>)
+                                    noteOrderReturnArr.push('rhythm_note_' + i + '_' + j + '_' + k + '_' + l + xtra)
                                 } else {
                                     var level3Return = [];
                                     for (var m = 0; m < notes[i][j][k][l].length; m++){
                                         if (Array.isArray(notes[i][j][k][l][m]) === false){
-                                            level3Return.push(<div id={'rhythm_note_' + i + '_' + j + '_' + k + '_' + l + '_' + m} key={'rhythm_note_' + i + '_' + j + '_' + k + '_' + l + '_' + m} className='inactive rhythmNote' onClick={clickHandler}  draggable onDragStart = {dragStartHandler} onDrag = {dragHandler} onDragOver = {dragOverHandler} onDragLeave={dragLeaveHandler} onDrop = {dropHandler} style={{height: '50px', width: '20px', margin: '10px' }}>{notes[i][j][k][l][m]}</div>)
-                                            noteOrderReturnArr.push('rhythm_note_' + i + '_' + j + '_' + k + '_' + l + '_' + m)
+                                            level3Return.push(<div id={'rhythm_note_' + i + '_' + j + '_' + k + '_' + l + '_' + m + xtra} key={'rhythm_note_' + i + '_' + j + '_' + k + '_' + l + '_' + m} className='inactive rhythmNote' onClick={clickHandler}  draggable onDragStart = {dragStartHandler} onDrag = {dragHandler} onDragOver = {dragOverHandler} onDragLeave={dragLeaveHandler} onDrop = {dropHandler} style={{height: '50px', width: '20px', margin: '10px' }}>{notes[i][j][k][l][m]}</div>)
+                                            noteOrderReturnArr.push('rhythm_note_' + i + '_' + j + '_' + k + '_' + l + '_' + m + xtra)
                                         } else {
                                         var level4Return = [];
                                         for (var n = 0; n < notes[i][j][k][l][m].length; n++){
                                             if (Array.isArray(notes[i][j][k][l][m][n]) === false){
-                                                level3Return.push(<div id={'rhythm_note_' + i + '_' + j + '_' + k + '_' + l + '_' + m + '_' + n} key={'rhythm_note_' + i + '_' + j + '_' + k + '_' + l + '_' + m + '_' + n} className='inactive rhythmNote' onClick={clickHandler}  draggable onDragStart = {dragStartHandler} onDrag = {dragHandler} onDragOver = {dragOverHandler} onDragLeave={dragLeaveHandler} onDrop = {dropHandler} style={{height: '50px', width: '15px', margin: '10px' }}>{notes[i][j][k][l][m][n]}</div>)
-                                                
+                                                level3Return.push(<div id={'rhythm_note_' + i + '_' + j + '_' + k + '_' + l + '_' + m + '_' + n + xtra} key={'rhythm_note_' + i + '_' + j + '_' + k + '_' + l + '_' + m + '_' + n} className='inactive rhythmNote' onClick={clickHandler}  draggable onDragStart = {dragStartHandler} onDrag = {dragHandler} onDragOver = {dragOverHandler} onDragLeave={dragLeaveHandler} onDrop = {dropHandler} style={{height: '50px', width: '15px', margin: '10px' }}>{notes[i][j][k][l][m][n]}</div>)
+                                                noteOrderReturnArr.push('rhythm_note_' + i + '_' + j + '_' + k + '_' + l + '_' + m  + '_' + n + xtra)
                                             } else {
                                                 
                                                 continue;
                                             }
                                         }
                                         level3Return.push(
-                                            <div id={'rhythm_note_' + i + '_' + j + '_' + k + '_' + l + '_' + m} key={'rhythm_note_' + i + '_' + j + '_' + k + '_' + l + '_' + m} className='inactive rhythmNote' onClick={clickHandler}  draggable onDragStart = {dragStartHandler} onDrag = {dragHandler} onDragOver = {dragOverHandler} onDragLeave={dragLeaveHandler} onDrop = {dropHandler} style={{margin: '5px', display: 'flex', flexDirection: 'row', alignItems: 'center' , backgroundColor: 'black'}}>{level4Return}</div>
+                                            <div id={'rhythm_note_' + i + '_' + j + '_' + k + '_' + l + '_' + m + xtra} key={'rhythm_note_' + i + '_' + j + '_' + k + '_' + l + '_' + m} className='inactive rhythmNote' onClick={clickHandler}  draggable onDragStart = {dragStartHandler} onDrag = {dragHandler} onDragOver = {dragOverHandler} onDragLeave={dragLeaveHandler} onDrop = {dropHandler} style={{margin: '5px', display: 'flex', flexDirection: 'row', alignItems: 'center' , backgroundColor: 'black'}}>{level4Return}</div>
                                         )
                                         }
                                     }
                                     level2Return.push(
-                                        <div id={'rhythm_note_' + i + '_' + j + '_' + k + '_' + l} key={'rhythm_note_' + i + '_' + j + '_' + k + '_' + l} className='inactive rhythmNote' onClick={clickHandler}  draggable onDragStart = {dragStartHandler} onDrag = {dragHandler} onDragOver = {dragOverHandler} onDragLeave={dragLeaveHandler} onDrop = {dropHandler} style={{margin: '5px', display: 'flex', flexDirection: 'row', alignItems: 'center', backgroundColor: 'lightgreen'}}>{level3Return}</div>
+                                        <div id={'rhythm_note_' + i + '_' + j + '_' + k + '_' + l + xtra} key={'rhythm_note_' + i + '_' + j + '_' + k + '_' + l} className='inactive rhythmNote' onClick={clickHandler}  draggable onDragStart = {dragStartHandler} onDrag = {dragHandler} onDragOver = {dragOverHandler} onDragLeave={dragLeaveHandler} onDrop = {dropHandler} style={{margin: '5px', display: 'flex', flexDirection: 'row', alignItems: 'center', backgroundColor: 'lightgreen'}}>{level3Return}</div>
                                     )
                                 }
                                 
                             }
                             level1Return.push(
-                                <div id={'rhythm_note_' + i + '_' + j + '_' + k} key={'rhythm_note_' + i + '_' + j + '_' + k} className='inactive rhythmNote' onClick={clickHandler}  draggable onDragStart = {dragStartHandler} onDrag = {dragHandler} onDragOver = {dragOverHandler} onDragLeave={dragLeaveHandler} onDrop = {dropHandler} style={{margin: '5px', display: 'flex', flexDirection: 'row', alignItems: 'center', backgroundColor: 'lightblue'}}>{level2Return}</div>
+                                <div id={'rhythm_note_' + i + '_' + j + '_' + k + xtra} key={'rhythm_note_' + i + '_' + j + '_' + k} className='inactive rhythmNote' onClick={clickHandler}  draggable onDragStart = {dragStartHandler} onDrag = {dragHandler} onDragOver = {dragOverHandler} onDragLeave={dragLeaveHandler} onDrop = {dropHandler} style={{margin: '5px', display: 'flex', flexDirection: 'row', alignItems: 'center', backgroundColor: 'lightblue'}}>{level2Return}</div>
                             )
                         } 
                     }
                     level0Return.push(
-                        <div id={'rhythm_note_' + i + '_' + j} key={'rhythm_note_' + i + '_' + j} className='inactive rhythmNote' onClick={clickHandler}  draggable onDragStart = {dragStartHandler} onDrag = {dragHandler} onDragOver = {dragOverHandler} onDragLeave={dragLeaveHandler} onDrop = {dropHandler} style={{margin: '5px', display: 'flex', flexDirection: 'row', alignItems: 'center', backgroundColor: 'lightsalmon'}}>{level1Return}</div>
+                        <div id={'rhythm_note_' + i + '_' + j + xtra} key={'rhythm_note_' + i + '_' + j} className='inactive rhythmNote' onClick={clickHandler}  draggable onDragStart = {dragStartHandler} onDrag = {dragHandler} onDragOver = {dragOverHandler} onDragLeave={dragLeaveHandler} onDrop = {dropHandler} style={{margin: '5px', display: 'flex', flexDirection: 'row', alignItems: 'center', backgroundColor: 'lightsalmon'}}>{level1Return}</div>
                         )
                 }
             }
             returnArr.push(
-                <div id={'rhythm_note_' + i} key={'rhythm_note_' + i} className='inactive rhytmNote' onClick={clickHandler}  draggable onDragStart = {dragStartHandler} onDrag = {dragHandler} onDragOver = {dragOverHandler} onDragLeave={dragLeaveHandler} onDrop = {dropHandler} style={{margin: '5px', display: 'flex', flexDirection: 'row', alignItems: 'center', backgroundColor: 'lightcoral' }}>{level0Return}</div>
+                <div id={'rhythm_note_' + i + xtra} key={'rhythm_note_' + i} className='inactive rhytmNote' onClick={clickHandler}  draggable onDragStart = {dragStartHandler} onDrag = {dragHandler} onDragOver = {dragOverHandler} onDragLeave={dragLeaveHandler} onDrop = {dropHandler} style={{margin: '5px', display: 'flex', flexDirection: 'row', alignItems: 'center', backgroundColor: 'lightcoral' }}>{level0Return}</div>
                 )
         }
         return returnArr    
     }
     setPlayNoteOrderByID(noteOrderReturnArr)
     return innerMapNotes(notes);
-}
-
-function mapMelodyNotes(melodyNotes){
-    return (
-        melodyNotes.map((melodyNote, idx) => 
-        <div id={'pattern_' + idx} key={'pattern_' + idx} draggable='true' className='inactive' style={{marginLeft: '5px', height: '25px', width: '25px'}}>{melodyNote}</div>
-        )
-    )
 }
 
 //---------------------------------------------
@@ -726,14 +685,6 @@ function randomRhythmGenerator(maxDepth, length){
         returnArr.push(recursiveRandomRhythmFunction())
     }
 setNotes(returnArr)
-}
-
-//---SKETCHY FUNCTION ALERT
-function setEverythingToInactive(){
-    var elems = document.getElementsByClassName('active rhythmNote')
-    for (var i = 0; i < elems.length; i++){
-        elems[i].className = 'inactive rhythmNote'
-    }
 }
 
 function playSynth(){
@@ -823,25 +774,6 @@ const onChangeModuleLength = e => {
     setPlayConstant(squishTiming(notes.length, e.target.value))
 }
 
-// function handleExport(){
-//     const user = JSON.parse(localStorage.getItem('userInfo'))
-//     const rhythmDataPrototype = {
-//         name: name,
-//         rhythmName: name,
-//         desc: '',
-//         rhythm: notes,
-//         length: moduleLengthDisplay,
-//         speed: playConstant,
-//         notes: noteSlots,
-//         dataType: 'rhythm',
-//         author: user['name'],
-//         authorId: user['_id'],
-//         pool: exportPool,
-       
-//     }
-//     dispatch(insertData(rhythmDataPrototype))
-// }
-
 const exportObj = {
     name: name,
     rhythmName: name,
@@ -881,7 +813,7 @@ const threeFourEighthNotes = [['O', 'O'], ['O', 'O'], ['O', 'O']]
 
 
     return (
-        <>
+        <div style={ free ? {'height': '200px', display: display ? '' : 'none'} : {}}>
         <Menu>
          <Menu.Item onClick={() => {playSynth(); setPlaying(true)}}><Icon name={playing ? 'stop' : 'play'}/></Menu.Item>  
          <Button.Group>
@@ -977,6 +909,6 @@ const threeFourEighthNotes = [['O', 'O'], ['O', 'O'], ['O', 'O']]
         changeParentName={setName}
         changeParentDesc={setDescription}
         />
-        </>
+        </div>
     )
 }

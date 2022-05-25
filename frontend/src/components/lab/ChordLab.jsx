@@ -16,7 +16,7 @@ import { setDisplayFocus as setDisplayFocusAction } from '../../store/actions/di
 import ExportModal from '../modal/ExportModal'
 import MapModal from '../modal/MapModal';
 
-export default function ChordLab({importedChordData, masterInstrumentArray}) {
+export default function ChordLab({importedChordData, masterInstrumentArray, free, display}) {
     const [playing, setPlaying] = useState(false)
     const [data, setData] = useState([{chord: ['C3', 'E3', 'G3'], position: 0}])
     const chords = []
@@ -89,8 +89,7 @@ export default function ChordLab({importedChordData, masterInstrumentArray}) {
 
     //upon import
     useEffect(() => {
-        console.log(importedChordData)
-        if(importedChordData['chord']){
+        if(importedChordData?.['chord']){
             let newInfo = {...labInfo}
         const chordDataPrototype = {
             name: importedChordData['chordName'],
@@ -431,7 +430,11 @@ export default function ChordLab({importedChordData, masterInstrumentArray}) {
             const synthPart = new Tone.Sequence(
                 function(time, note) {
                   polySynth.triggerAttackRelease(noteStringHandler(note), "10hz", time)
-                  var highlightedChord = document.getElementById('chord_' + count)
+                  let chordId = 'chord_' + count
+                  if (free){
+                      chordId = 'chord_' + count + '_free'
+                  }
+                  var highlightedChord = document.getElementById(chordId)
                     highlightedChord.className = 'active chord'
                     setTimeout(() => {highlightedChord.className = 'inactive chord'}, gap)
                     setDisplayFocus(count)
@@ -481,9 +484,14 @@ export default function ChordLab({importedChordData, masterInstrumentArray}) {
             Tone.start()
             Tone.Transport.cancel()
             dispatch(setPlayImport([returnObj]))
+            
             //Manual animation for chord lab
             for (let i = 0; i < chords.length; i++){
-                let highlightedChord = document.getElementById('chord_' + i)
+                let chordId = 'chord_' + i
+            if (free){
+                chordId = 'chord_' + i + '_free'
+            }
+                let highlightedChord = document.getElementById(chordId)
                 intervals.current.push(setTimeout(() => {highlightedChord.className = 'active chord'}, (i) * gap))
                 intervals.current.push(setTimeout(() => {highlightedChord.className = 'inactive chord'}, (i + 1) * gap))
             }
@@ -920,14 +928,20 @@ export default function ChordLab({importedChordData, masterInstrumentArray}) {
         } else {
             parentID = e.target.id;
         }
-
-        if (parentID.split('_').length === 2){
-            const x = parentID.split('_')[1]
+        let indexID = parentID
+        if (free){
+            let temp = parentID.split('_')
+            temp.pop()
+            indexID = temp.join('_')
+        }
+        
+        if (indexID.split('_').length === 2){
+            const x = indexID.split('_')[1]
             setDisplayFocus(x)
             polySynth.triggerAttackRelease(chords[x], '8n');
-        } else if (parentID.split('_').length === 3) {
-            const x = parentID.split('_')[1]
-            const y = parentID.split('_')[2]
+        } else if (indexID.split('_').length === 3) {
+            const x = indexID.split('_')[1]
+            const y = indexID.split('_')[2]
             setDisplayFocus(x)
             polySynth.triggerAttackRelease(chords[x][y], '8n')
         } else {
@@ -1072,9 +1086,13 @@ export default function ChordLab({importedChordData, masterInstrumentArray}) {
             var returnChord = [];
             var pitchClasses = [];
             for (let j = 0; j < chords[i].length; j++){
+                let noteId = 'chord_' + i + '_' + j
+                if (free){
+                    noteId = 'chord_' + i + '_' + j + '_free'
+                }
                 pitchClasses.push(Note.pitchClass(chords[i][j]))
                 returnChord.push(
-                    <div id={'chord_' + i + '_' + j} style={{display: 'flex', flexDirection: 'row', height: '50px', width: '50px', backgroundColor: 'wheat', margin: '1px'}}>
+                    <div id={noteId} style={{display: 'flex', flexDirection: 'row', height: '50px', width: '50px', backgroundColor: 'wheat', margin: '1px'}}>
                         {chords[i][j]}
                         {(edit && noteOptions !== 'delete') && <div style={{display: 'flex', flexDirection: 'column'}}>
                         <Icon onClick={handleClickUp} name={(noteOptions === 'insert') ? "plus" : "caret square up" }/><Icon onClick={handleClickDown} name={(noteOptions === 'insert') ? "" : "caret square up" }/>
@@ -1083,9 +1101,12 @@ export default function ChordLab({importedChordData, masterInstrumentArray}) {
                     </div>
                 )
             }
-
+            let chordId = 'chord_' + i
+            if (free){
+                chordId =  'chord_' + i + '_free'
+            }
             returnArr.push(
-                <div id={'chord_' + i} onClick={handlePlayThis} draggable onDragStart = {dragStartHandler} onDrag = {dragHandler} onDragOver = {dragOverHandler} onDragLeave={dragLeaveHandler} onDrop = {dropHandler}className='inactive chord' style={{display: 'flex', flexDirection: 'column-reverse', margin: '5px', marginBottom: '15px'}}>
+                <div id={chordId} onClick={handlePlayThis} draggable onDragStart = {dragStartHandler} onDrag = {dragHandler} onDragOver = {dragOverHandler} onDragLeave={dragLeaveHandler} onDrop = {dropHandler}className='inactive chord' style={{display: 'flex', flexDirection: 'column-reverse', margin: '5px', marginBottom: '15px'}}>
                 <div onClick={(e) => (handlePlayThis(e, true))} style={{display: 'flex', flexDirection: 'row', marginBottom: '18px'}}>
                 { (edit && noteOptions !== 'delete') && <div  style={{display: 'flex', flexDirection: (noteOptions === 'insert') ? 'row' : 'column'}}>
                 <Icon onClick={handleClickUpChord} name= {(noteOptions === 'insert') ? "plus" : "caret square up" }/><Icon onClick={handleClickDownChord}name= {(noteOptions === 'insert') ? "" : "caret square down" }/>
@@ -1230,7 +1251,7 @@ export default function ChordLab({importedChordData, masterInstrumentArray}) {
       }
       //====
     return (
-        <>
+        <div style={ free ? {'height': '200px', display: display ? '' : 'none'} : {}}>
         <Menu>
         <Menu.Item onClick={() => handleSharpsOrFlats()}>{options === 'sharps' ? '#' : 'b'}</Menu.Item>
          <Menu.Item onClick={() => {playChords(); setPlaying(true)}}> <Icon name={playing ? 'stop' : 'play'}/> </Menu.Item> 
@@ -1396,6 +1417,6 @@ export default function ChordLab({importedChordData, masterInstrumentArray}) {
         changeParentName={changeFirstChordName}
         changeParentDesc={setDescription}
         />
-        </>
+        </div>
     ) 
 }

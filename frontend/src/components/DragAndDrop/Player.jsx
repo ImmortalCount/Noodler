@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef} from 'react'
 import DragAndFillCard from './DragAndFillCard'
-import {Button, Dropdown, Menu, Icon, Input, Form, TextArea} from 'semantic-ui-react';
+import {Button, Dropdown, Menu, Icon, Input, Form, TextArea, ButtonOr, Divider} from 'semantic-ui-react';
 import { Note, Scale, Chord, Midi, ChordType} from '@tonaljs/tonal';
 import { useDispatch, useSelector } from 'react-redux';
 import { bindActionCreators } from 'redux';
@@ -16,8 +16,9 @@ import { setDisplayFocus } from '../../store/actions/displayFocusActions';
 import { setPlayHighlight } from '../../store/actions/playHighlightActions';
 import { setRecommendedScale, turnScaleNameIntoScaleData } from '../lab/chordMapGenerator';
 
-export default function Player ({masterInstrumentArray, display}) {
+export default function Player ({masterInstrumentArray, display, childChangeInstr}) {
     const [instrumentFocus, setInstrumentFocus] = useState(0);
+    const [displayLock, setDisplayLock] = useState(true)
     const [opened, setOpened] = useState(false)
     const [mainModule, setMainModule] = useState(0)
     const [data, setData] = useState([{mode: 'melody', highlight: [], data: initialDataType2}])
@@ -28,10 +29,9 @@ export default function Player ({masterInstrumentArray, display}) {
     const [name, setName] = useState('Noodler Theme')
     const [exportPool, setExportPool] = useState('global')
     const [edit, setEdit] = useState(false)
-    const [songOptions, setSongOptions] = useState(false)
-    const [bpm, setBpm] = useState(120)
     const [description, setDescription] = useState('')
     const [showDescription, setShowDescription] = useState(false)
+    const [mode, setMode] = useState(false)
     const [inputFocus, setInputFocus] = useState(false)
     const [hideModuleName, setHideModuleName] = useState(false)
     const [titleLock, setTitleLock] = useState(false)
@@ -149,7 +149,12 @@ export default function Player ({masterInstrumentArray, display}) {
         }
     }, [displayFocus])
 
-
+function handleSetInstrumentFocus(value){
+    if (displayLock){
+        childChangeInstr(value)
+    }
+    setInstrumentFocus(value)
+}
 
 function qualityOfChordNameParser(chordName){
     if (chordName === undefined || chordName === null || chordName.length === 0){
@@ -624,7 +629,7 @@ function moduleSubtract(){
         return
     }
 }
-    //----------------------------------MAP COMPONENTS
+    //MAP COMPONENTS
 
     function mapCards(cardData, instrument){
         return (
@@ -673,26 +678,10 @@ function moduleSubtract(){
     function mapMenuItems(){
         return (
             masterInstrumentArray.map((instrument, idx) => 
-            <Button key={'instrumentSelect' + idx} active={instrumentFocus === idx} compact basic onClick ={() => setInstrumentFocus(idx)}>{instrument}</Button>
+            <Button key={'instrumentSelect' + idx} active={instrumentFocus === idx} compact basic onClick ={() => handleSetInstrumentFocus(idx)}>{instrument}</Button>
             )
         )
 }
-    function mapDropdowns(){
-        return (
-        masterInstrumentArray.map((instrument, idx) =>
-        (instrumentFocus === idx && <Dropdown
-                selection
-                onChange={handleChangeMode}
-                options={modeOptions}
-                value = {data[idx]['mode']}
-                key={idx}
-                id = {'dropdown_' + idx}
-                />
-            )
-            
-        )
-        )
-    }
     //--------SET INTERVAL WHICH CHECKS TO SEE WHAT MODULE IS PLAYING
 
     function setModuleMarkers(){
@@ -711,8 +700,6 @@ function moduleSubtract(){
         markerValue.current = markers
         setMarkers(markers)
     }
-
-    
 
     var currentlyPlayingValue = useRef([])
     let thisInterval = useRef([])
@@ -747,30 +734,11 @@ function moduleSubtract(){
             return
         }
     }, 50)
-        // return () => {
-        //   clearInterval(thisInterval.current);
-        // };
       }, [])
 
-    
-
-
-    //-----------------------------------
-    const modeOptions = [
-        {key: 'off', text: 'Mode: Off', value: 'off'},
-        {key: 'melody', text: 'Mode: Melody', value: 'melody'},
-        {key: 'chord', text: 'Mode: Chord', value: 'chord'},
-        {key: 'scale', text: 'Mode: Display Scale', value: 'scale'},
-        {key: 'chordTones', text: 'Mode: Display Chord Tones', value: 'chordTones'},
-    ]
-
-    const handleChangeMode = (e, {id, value}) => {
+function handleChangeMode(value){
         var clone = [...data]
-        var idx = Number(id.split("_")[1])
-        clone[idx]['mode'] = value;
-        if (value === 'melody'){
-        } else if (value === 'chord'){
-        }
+        clone[instrumentFocus]['mode'] = value;
         setData(clone)
     }
 
@@ -825,17 +793,6 @@ useEffect(() => {
     }
 }, [data, songInfo, exportPool, description, name, Tone.Transport.bpm.value])
 
-  //BPM
-const handleBPMChange = e => {
-    setBpm(e.target.value)
-    Tone.Transport.bpm.value = Math.round(e.target.value);
-    // setModuleMarkers(moduleMarkerCreator(data))
-}
-
-const onChangeBPM = e => {
-    setBpm(e.target.value)
-}
-
 const handleDescriptionChange = e => {
     setDescription(e.target.value)
 }
@@ -855,8 +812,6 @@ function getNamesFromGlobalInstruments(globalInstruments){
 
 
 function getTuningsFromGlobalInstruments(globalInstruments){
-    console.log(globalInstruments, masterInstrumentArray)
-     //only instruments labelled  chord or melody can pass through
     let returnArr = []
     for (let i = 0; i < masterInstrumentArray.length; i++){
         if (data[i]){
@@ -879,7 +834,6 @@ function removeSilentDataForTabProcessing(data){
 }
 
 function convertToTab(){ 
-    console.log(globalInstruments)
     let tunings = getTuningsFromGlobalInstruments(globalInstruments)
     let instrumentNames = getNamesFromGlobalInstruments(globalInstruments)
     let cleanData = removeSilentDataForTabProcessing(data)
@@ -895,10 +849,11 @@ function convertToTab(){
         <Button.Group>
         {mapMenuItems()}
         </Button.Group>
-        {mapDropdowns()}
+        <Menu.Item basic active={mode} onClick={()=> setMode(!mode)}>Mode</Menu.Item>
         <Menu.Item basic active={edit} onClick={()=> setEdit(!edit)}>Edit</Menu.Item>
-        <Menu.Item basic active={edit} onClick={()=> setHideModuleName(!hideModuleName)}>View</Menu.Item>
-        <Menu.Item basic active={edit} onClick={()=> setTitleLock(!titleLock)}>Title Lock{titleLock ? 'on' : 'off'}</Menu.Item>
+        <Menu.Item basic active={displayLock} onClick={()=> setDisplayLock(!displayLock)}>Display Lock</Menu.Item>
+        <Menu.Item basic active={hideModuleName} onClick={()=> setHideModuleName(!hideModuleName)}>View</Menu.Item>
+        <Menu.Item basic active={titleLock} onClick={()=> setTitleLock(!titleLock)}>Title Lock{titleLock ? 'on' : 'off'}</Menu.Item>
         <Menu.Item basic active={edit} onClick={()=> console.log(globalInstruments)}>Test</Menu.Item>
         <Menu.Item basic active={showDescription} onClick={() => setShowDescription(!showDescription)}> Desc</Menu.Item>
         <Button.Group>
@@ -919,6 +874,13 @@ function convertToTab(){
         <TextArea onInput={handleDescriptionChange} id={'desc_scaleLab'} ref={input => input && input.focus()} placeholder='Description...' value={description} />
         </Form>}
         </div>
+        {mode && <Button.Group>
+            <Button active={data[instrumentFocus]['mode'] === 'off'} compact basic onClick={() => handleChangeMode('off')} >Off</Button>
+            <Button active={data[instrumentFocus]['mode'] === 'melody'}  compact basic onClick={() => handleChangeMode('melody')}  >Melody</Button>
+            <Button active={data[instrumentFocus]['mode'] === 'chord'}  compact basic  onClick={() => handleChangeMode('chord')} >Chord</Button>
+            <Button active={data[instrumentFocus]['mode'] === 'scale'}  compact basic onClick={() => handleChangeMode('scale')}  >Display Scale</Button>
+            <Button active={data[instrumentFocus]['mode'] === 'chordTones'}  compact basic onClick={() => handleChangeMode('chordTones')}  >Display Chord Tones</Button>
+            </Button.Group>}
         {edit && <Button.Group>
             <Button active ={activeButton === 'swap'}compact basic onClick ={() => handleControls('swap')}>Swap</Button>
             <Button active ={activeButton === 'replace'} compact basic onClick ={() => handleControls('replace')}>Replace</Button>

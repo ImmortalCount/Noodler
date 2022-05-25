@@ -1,4 +1,4 @@
-import { createSVGElement, setAttributes } from './svgUtils';
+import { createSVGElement, setAttributes } from '../svg/svgUtils';
 import { shadeHexColor} from './guitarDisplayFunctions';
 import { bassInstruments } from './instruments';
 import {noteValues, romanNumerals} from './guitarSVGConstants';
