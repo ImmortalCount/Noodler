@@ -811,9 +811,26 @@ const fourFourEighthNotes = [['O', 'O'], ['O', 'O'], ['O', 'O'], ['O', 'O']]
 const threeFourQuarterNotes = [['O'], ['O'], ['O']]
 const threeFourEighthNotes = [['O', 'O'], ['O', 'O'], ['O', 'O']]
 
+const dropHandlerSpecial =  e => {
+    if (!free){
+        return
+    }
+    const data = JSON.parse(e.dataTransfer.getData("text"));
+    if (data['className'] !== 'rhythmData'){
+        return
+      }
+    const importedRhythmData =  data['message']
+    setNotes(importedRhythmData['rhythm'])
+    setName(importedRhythmData['rhythmName'])
+    setPlayConstant(importedRhythmData['speed'])
+}
+const dragOverHandlerSpecial =  e => {
+    e.preventDefault();
+}
+
 
     return (
-        <div style={ free ? {'height': '200px', display: display ? '' : 'none'} : {}}>
+        <div onDragOver={dragOverHandlerSpecial} onDrop={dropHandlerSpecial} style={ free ? {'height': '200px', display: display ? '' : 'none'} : {}}>
         <Menu>
          <Menu.Item onClick={() => {playSynth(); setPlaying(true)}}><Icon name={playing ? 'stop' : 'play'}/></Menu.Item>  
          <Button.Group>
@@ -860,7 +877,7 @@ const threeFourEighthNotes = [['O', 'O'], ['O', 'O'], ['O', 'O']]
         </Dropdown> 
         </Button.Group> 
          <Menu.Item onClick={()=> setEdit(!edit)}> Edit</Menu.Item>   
-         <Menu.Item onClick={()=> setStretchCompress(!stretchCompress)}>  Stretch/Compress </Menu.Item>      
+         <Menu.Item onClick={()=> setStretchCompress(!stretchCompress)}>  Warp </Menu.Item>      
          <Menu.Item onClick={() => setShowDescription(!showDescription)}> Desc </Menu.Item>
          <Button.Group>
          <Button basic onClick={() => setOpened(true)}>Export</Button>

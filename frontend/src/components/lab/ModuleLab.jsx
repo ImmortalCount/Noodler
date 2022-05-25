@@ -10,6 +10,7 @@ import { setNoteDisplay } from '../../store/actions/noteDisplayActions';
 import { setPlayImport } from '../../store/actions/playImportActions';
 import ExportModal from '../modal/ExportModal'
 import { setDisplayFocus } from '../../store/actions/displayFocusActions';
+import { setLabData } from '../../store/actions/labDataActions';
 
 export default function ModuleLab({importedModuleData, masterInstrumentArray, free, display}) {
     const [name, setName] = useState('Module 1')
@@ -552,8 +553,34 @@ for (var o = 0; o < 10; o++){
         dispatch(setNoteDisplay(convertModuleForDispatch()))
     }
 
+    const dropHandlerSpecial =  e => {
+        if (!free){
+            return
+        }
+        
+        const data = JSON.parse(e.dataTransfer.getData("text"));
+        if (data['className'] !== 'moduleData'){
+            return
+          }
+        const importedModuleData =  data['message']
+        setName(importedModuleData['name'])
+        setDescription(importedModuleData['desc'])
+
+        // console.log(data, 'import data')
+        // console.log(labData, 'lab data')
+        let exportData = {};
+        exportData['chordLab'] = importedModuleData['data']['chordData']
+        exportData['patternLab'] = importedModuleData['data']['patternData']
+        exportData['rhythmLab'] = importedModuleData['data']['rhythmData']
+        exportData['scaleLab'] = importedModuleData['data']['scaleData']
+        dispatch(setLabData(exportData))
+    }
+    const dragOverHandlerSpecial =  e => {
+        e.preventDefault();
+    }
+
     return (
-        <div style={ free ? {'height': '200px', display: display ? '' : 'none'} : {}}>
+        <div onDragOver={dragOverHandlerSpecial} onDrop={dropHandlerSpecial} style={ free ? {'height': '200px', display: display ? '' : 'none'} : {}}>
         <Menu>
          <Menu.Item onClick={() => {playModule(); setPlaying(true)}} ><Icon name={playing ? 'stop': 'play'}/></Menu.Item>  
          <Dropdown onChange={onChangeDropdown} options={options === 'sharps' ? dropdownOptionsKeySharp : dropdownOptionsKeyFlat} text = {`Key: ${key}`} simple item/>

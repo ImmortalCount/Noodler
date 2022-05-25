@@ -85,7 +85,7 @@ function createScaleSVG(){
     var angleIncrement = 2 * Math.PI / (amountCircles) 
     //main circle
     const mainCircle = createSVGElement('circle')
-    const mainCircleAttrs = {'cx': xCenter, 'cy': yCenter, 'r': 'radius', 'fill': 'transparent', 'stroke': 'black', "stroke-width": '2'}
+    const mainCircleAttrs = {'cx': xCenter, 'cy': yCenter, 'r': radius, 'fill': 'transparent', 'stroke': 'black', "stroke-width": '2'}
     setAttributes(mainCircle, mainCircleAttrs)
     svg.appendChild(mainCircle)
     //inner Circles
@@ -137,12 +137,12 @@ function createScaleSVG(){
 
   useEffect(() => {
     if (importedScaleData){
-      var newNotes = importedScaleData['scale']
+      const newNotes = importedScaleData['scale']
     if (newNotes !== undefined){
-      var newBinary = importedScaleData['binary']
-      var newName = importedScaleData['scaleName']
-      var newNumber = importedScaleData['number']
-      var newDesc = importedScaleData['desc']
+      const newBinary = importedScaleData['binary']
+      const newName = importedScaleData['scaleName']
+      const newNumber = importedScaleData['number']
+      const newDesc = importedScaleData['desc']
       setNotes(newNotes)
       setScaleName(newName.split(' ').slice(1).join(' '))
       setDisplayName(newName)
@@ -757,9 +757,44 @@ const handleScaleDescriptionChange = e => {
   setDescription(e.target.value)
 }
 
+const dropHandler =(e) => {
+  if (!free){
+    return
+  }
+  const data = JSON.parse(e.dataTransfer.getData("text"));
+  if (data['className'] !== 'scaleData'){
+    return
+  }
+  const importedScaleData = data['message']
+  const newNotes = importedScaleData['scale']
+  const newBinary = importedScaleData['binary']
+  const newName = importedScaleData['scaleName']
+  const newNumber = importedScaleData['number']
+  const newDesc = importedScaleData['desc']
+
+  setNotes(newNotes)
+  setScaleName(newName.split(' ').slice(1).join(' '))
+  setDisplayName(newName)
+  setScaleNumber(newNumber)
+  setScaleDataBinary(newBinary)
+  setRootNote(newNotes[0])
+  setDescription(newDesc)
+  createScaleSVG()
+
+  e.stopPropagation();
+  e.nativeEvent.stopImmediatePropagation();
+  e.preventDefault();
+  e.dataTransfer.clearData();
+}
+
+const onDragOver = e => {
+  e.preventDefault();
+  console.log('draggin over!!')
+}
+
 
     return (
-        <div style={ free ? {'height': '200px', display: display ? '' : 'none'} : {}}>
+        <div onDrop={dropHandler} onDragOver={onDragOver} style={ free ? {'height': '200px', display: display ? '' : 'none'} : {}}>
         <Menu>
         <Menu.Item onClick={() => handleSharpsOrFlats()}>{options === 'sharps' ? '#' : 'b'}</Menu.Item>
         <Menu.Item onClick={() => test()}>Test</Menu.Item>

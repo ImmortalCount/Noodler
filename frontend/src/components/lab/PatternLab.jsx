@@ -1184,8 +1184,27 @@ const handleEditOptions = () => {
     }
   }
 
+  const dropHandlerSpecial =  e => {
+    if (!free){
+        return
+    }
+    const data = JSON.parse(e.dataTransfer.getData("text"));
+    if (data['className'] !== 'patternData'){
+        return
+      }
+    const importedPatternData =  data['message']
+    setPattern(importedPatternData['pattern'])
+    setPatternType(importedPatternData['type'])
+    setName(importedPatternData['patternName'])
+    setPositionType(importedPatternData['positionType'])
+    handleSetData(patternAndScaleToNotes(importedPatternData['pattern']), importedPatternData['position'])
+}
+const dragOverHandlerSpecial =  e => {
+    e.preventDefault();
+}
+
     return (
-        <div style={ free ? {'height': '200px', display: display ? '' : 'none'} : {}}>
+        <div onDragOver={dragOverHandlerSpecial} onDrop={dropHandlerSpecial} style={ free ? {'height': '200px', display: display ? '' : 'none'} : {}}>
         <Menu>
         <Menu.Item onClick={() => handleSharpsOrFlats()}>{options === 'sharps' ? '#' : 'b'}</Menu.Item>
          <Menu.Item onClick={() => {playAll(); setPlaying(true)}}><Icon name={playing ? 'stop': 'play'}/></Menu.Item>

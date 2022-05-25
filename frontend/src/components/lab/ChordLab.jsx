@@ -59,7 +59,6 @@ export default function ChordLab({importedChordData, masterInstrumentArray, free
 
     //Convert notes and position data into DATA
     function handleSetData(chords, position){
-        console.log(position, 'POSITION FROM chord lab')
         var clone = JSON.parse(JSON.stringify(chords))
         clone = sortAllChordsByPitch(clone)
         if (position === undefined){
@@ -1249,9 +1248,26 @@ export default function ChordLab({importedChordData, masterInstrumentArray, free
         clone[0] = name
         setExportNames(clone)
       }
+
+    const dropHandlerSpecial =  e => {
+        if (!free){
+            return
+        }
+        const data = JSON.parse(e.dataTransfer.getData("text"));
+        if (data['className'] !== 'chordData'){
+            return
+          }
+        const importedChordData =  data['message']
+        setExportNames([importedChordData['chordName']])
+        handleSetData([importedChordData['chord']], importedChordData['position'])
+        setPositionType(importedChordData['positionType'])
+    }
+    const dragOverHandlerSpecial =  e => {
+        e.preventDefault();
+    }
       //====
     return (
-        <div style={ free ? {'height': '200px', display: display ? '' : 'none'} : {}}>
+        <div onDragOver={dragOverHandlerSpecial} onDrop={dropHandlerSpecial} style={ free ? {'height': '200px', display: display ? '' : 'none'} : {}}>
         <Menu>
         <Menu.Item onClick={() => handleSharpsOrFlats()}>{options === 'sharps' ? '#' : 'b'}</Menu.Item>
          <Menu.Item onClick={() => {playChords(); setPlaying(true)}}> <Icon name={playing ? 'stop' : 'play'}/> </Menu.Item> 

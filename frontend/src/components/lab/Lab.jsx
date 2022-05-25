@@ -10,13 +10,13 @@ import { setLabData } from '../../store/actions/labDataActions';
 
 
 export default function Lab({masterInstrumentArray, display}) {
-    const [activeLabIndices, setActiveLabIndices] = useState([2])
+    const [activeLabIndices, setActiveLabIndices] = useState([0])
     const [importedScaleData, setImportedScaleData] = useState({})
     const [importedChordData, setImportedChordData] = useState({})
     const [importedPatternData, setImportedPatternData] = useState({})
     const [importedRhythmData, setImportedRhythmData] = useState({})
     const [importedModuleData, setImportedModuleData] = useState({})
-
+  
     const dispatch = useDispatch()
 
     const labData = useSelector(state => state.labData)
