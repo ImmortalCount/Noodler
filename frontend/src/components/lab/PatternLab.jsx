@@ -17,7 +17,7 @@ import { setDisplayFocus as setDisplayFocusAction } from '../../store/actions/di
 import ExportModal from '../modal/ExportModal';
 
 
-export default function PatternLab({importedPatternData, masterInstrumentArray, display, free}) {
+export default function PatternLab({importedPatternData, masterInstrumentArray, display, free, update, setUpdate, labSplit}) {
 const [playing, setPlaying] = useState(false)
 const [data, setData] = useState([{notes: ['C3'], position: 0}, {notes: ['D3'], position: 0}, {notes: ['E3'], position: 0}, {notes: ['F3'], position: 0}, {notes: ['G3'], position: 0}, {notes: ['A3'], position: 0}, {notes: ['B3'], position: 0}, {notes: ['C4'], position: 0}])
 const notes = []
@@ -137,9 +137,20 @@ function patternAndScaleToNotes(patternArr){
 
         return notesExport
     }
-
-
-
+//manual update
+useEffect(() => {
+    if (update && labSplit){
+        setUpdate(false)
+        const importedPatternData = labInfo['patternLab']
+        if (importedPatternData){
+            setPattern(importedPatternData['pattern'])
+            setPatternType(importedPatternData['type'])
+            setName(importedPatternData['patternName'])
+            setPositionType(importedPatternData['positionType'])
+            handleSetData(patternAndScaleToNotes(importedPatternData['pattern']), importedPatternData['position'])
+        }
+    }
+}, [update])
 //Upon importing
 useEffect(() => {
     if (importedPatternData?.['pattern']){

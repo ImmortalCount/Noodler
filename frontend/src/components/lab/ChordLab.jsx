@@ -16,7 +16,7 @@ import { setDisplayFocus as setDisplayFocusAction } from '../../store/actions/di
 import ExportModal from '../modal/ExportModal'
 import MapModal from '../modal/MapModal';
 
-export default function ChordLab({importedChordData, masterInstrumentArray, free, display}) {
+export default function ChordLab({importedChordData, masterInstrumentArray, free, display, update, setUpdate}) {
     const [playing, setPlaying] = useState(false)
     const [data, setData] = useState([{chord: ['C3', 'E3', 'G3'], position: 0}])
     const chords = []
@@ -85,6 +85,19 @@ export default function ChordLab({importedChordData, masterInstrumentArray, free
     useEffect(() => {
         generateChordStack()
     }, [progression, progressionType, voicing, generateChordOptions])
+
+    //manual update
+    useEffect(() => {
+        if(update){
+        setUpdate(false)
+        const importedChordData = labInfo['chordLab']
+        if (importedChordData){
+            setExportNames([importedChordData['chordName']])
+            handleSetData(importedChordData['chords'], importedChordData['position'])
+            setPositionType(importedChordData['positionType'])
+        }
+        }
+    }, [update])
 
     //upon import
     useEffect(() => {

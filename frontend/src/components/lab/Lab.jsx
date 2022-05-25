@@ -1,4 +1,4 @@
-import React, {useState} from 'react'
+import React, {useEffect, useState} from 'react'
 import { Accordion, Icon} from 'semantic-ui-react'
 import ChordLab from './ChordLab'
 import PatternLab from './PatternLab'
@@ -9,7 +9,7 @@ import { useDispatch, useSelector} from 'react-redux';
 import { setLabData } from '../../store/actions/labDataActions';
 
 
-export default function Lab({masterInstrumentArray, display}) {
+export default function Lab({masterInstrumentArray, display, update, setUpdate, labSplit}) {
     const [activeLabIndices, setActiveLabIndices] = useState([0])
     const [importedScaleData, setImportedScaleData] = useState({})
     const [importedChordData, setImportedChordData] = useState({})
@@ -36,8 +36,21 @@ export default function Lab({masterInstrumentArray, display}) {
       e.preventDefault();
   }
 
+  //manual update
+   useEffect(() => {
+    if (update && !labSplit){
+      setUpdate(false)
+      setActiveLabIndices([4])
+      setImportedScaleData(labInfo['scaleLab'])
+      setImportedChordData(labInfo['chordLab'])
+      setImportedPatternData(labInfo['patternLab'])
+      setImportedRhythmData(labInfo['rhythmLab'])
+  }
+   }, [update])
  //scale, chord, pattern, rhythm
   const dropHandler = e => {
+    'is this going off?'
+    console.log(console.log(importedChordData, importedPatternData, importedModuleData, importedRhythmData, '!!!!'))
     var data = JSON.parse(e.dataTransfer.getData("text"));
     if (data['type'] === 'scaleLab'
         || data['type'] === 'chordLab'

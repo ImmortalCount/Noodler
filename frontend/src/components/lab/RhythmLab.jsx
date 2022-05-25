@@ -10,7 +10,7 @@ import './lab.css'
 
 
 
-export default function RhythmLab({importedRhythmData, display, free}) {
+export default function RhythmLab({importedRhythmData, display, free, update, setUpdate, labSplit}) {
     const [playing, setPlaying] = useState(false)
     const initialNotes = [['O', 'O'], ['O', 'O'], ['O', 'O'], ['O', 'O']]
     const [name, setName] = useState('Rhythm 1')
@@ -36,6 +36,19 @@ export default function RhythmLab({importedRhythmData, display, free}) {
 
     const labData = useSelector(state => state.labData)
     const {labInfo} = labData
+
+//manual update
+useEffect(() => {
+    if (update && labSplit){
+        setUpdate(false)
+        const importedRhythmData =  labInfo['rhythmLab']
+        if (importedRhythmData){
+            setNotes(importedRhythmData['rhythm'])
+            setName(importedRhythmData['rhythmName'])
+            setPlayConstant(importedRhythmData['speed'])
+        }
+    }
+}, [update])
 
 //update for imported data
 useEffect(() => {

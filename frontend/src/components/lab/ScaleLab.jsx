@@ -13,7 +13,7 @@ import { setPlayImport } from '../../store/actions/playImportActions';
 import { setDisplayFocus } from '../../store/actions/displayFocusActions';
 import { createSVGElement, setAttributes } from '../svg/svgUtils';
 
-export default function ScaleLab({importedScaleData, masterInstrumentArray, display, free}) {
+export default function ScaleLab({importedScaleData, masterInstrumentArray, display, free, update, setUpdate, labSplit}) {
     const [playing, setPlaying] = useState(false);
     const [scaleDataBinary, setScaleDataBinary] = useState([1,0,1,0,1,1,0,1,0,1,0,1])
     const [scaleName, setScaleName] = useState('major');
@@ -62,8 +62,6 @@ export default function ScaleLab({importedScaleData, masterInstrumentArray, disp
 
     const labData = useSelector(state => state.labData)
     const {labInfo} = labData
-
-
 
 function createScaleSVG(){
     const svg = createSVGElement('svg')
@@ -133,10 +131,30 @@ function createScaleSVG(){
     scaleDiv.appendChild(svg);
   }
 
-   
+  //manual update
+  useEffect(() => {
+    if (update && labSplit){
+      setUpdate(false)
+      if (labInfo['scaleLab']){
+
+      }
+      const importedScaleData = labInfo['scaleLab']
+      if (importedScaleData){
+      setNotes(importedScaleData['scale'])
+      setScaleName(importedScaleData['scaleName'].split(' ').slice(1).join(' '))
+      setDisplayName(importedScaleData['scaleName'])
+      setScaleNumber(importedScaleData['number'])
+      setScaleDataBinary(importedScaleData['binary'])
+      setRootNote(importedScaleData['scale'][0])
+      setDescription(importedScaleData['desc'])
+      createScaleSVG()
+      }
+    }
+  }, [update])
 
   useEffect(() => {
     if (importedScaleData){
+      console.log('scale Data was imported')
       const newNotes = importedScaleData['scale']
     if (newNotes !== undefined){
       const newBinary = importedScaleData['binary']
@@ -797,7 +815,7 @@ const onDragOver = e => {
         <div onDrop={dropHandler} onDragOver={onDragOver} style={ free ? {'height': '200px', display: display ? '' : 'none'} : {}}>
         <Menu>
         <Menu.Item onClick={() => handleSharpsOrFlats()}>{options === 'sharps' ? '#' : 'b'}</Menu.Item>
-        <Menu.Item onClick={() => test()}>Test</Menu.Item>
+        <Menu.Item onClick={() => console.log(importedScaleData)}>Test</Menu.Item>
         <Dropdown onChange={onChangeDropdown} options={options === 'sharps' ? dropdownOptionsSharp : dropdownOptionsFlat} text = {`Root: ${rootNote}`} simple item/>
         <Button.Group>
         <Button basic compact onClick={()=> {playNoteSequence(); setPlaying(true)}}><Icon name={playing ? 'stop' : 'play'}/></Button>

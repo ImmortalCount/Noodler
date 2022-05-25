@@ -17,7 +17,8 @@ import ModuleLab from '../../components/lab/ModuleLab'
 export default function MainPage() {
     const [activeTabs, setActiveTabs] = useState(['explorer', 'player' ])
     const [masterInstrumentArray, setMasterInstrumentArray] = useState(['Instr 1'])
-    const [activelyDisplayedInstruments, setActivelyDisplayedInstruments] = useState([0])
+    const [activelyDisplayedInstruments, setActivelyDisplayedInstruments] = useState([2])
+    const [update, setUpdate] = useState(false)
     const [groupDisplay, setGroupDisplay] = useState(false)
     const [labSplit, setLabSplit] = useState(false)
     const songImportData = useSelector(state => state.songImport)
@@ -52,6 +53,11 @@ export default function MainPage() {
            temp = temp.filter(x => x !== titleProps.name);
        }
        setActiveTabs(temp)
+    }
+
+    function handleLabSplit(){
+        setUpdate(true)
+        setLabSplit(!labSplit)
     }
 
     function guitarAddHandler(){
@@ -115,7 +121,6 @@ export default function MainPage() {
             )
     }
 
-
 function Midbar() {
         return (
             <Menu>
@@ -123,14 +128,14 @@ function Midbar() {
                {!labSplit && <Button
                 basic
                 name='labSplit'
-                onClick={() => setLabSplit(!labSplit)}
+                onClick={() => handleLabSplit()}
                 >
                 Lab Split
                 </Button>}
                 {labSplit && <Button
                 basic
                 name='labSplit'
-                onClick={() => setLabSplit(!labSplit)}
+                onClick={() => handleLabSplit()}
                 >
                 Lab Join
                 </Button> }  
@@ -216,6 +221,14 @@ function Midbar() {
                 >
                 Player
                 </Button>
+                <Button
+                basic
+                name='player'
+                active={activeTabs.includes('player')}
+                onClick={() => setUpdate(true)}
+                >
+                ForceUpdate
+                </Button>
                 </Button.Group>
                 <Menu.Menu position='right'>
                 <Button.Group>
@@ -263,32 +276,50 @@ function Midbar() {
             />
             <Lab
             masterInstrumentArray = {masterInstrumentArray}
-            display = {activeTabs.includes('lab') }
+            display = {activeTabs.includes('lab')  && (!labSplit)}
+            update={update}
+            setUpdate={setUpdate}
+            labSplit={labSplit}
             />
             <ScaleLab
             masterInstrumentArray = {masterInstrumentArray}
-            display = {activeTabs.includes('scaleLab') }
+            display = {activeTabs.includes('scaleLab')  && (labSplit)}
+            update = {update}
+            setUpdate = {setUpdate}
             free = {true}
+            labSplit={labSplit}
             />
             <ChordLab
             masterInstrumentArray = {masterInstrumentArray}
-            display = {activeTabs.includes('chordLab') }
+            display = {activeTabs.includes('chordLab') && (labSplit) }
+            update = {update}
+            setUpdate = {setUpdate}
             free = {true}
+            labSplit={labSplit}
             />
             <PatternLab
             masterInstrumentArray = {masterInstrumentArray}
-            display = {activeTabs.includes('patternLab') }
+            display = {activeTabs.includes('patternLab') && (labSplit) }
+            update = {update}
+            setUpdate = {setUpdate}
             free = {true}
+            labSplit={labSplit}
             />
             <RhythmLab
             masterInstrumentArray = {masterInstrumentArray}
-            display = {activeTabs.includes('rhythmLab') }
+            display = {activeTabs.includes('rhythmLab') && (labSplit)}
+            update = {update}
+            setUpdate = {setUpdate}
             free = {true}
+            labSplit={labSplit}
             />
             <ModuleLab
             masterInstrumentArray = {masterInstrumentArray}
-            display = {activeTabs.includes('moduleLab') }
+            display = {activeTabs.includes('moduleLab') && (labSplit)}
+            update = {update}
+            setUpdate = {setUpdate}
             free = {true}
+            labSplit={labSplit}
             />
             
             <Mixer
