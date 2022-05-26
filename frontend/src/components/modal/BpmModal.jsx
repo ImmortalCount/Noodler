@@ -25,7 +25,7 @@ function BpmModal() {
         <>
           <div className="overlay"></div>
           <div className="modal">
-            <header className="modal__header">
+            <header className="modal__header" style={{backgroundColor: 'teal'}}>
               <h2>
                   Bpm
                 </h2>

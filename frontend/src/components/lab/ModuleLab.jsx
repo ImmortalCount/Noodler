@@ -584,8 +584,6 @@ for (var o = 0; o < 10; o++){
         <Menu>
          <Menu.Item onClick={() => {playModule(); setPlaying(true)}} ><Icon name={playing ? 'stop': 'play'}/></Menu.Item>  
          <Dropdown onChange={onChangeDropdown} options={options === 'sharps' ? dropdownOptionsKeySharp : dropdownOptionsKeyFlat} text = {`Key: ${key}`} simple item/>
-         <Menu.Item onClick={() => setShowDescription(!showDescription)}> Desc </Menu.Item>
-         <Menu.Item onClick={() => console.log(labInfo)}> Desc </Menu.Item>
          <Dropdown
             simple 
             item
@@ -616,7 +614,7 @@ for (var o = 0; o < 10; o++){
           </Dropdown.Menu>
         </Dropdown>
         </Button.Group>
-        
+        <Menu.Item onClick={() => setShowDescription(!showDescription)}> Desc </Menu.Item>
          <Button.Group>
          <Button basic onClick={() => setOpened(true)}>Export</Button>
         

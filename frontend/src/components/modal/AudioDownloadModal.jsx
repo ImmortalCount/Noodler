@@ -68,7 +68,7 @@ export default function AudioDownloadModal({tab, length, handleRecord}) {
       <>
         <div className="overlay"></div>
         <div id='tabDownloadModal' className="modal">
-          <header className="modal__header">
+          <header className="modal__header" style={{backgroundColor: 'teal'}}>
             <h3>
                 Download Audio
               </h3>

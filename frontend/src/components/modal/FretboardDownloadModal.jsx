@@ -23,13 +23,18 @@ function FretboardDownloadModal({instruments, idx, downloadAsPng}) {
     }
 }, [instruments])
 
+function handleDownload(){
+  downloadAsPng(idx, fileName)
+  setIsOpen(false)
+}
+
   return (
     <>
       {isOpen && (
         <>
           <div className="overlay"></div>
           <div className="modal">
-            <header className="modal__header">
+            <header className="modal__header" style={{backgroundColor: 'teal'}}>
               <h3>
                   Download Fretboard
                 </h3>
@@ -47,7 +52,7 @@ function FretboardDownloadModal({instruments, idx, downloadAsPng}) {
             onBlur={() => setInputFocus(false)}
             style={{display: inputFocus ? '': 'none' }}
             />
-              <Button onClick={() => downloadAsPng(idx, fileName)}> Download</Button>
+              <Button onClick={() => handleDownload()}> Download</Button>
             </main>
  
           </div>

@@ -39,7 +39,7 @@ export default function TabDownloadModal({tab}) {
       <>
         <div className="overlay"></div>
         <div id='tabDownloadModal' className="modal">
-          <header className="modal__header">
+          <header className="modal__header" style={{backgroundColor: 'teal'}}>
             <h3>
                 Download Tab
               </h3>

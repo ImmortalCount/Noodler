@@ -17,7 +17,9 @@ DATA_POOL_DELETE_FAIL,
 DATA_POOL_UPDATE_REQUEST, 
 DATA_POOL_UPDATE_SUCCESS, 
 DATA_POOL_UPDATE_FAIL, 
-DATA_POOL_UPDATE_RESET, 
+DATA_POOL_UPDATE_RESET,
+DATA_POOL_INSERT_INITIALIZE,
+DATA_POOL_UPDATE_INITIALIZE, 
 } from '../constants/dataPoolConstants.js'
 
 export const insertData = (musicData) => async (dispatch) => {
@@ -111,4 +113,13 @@ export const getMusicData = (requestData) => async (dispatch) => {
             : error.message
         })
     }
+}
+
+export const initializeUpdateAndInsertData = () => async (dispatch) =>{
+    dispatch({
+        type: DATA_POOL_INSERT_INITIALIZE
+    })
+    dispatch({
+        type: DATA_POOL_UPDATE_INITIALIZE
+    })
 }

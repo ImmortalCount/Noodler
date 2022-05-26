@@ -1,8 +1,8 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { Button, Checkbox, Input, TextArea } from "semantic-ui-react";
 import { useDispatch, useSelector } from 'react-redux';
 import "./modal.css";
-import { insertData, updateData } from '../../store/actions/dataPoolActions';
+import { insertData, updateData, initializeUpdateAndInsertData } from '../../store/actions/dataPoolActions';
 
 function ExportModal({dataType, exportObj, opened, setOpened, changeParentName, changeParentDesc}) {
   const [isOpen, setIsOpen] = useState(false);
@@ -15,11 +15,26 @@ function ExportModal({dataType, exportObj, opened, setOpened, changeParentName, 
   const [poolDisplay, setPoolDisplay] = useState('global')
   const user = JSON.parse(localStorage.getItem('userInfo'))
 
-  useEffect(() => {
-    if (opened){
-      setIsOpen(true)
-    }
-  }, [opened])
+  const dataInsertStatus  = useSelector(state => state.dataInsert)
+  const {loading, error, dataInsert} = dataInsertStatus
+
+  const dataUpdateStatus = useSelector(state => state.dataUpdate)
+  const {dataUpdate} = dataUpdateStatus
+
+  const dontRender = [
+    'authorId',
+    'scaleName',
+    'chordName',
+    'rhythmName',
+    'moduleName',
+    'patternName',
+    'desc',
+    'instruments',
+    'data', 
+    'pool',
+    'scaleType',
+    'dataType'
+  ]
 
   useEffect(() => {
     if (exportObj){
@@ -30,25 +45,30 @@ function ExportModal({dataType, exportObj, opened, setOpened, changeParentName, 
       }
       setDesc(exportObj.desc)
     }
-  }, [exportObj])
+  }, [])
 
+  useEffect(() => {
+    if (opened){
+      setIsOpen(true)
+    }
+  }, [opened])
 
-  const openModal = () => {
-    setIsOpen(true);
-  }
+  useEffect(() => {
+    if (dataInsert?.data?.success || dataUpdate?.data?.success){
+    let timeout = setTimeout(() => {
+      closeModal()
+      clearTimeout(timeout)
+      }, 1000 )
+    }
+  })
 
   const closeModal = () => {
     setIsOpen(false);
     setMessageDisplay(false)
     setUpdateDisplay(false)
     setOpened(false)
+    dispatch(initializeUpdateAndInsertData())
   }
-
-  const dataInsertStatus  = useSelector(state => state.dataInsert)
-  const {loading, error, dataInsert} = dataInsertStatus
-
-  const dataUpdateStatus = useSelector(state => state.dataUpdate)
-  const {dataUpdate} = dataUpdateStatus
 
   const dispatch = useDispatch()
 
@@ -67,31 +87,6 @@ function ExportModal({dataType, exportObj, opened, setOpened, changeParentName, 
     setMessageDisplay(false)
     setUpdateDisplay(false)
   }
-
-  const dontRender = [
-    'authorId',
-    'scaleName',
-    'chordName',
-    'rhythmName',
-    'moduleName',
-    'patternName',
-    'desc',
-    'instruments',
-    'data', 
-    'pool',
-    'scaleType',
-    'dataType'
-  ]
-
-function handleSetName(name){
-  setName(name)
-  changeParentName(name)
-}
-
-function handleSetDesc(desc){
-  setDesc(desc)
-  changeParentDesc(desc)
-}
 
  function handleClickPool(value){
   if (value === 'local'){
@@ -115,6 +110,9 @@ function handleBackgroundColor(){
   return colors[dataType]
 }
 
+function handleOnBlurName(){
+
+}
 
   return (
     <>
@@ -142,8 +140,8 @@ function handleBackgroundColor(){
             value={name}
             id={'input_moduleLab'}
             ref={input => input && input.focus()}
-            onInput={e => handleSetName(e.target.value)}
-            onBlur={() => setInputFocus(false)}
+            onInput={e => setName(e.target.value)}
+            onBlur={() =>{changeParentName(name); setInputFocus(false)}}
             style={{display: inputFocus ? '': 'none' }}
             />
               <div onClick={() => setTextAreaFocus(!textAreaFocus)} style={{display: !textAreaFocus ? '': 'none' }}>
@@ -153,8 +151,8 @@ function handleBackgroundColor(){
                 value={desc}
                 id={'input_moduleLab'}
                 ref={input => input && input.focus()}
-                onInput={e => handleSetDesc(e.target.value)}
-                onBlur={() => setTextAreaFocus(false)}
+                onInput={e => setDesc(e.target.value)}
+                onBlur={() => {changeParentDesc(desc); setTextAreaFocus(false)}}
                 style={{display: textAreaFocus ? '': 'none' }}
               />
               <h3>

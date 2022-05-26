@@ -854,7 +854,6 @@ function convertToTab(){
         <Menu.Item basic active={displayLock} onClick={()=> setDisplayLock(!displayLock)}>Display Lock</Menu.Item>
         <Menu.Item basic active={hideModuleName} onClick={()=> setHideModuleName(!hideModuleName)}>View</Menu.Item>
         <Menu.Item basic active={titleLock} onClick={()=> setTitleLock(!titleLock)}>Title Lock{titleLock ? 'on' : 'off'}</Menu.Item>
-        <Menu.Item basic active={edit} onClick={()=> console.log(globalInstruments)}>Test</Menu.Item>
         <Menu.Item basic active={showDescription} onClick={() => setShowDescription(!showDescription)}> Desc</Menu.Item>
         <Button.Group>
         <Button basic onClick={() => setOpened(true)}>Export</Button>

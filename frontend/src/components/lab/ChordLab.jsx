@@ -95,6 +95,7 @@ export default function ChordLab({importedChordData, masterInstrumentArray, free
             setExportNames([importedChordData['chordName']])
             handleSetData(importedChordData['chords'], importedChordData['position'])
             setPositionType(importedChordData['positionType'])
+            setDescription([importedChordData['desc']])
         }
         }
     }, [update])
@@ -106,7 +107,7 @@ export default function ChordLab({importedChordData, masterInstrumentArray, free
         const chordDataPrototype = {
             name: importedChordData['chordName'],
             chordName: importedChordData['chordName'],
-            desc: '',
+            desc: importedChordData['desc'],
             chord: importedChordData['chord'],
             position: importedChordData['position'],
             author: '',
@@ -119,6 +120,7 @@ export default function ChordLab({importedChordData, masterInstrumentArray, free
         var returnArr = []
         returnArr.push(importedChordData['chord'])
         setExportNames([importedChordData['chordName']])
+        setDescription([importedChordData['desc']])
         handleSetData(returnArr, importedChordData['position'])
         setPositionType(importedChordData['positionType'])
         }
@@ -1036,8 +1038,10 @@ export default function ChordLab({importedChordData, masterInstrumentArray, free
         }
         var exportChord = chords[0]
         var obj = {id: 'special', className: 'chordData', message: {
+            name: exportName,
             chordName: exportName,
             chord: exportChord,
+            desc: description,
             position: [position[0]],
             positionType: positionType
 
@@ -1374,8 +1378,7 @@ export default function ChordLab({importedChordData, masterInstrumentArray, free
          <Dropdown.Item active={positionType === 'locked'} onClick={() => setPositionType('locked')}> Locked <Icon name='lock'/></Dropdown.Item>       
         </Dropdown.Menu>
         </Dropdown>
-         <Menu.Item onClick={handleEdit}> Edit </Menu.Item>     
-         <Menu.Item onClick={() => console.log(masterInstrumentArray)}> Test </Menu.Item>     
+         <Menu.Item onClick={handleEdit}> Edit </Menu.Item>       
          <Menu.Item onClick={() => setShowDescription(!showDescription)}> Desc </Menu.Item>
          <Button.Group>
          <Button basic compact onClick={() => setDisplay()}>Display</Button>

@@ -46,6 +46,7 @@ useEffect(() => {
             setNotes(importedRhythmData['rhythm'])
             setName(importedRhythmData['rhythmName'])
             setPlayConstant(importedRhythmData['speed'])
+            setDescription(importedRhythmData['desc'])
         }
     }
 }, [update])
@@ -56,6 +57,7 @@ useEffect(() => {
         setNotes(importedRhythmData['rhythm'])
         setName(importedRhythmData['rhythmName'])
         setPlayConstant(importedRhythmData['speed'])
+        setDescription(importedRhythmData['desc'])
     }
     
 }, [importedRhythmData])
@@ -511,7 +513,7 @@ const dragStartHandlerSpecial = e => {
     var obj = {id: 'special', className: 'rhythmData', message: {
         name: name,
         rhythmName: name,
-        desc: '',
+        desc: description,
         rhythm: JSON.parse(JSON.stringify(notes)),
         length: moduleLengthDisplay,
         notes: noteSlots,

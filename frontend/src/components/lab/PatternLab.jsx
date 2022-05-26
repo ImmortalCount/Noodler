@@ -145,6 +145,7 @@ useEffect(() => {
         if (importedPatternData){
             setPattern(importedPatternData['pattern'])
             setPatternType(importedPatternData['type'])
+            setDescription(importedPatternData['desc'])
             setName(importedPatternData['patternName'])
             setPositionType(importedPatternData['positionType'])
             handleSetData(patternAndScaleToNotes(importedPatternData['pattern']), importedPatternData['position'])
@@ -154,9 +155,9 @@ useEffect(() => {
 //Upon importing
 useEffect(() => {
     if (importedPatternData?.['pattern']){
-        console.log(importedPatternData, 'IMPORTED PATTERN DATA!')
         setPattern(importedPatternData['pattern'])
         setPatternType(importedPatternData['type'])
+        setDescription(importedPatternData['desc'])
         setName(importedPatternData['patternName'])
         setPositionType(importedPatternData['positionType'])
         handleSetData(patternAndScaleToNotes(importedPatternData['pattern']), importedPatternData['position'])
@@ -285,11 +286,16 @@ const dragStartHandler = e => {
 
 const dragStartHandlerSpecial = e => {
     var obj = {id: 'special', className: 'patternData', message: {
+        name: name,
         patternName: name,
         pattern: patternType === 'fixed'? chordSequenceToNoteString(notes) : pattern,
         position: position,
+        desc: description,
         type: patternType,
         positionType: positionType,
+        author: '',
+        authorId: '',
+        pool: '',
     }, type: 'patternLabExport'}
     e.dataTransfer.setData('text', JSON.stringify(obj));
 }

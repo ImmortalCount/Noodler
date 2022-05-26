@@ -1,4 +1,4 @@
-import React,{useState, useEffect} from 'react'
+import React,{useState, useEffect, useRef} from 'react'
 import Player from '../../components/DragAndDrop/Player'
 import Lab from '../../components/lab/Lab'
 import Navbar from '../../components/navbar/Navbar'
@@ -18,7 +18,7 @@ import './mainpage.css'
 export default function MainPage() {
     const [activeTabs, setActiveTabs] = useState(['explorer', 'player' ])
     const [masterInstrumentArray, setMasterInstrumentArray] = useState(['Instr 1'])
-    const [activelyDisplayedInstruments, setActivelyDisplayedInstruments] = useState([2])
+    const [activelyDisplayedInstruments, setActivelyDisplayedInstruments] = useState([0])
     const [update, setUpdate] = useState(false)
     const [groupDisplay, setGroupDisplay] = useState(false)
     const [labSplit, setLabSplit] = useState(false)
@@ -41,10 +41,9 @@ export default function MainPage() {
     }, [songImport])
 
     useEffect(() => {
-       
-            setMasterInstrumentArray(instrumentNames['nameInfo'])
-        
+        setMasterInstrumentArray(instrumentNames['nameInfo'])
     }, [instrumentNames['nameInfo']])
+
 
     const onClickHandler = (e, titleProps) => {
         var temp = [...activeTabs]

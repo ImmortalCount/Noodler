@@ -7,6 +7,7 @@ import {
     DATA_POOL_INSERT_REQUEST,
     DATA_POOL_INSERT_SUCCESS, 
     DATA_POOL_INSERT_FAIL, 
+    DATA_POOL_INSERT_INITIALIZE,
     
     DATA_POOL_DELETE_REQUEST, 
     DATA_POOL_DELETE_SUCCESS, 
@@ -15,6 +16,7 @@ import {
     DATA_POOL_UPDATE_REQUEST, 
     DATA_POOL_UPDATE_SUCCESS, 
     DATA_POOL_UPDATE_FAIL, 
+    DATA_POOL_UPDATE_INITIALIZE,
     } from '../constants/dataPoolConstants.js'
 
     export const dataListReducer = (state = { orders: []}, action ) => {
@@ -56,6 +58,8 @@ import {
                     loading: false,
                     error: action.payload,
                 }
+            case DATA_POOL_INSERT_INITIALIZE:
+                return {}
             default: 
                 return state
         }
@@ -77,6 +81,8 @@ import {
                     loading: false,
                     error: action.payload,
                 }
+            case DATA_POOL_UPDATE_INITIALIZE:
+                return {}
             default: 
                 return state
         }
