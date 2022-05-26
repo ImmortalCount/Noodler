@@ -40,7 +40,6 @@ export default function Lab({masterInstrumentArray, display, update, setUpdate, 
    useEffect(() => {
     if (update && !labSplit){
       setUpdate(false)
-      setActiveLabIndices([4])
       setImportedScaleData(labInfo['scaleLab'])
       setImportedChordData(labInfo['chordLab'])
       setImportedPatternData(labInfo['patternLab'])

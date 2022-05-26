@@ -13,6 +13,7 @@ import ChordLab from '../../components/lab/ChordLab'
 import PatternLab from '../../components/lab/PatternLab'
 import RhythmLab from '../../components/lab/RhythmLab'
 import ModuleLab from '../../components/lab/ModuleLab'
+import './mainpage.css'
 
 export default function MainPage() {
     const [activeTabs, setActiveTabs] = useState(['explorer', 'player' ])
@@ -220,14 +221,6 @@ function Midbar() {
                 onClick={onClickHandler}
                 >
                 Player
-                </Button>
-                <Button
-                basic
-                name='player'
-                active={activeTabs.includes('player')}
-                onClick={() => setUpdate(true)}
-                >
-                ForceUpdate
                 </Button>
                 </Button.Group>
                 <Menu.Menu position='right'>

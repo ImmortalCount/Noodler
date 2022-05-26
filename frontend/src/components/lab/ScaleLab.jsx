@@ -154,7 +154,6 @@ function createScaleSVG(){
 
   useEffect(() => {
     if (importedScaleData){
-      console.log('scale Data was imported')
       const newNotes = importedScaleData['scale']
     if (newNotes !== undefined){
       const newBinary = importedScaleData['binary']

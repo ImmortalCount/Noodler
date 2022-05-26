@@ -1,0 +1,10 @@
+.bottomhalf {
+    /* height: 100px;
+    width: 50%;
+    margin: 0 auto; */
+    overflow: hidden;
+  }
+  
+  .bottomhalf:hover {
+    overflow-x: scroll;
+  }

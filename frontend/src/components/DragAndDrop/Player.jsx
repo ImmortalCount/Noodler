@@ -143,11 +143,11 @@ export default function Player ({masterInstrumentArray, display, childChangeInst
         dispatch(setTab({tab: tab, name: name}))
     }, [data, Tone.Transport.bpm.value, globalInstruments, globalPosition]);
 
-    useEffect(() => {
-        if (displayFocus !== 'player'){
-            highlight.current = false
-        }
-    }, [displayFocus])
+    // useEffect(() => {
+    //     if (displayFocus !== 'player'){
+    //         highlight.current = false
+    //     }
+    // }, [displayFocus])
 
 function handleSetInstrumentFocus(value){
     if (displayLock){
@@ -704,10 +704,9 @@ function moduleSubtract(){
     var currentlyPlayingValue = useRef([])
     let thisInterval = useRef([])
 
-
+    console.log('rerender')
     useEffect(() => {
         thisInterval.current = setInterval(function checkCurrentTimeAndSetCurrentlyPlaying() {
-        
          if (highlight.current) {
             let currentTime = Tone.Time(Tone.Transport.position).toSeconds()
             var playingArr = [];
@@ -719,6 +718,7 @@ function moduleSubtract(){
                     }
                 }
             }
+            
             if (JSON.stringify(currentlyPlayingValue.current) === JSON.stringify(playingArr)){
                 return
             } else {
