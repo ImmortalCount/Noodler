@@ -1,8 +1,9 @@
 .bottomhalf {
-    /* height: 100px;
-    width: 50%;
-    margin: 0 auto; */
+    display: 'flex';
     overflow: hidden;
+    flex-direction: 'row';
+    background-color: 'white';
+    min-height: 1500px;
   }
   
   .bottomhalf:hover {

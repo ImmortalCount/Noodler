@@ -31,6 +31,12 @@ useEffect(() => {
 }, [keyword, scope, userID, subData])
 
 useEffect(() => {
+    dispatchSearch()
+}, [scope, subData, keyword, dispatch, userID, pageNumber])
+
+    //========================================================
+
+function dispatchSearch(){
     let queryObject = {}
     queryObject["pool"] = scope
     queryObject["dataType"] = subData
@@ -42,10 +48,7 @@ useEffect(() => {
     if (pageTotalFromQuery !== lastPageTotalFromQuery.current){
         lastPageTotalFromQuery.current = pageTotalFromQuery
     }
-}, [scope, subData, keyword, dispatch, userID, pageNumber])
-
-    //========================================================
-
+}
 const onDrag = (e) => {
 }
 
@@ -147,15 +150,16 @@ const onDragStart = (e) => {
         <div style={{display: display ? '' : 'none'}}>
             <Menu>
             <Input type='text' placeholder='Search...' icon='search' onChange={(e, {value}) => setKeyword(value)} />
-            {userID !== null  && <Select compact options={scopeOptions} onChange={handleScopeOptions} defaultValue='global'/>}
-            {userID === null && <Select compact options={restrictedScopeOptions} onChange={(e, {value}) => setSubData(value)} defaultValue='global'/>}
-            <Select compact options={dataSubTypeOptions} onChange={(e, {value}) => setSubData(value)} defaultValue='all'/>
+            {userID !== null  && <Select style={{'minWidth': '100px'}}  options={scopeOptions} onChange={handleScopeOptions} defaultValue='global'/>}
+            {userID === null && <Select style={{'minWidth': '100px'}} options={restrictedScopeOptions} onChange={(e, {value}) => setSubData(value)} defaultValue='global'/>}
+            <Select style={{'minWidth': '100px'}} options={dataSubTypeOptions} onChange={(e, {value}) => setSubData(value)} defaultValue='all'/>
             </Menu>
         <Grid>
-            <Grid.Column width={15}>
+            <Grid.Column width={20}>
             <pre style={{ overflowX: 'auto' , margin:0}}>
             <div>{pageNumber + 1} / {pageTotalFromQuery ? pageTotalFromQuery : lastPageTotalFromQuery.current}</div>
             <ButtonGroup style={{margin:0}}>
+                <Button onClick={() => dispatchSearch()}><Icon name='sync alternate'/></Button>
                 <Button disabled={pageNumber === 0} onClick={() => setPageNumber(0)}> First </Button>
                 <Button disabled={pageNumber === 0} onClick={handleNavigatePreviousPage}> Prev </Button>
                 <Button disabled={pageNumber + 1 >= pageTotalFromQuery} onClick={handleNavigateNextPage}> Next</Button>

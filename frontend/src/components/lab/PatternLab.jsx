@@ -152,17 +152,6 @@ useEffect(() => {
         }
     }
 }, [update])
-//Upon importing
-useEffect(() => {
-    if (importedPatternData?.['pattern']){
-        setPattern(importedPatternData['pattern'])
-        setPatternType(importedPatternData['type'])
-        setDescription(importedPatternData['desc'])
-        setName(importedPatternData['patternName'])
-        setPositionType(importedPatternData['positionType'])
-        handleSetData(patternAndScaleToNotes(importedPatternData['pattern']), importedPatternData['position'])
-    }
-}, [importedPatternData])
 
 //upon updating
 useEffect(() => {
@@ -187,6 +176,38 @@ useEffect(() => {
     dispatch(setLabData(newInfo))
     dispatch(setNoteDisplay(convertScaleForDispatch()))
   }, [name, instrumentDisplay, data, displayFocus, displayAll, positionType, patternType])
+
+
+  useEffect(() => {
+    if (importedPatternData?.['pattern']){
+        setPattern(importedPatternData['pattern'])
+        setPatternType(importedPatternData['type'])
+        setDescription(importedPatternData['desc'])
+        setName(importedPatternData['patternName'])
+        setPositionType(importedPatternData['positionType'])
+        handleSetData(patternAndScaleToNotes(importedPatternData['pattern']), importedPatternData['position'])
+        let mostCurrentPattern = patternExtraction()
+        setPattern(mostCurrentPattern)
+        let newInfo = {...labInfo}
+        const patternDataPrototype = {
+        name: importedPatternData['patternName'],
+        patternName: importedPatternData['patternName'],
+        desc: importedPatternData['desc'],
+        type: importedPatternData['positionType'],
+        positionType: importedPatternData['positionType'],
+        length: importedPatternData['pattern'].length,
+        pattern: importedPatternData['pattern'],
+        position: importedPatternData['position'],
+        author: '',
+        authorId: '',
+        dataType: 'pattern',
+        pool: '',
+    }
+    newInfo['patternLab'] = patternDataPrototype
+    dispatch(setLabData(newInfo))
+    }
+    
+}, [importedPatternData])
 
   useEffect(() => {
     dispatch(setDisplayFocusAction('lab'))

@@ -704,7 +704,6 @@ function moduleSubtract(){
     var currentlyPlayingValue = useRef([])
     let thisInterval = useRef([])
 
-    console.log('rerender')
     useEffect(() => {
         thisInterval.current = setInterval(function checkCurrentTimeAndSetCurrentlyPlaying() {
          if (highlight.current) {

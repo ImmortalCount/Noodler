@@ -59,6 +59,7 @@ export default function ChordLab({importedChordData, masterInstrumentArray, free
 
     //Convert notes and position data into DATA
     function handleSetData(chords, position){
+        console.log(chords, '!!!!')
         var clone = JSON.parse(JSON.stringify(chords))
         clone = sortAllChordsByPitch(clone)
         if (position === undefined){
@@ -91,9 +92,16 @@ export default function ChordLab({importedChordData, masterInstrumentArray, free
         if(update){
         setUpdate(false)
         const importedChordData = labInfo['chordLab']
+        console.log(importedChordData, '!!!!!')
         if (importedChordData){
+            let chords;
+            if (importedChordData['chords']){
+                chords = importedChordData['chords']
+            } else {
+                chords = [importedChordData['chord']]
+            }
             setExportNames([importedChordData['chordName']])
-            handleSetData(importedChordData['chords'], importedChordData['position'])
+            handleSetData(chords, importedChordData['position'])
             setPositionType(importedChordData['positionType'])
             setDescription([importedChordData['desc']])
         }
@@ -104,11 +112,19 @@ export default function ChordLab({importedChordData, masterInstrumentArray, free
     useEffect(() => {
         if(importedChordData?.['chord']){
             let newInfo = {...labInfo}
+            let chordImport;
+            if (importedChordData['chords']){
+                chordImport =  importedChordData['chords']
+            } else {
+                chordImport = [importedChordData['chord']]
+            }
         const chordDataPrototype = {
+            
             name: importedChordData['chordName'],
             chordName: importedChordData['chordName'],
             desc: importedChordData['desc'],
             chord: importedChordData['chord'],
+            chords: chordImport,
             position: importedChordData['position'],
             author: '',
             authorId: '',
@@ -521,6 +537,7 @@ export default function ChordLab({importedChordData, masterInstrumentArray, free
 
     function sortAllChordsByPitch(chords){
         let tempArr = []
+        console.log(chords, 'CHORDS FROM SORT ALL CHORDS BY PITCH!!!')
         for (let i = 0; i < chords.length; i++){
             tempArr.push(Note.sortedNames(chords[i]))
         }
