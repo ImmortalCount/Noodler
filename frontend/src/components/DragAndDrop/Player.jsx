@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef} from 'react'
 import DragAndFillCard from './DragAndFillCard'
+import FileSaver from 'file-saver'
 import {Button, Dropdown, Menu, Icon, Input, Form, TextArea, ButtonOr, Divider} from 'semantic-ui-react';
 import { Note, Scale, Chord, Midi, ChordType} from '@tonaljs/tonal';
 import { useDispatch, useSelector } from 'react-redux';
@@ -15,6 +16,7 @@ import { setTab } from '../../store/actions/tabActions';
 import { setDisplayFocus } from '../../store/actions/displayFocusActions';
 import { setPlayHighlight } from '../../store/actions/playHighlightActions';
 import { setRecommendedScale, turnScaleNameIntoScaleData } from '../lab/chordMapGenerator';
+import { turnPlayerDataIntoFullMidiSong } from '../midi/midifunctions';
 
 export default function Player ({masterInstrumentArray, display, childChangeInstr}) {
     const [instrumentFocus, setInstrumentFocus] = useState(0);
@@ -59,6 +61,9 @@ export default function Player ({masterInstrumentArray, display, childChangeInst
 
     const globalPositionData = useSelector(state => state.globalPosition)
     const {globalPosition} = globalPositionData
+
+    const setBpmData = useSelector(state => state.setBpm)
+    const setBpm = setBpmData['bpm']
 
     var highlight = useRef(false)
 
@@ -141,13 +146,7 @@ export default function Player ({masterInstrumentArray, display, childChangeInst
         sendModuleData(JSON.stringify({markers: markers, data: sentData})) 
         let tab = convertToTab()
         dispatch(setTab({tab: tab, name: name}))
-    }, [data, Tone.Transport.bpm.value, globalInstruments, globalPosition]);
-
-    // useEffect(() => {
-    //     if (displayFocus !== 'player'){
-    //         highlight.current = false
-    //     }
-    // }, [displayFocus])
+    }, [data, setBpm, globalInstruments, globalPosition]);
 
 function handleSetInstrumentFocus(value){
     if (displayLock){
@@ -841,6 +840,14 @@ function convertToTab(){
     return tab
 }
 
+function downloadAsMidi(){
+    const playableSequence = convertModuleDataIntoPlayableSequence(data)
+    const midi = turnPlayerDataIntoFullMidiSong(playableSequence)
+    let blob = new Blob([midi.toArray()], {type: "audio/midi"});
+    FileSaver.saveAs(blob, name + ".mid")
+    console.log(midi)
+}
+
     return (
         <>
         <div style={{display: display ? '' : 'none'}} onDrop={dropHandlerBackground} >
@@ -849,6 +856,8 @@ function convertToTab(){
         {mapMenuItems()}
         </Button.Group>
         <Menu.Item basic active={mode} onClick={()=> setMode(!mode)}>Mode</Menu.Item>
+        <Menu.Item basic onClick={()=> console.log(convertModuleDataIntoPlayableSequence(data))}>Test</Menu.Item>
+        <Menu.Item basic onClick={()=> downloadAsMidi()}>Midi Time</Menu.Item>
         <Menu.Item basic active={edit} onClick={()=> setEdit(!edit)}>Edit</Menu.Item>
         <Menu.Item basic active={displayLock} onClick={()=> setDisplayLock(!displayLock)}>Display Lock</Menu.Item>
         <Menu.Item basic active={hideModuleName} onClick={()=> setHideModuleName(!hideModuleName)}>View</Menu.Item>

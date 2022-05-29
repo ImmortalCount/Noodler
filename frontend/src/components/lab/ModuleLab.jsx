@@ -1,4 +1,5 @@
 import React, {useState, useRef, useEffect} from 'react'
+import FileSaver from 'file-saver'
 import { Scale, Note, Chord } from '@tonaljs/tonal';
 import DragAndFillCard from '../DragAndDrop/DragAndFillCard'
 import { Menu , Input, Dropdown, Button, Form, TextArea, Icon} from 'semantic-ui-react';
@@ -11,6 +12,7 @@ import { setPlayImport } from '../../store/actions/playImportActions';
 import ExportModal from '../modal/ExportModal'
 import { setDisplayFocus } from '../../store/actions/displayFocusActions';
 import { setLabData } from '../../store/actions/labDataActions';
+import { turnNotesWithRhythmIntoMidi } from '../midi/midifunctions';
 
 export default function ModuleLab({importedModuleData, masterInstrumentArray, free, display}) {
     const [name, setName] = useState('Module 1')
@@ -329,11 +331,11 @@ for (var o = 0; o < 10; o++){
         if (playType === 'Melody'){
             let notesToMap = patternAndScaleToNotes(pattern, patternType, scaleNotes)
             sequence = mapNotesToRhythm(notesToMap, rhythm)
-            console.log(notesToMap, 'notesToMap')
+            console.log(sequence, 'notesToMap')
         } else if (playType === 'Chord'){
             let notesToMap = chordIntoNotes(chord, notesFromRhythm)
             sequence = mapNotesToRhythm(notesToMap, rhythm)
-            console.log(notesToMap, 'notesToMap')
+            console.log(sequence, 'notesToMap')
         }
         
         let previousInstrumentDisplay = instrumentDisplay
@@ -579,6 +581,20 @@ for (var o = 0; o < 10; o++){
         e.preventDefault();
     }
 
+    function downloadAsMidi(){
+        let sequence;
+        if (playType === 'Melody'){
+            let notesToMap = patternAndScaleToNotes(pattern, patternType, scaleNotes)
+            sequence = mapNotesToRhythm(notesToMap, rhythm)
+        } else if (playType === 'Chord'){
+            let notesToMap = chordIntoNotes(chord, notesFromRhythm)
+            sequence = mapNotesToRhythm(notesToMap, rhythm)
+        }
+        var midi = turnNotesWithRhythmIntoMidi(sequence)
+        let blob = new Blob([midi.toArray()], {type: "audio/midi"});
+        FileSaver.saveAs(blob, "moduleTest.mid")
+}
+
     return (
         <div onDragOver={dragOverHandlerSpecial} onDrop={dropHandlerSpecial} style={ free ? {'height': '200px', display: display ? '' : 'none'} : {}}>
         <Menu>
@@ -615,6 +631,7 @@ for (var o = 0; o < 10; o++){
         </Dropdown>
         </Button.Group>
         <Menu.Item onClick={() => setShowDescription(!showDescription)}> Desc </Menu.Item>
+        <Menu.Item onClick={() => downloadAsMidi()}> Midi Time </Menu.Item>
          <Button.Group>
          <Button basic onClick={() => setOpened(true)}>Export</Button>
         

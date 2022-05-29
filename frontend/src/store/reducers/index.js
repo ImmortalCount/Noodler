@@ -16,6 +16,7 @@ import { mixerReducer } from "./mixerReducer.js";
 import { tabReducer } from './tabReducer.js';
 import { displayFocusReducer } from "./displayFocusReducer.js";
 import { globalPositionReducer } from "./globalPositionReducer.js";
+import { setBpmReducer } from "./setBpmReducer.js";
 
 const reducers = combineReducers({
     module: moduleDataReducer,
@@ -37,7 +38,8 @@ const reducers = combineReducers({
     mixer: mixerReducer,
     tab: tabReducer,
     displayFocus: displayFocusReducer,
-    globalPosition: globalPositionReducer
+    globalPosition: globalPositionReducer,
+    setBpm: setBpmReducer
 })
 
 export default reducers

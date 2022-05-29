@@ -875,8 +875,11 @@ const handleInstrumentNameChange = e => {
 function changeVolumeFromMixerInput(){
     if (mixer){
         let thisInstrumentSynth = loadedSynths.current[mixer['synthSource']]
+        if (thisInstrumentSynth?.volume === undefined){
+            return
+        }
         if (mixer['value'] === '-20'){
-            thisInstrumentSynth.volume.value = -Infinity;
+                thisInstrumentSynth.volume.value = -Infinity;
         } else {
             thisInstrumentSynth.volume.value = mixer['value']
         }

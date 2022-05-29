@@ -1,6 +1,8 @@
 /* eslint-disable react-hooks/exhaustive-deps */
 import {React, useState, useEffect, useRef} from 'react'
 import * as Tone from 'tone';
+import FileSaver from 'file-saver'
+import { Midi } from '@tonejs/midi'
 import {Scale, Chord, Note} from '@tonaljs/tonal';
 import { useDispatch, useSelector} from 'react-redux';
 import { insertData } from '../../store/actions/dataPoolActions';
@@ -15,6 +17,7 @@ import { mapChordsToPlayer } from '../../store/actions/mapChordsToPlayerActions'
 import { setDisplayFocus as setDisplayFocusAction } from '../../store/actions/displayFocusActions';
 import ExportModal from '../modal/ExportModal'
 import MapModal from '../modal/MapModal';
+import { turnNotesIntoMidi } from '../midi/midifunctions';
 
 export default function ChordLab({importedChordData, masterInstrumentArray, free, display, update, setUpdate}) {
     const [playing, setPlaying] = useState(false)
@@ -1299,6 +1302,12 @@ export default function ChordLab({importedChordData, masterInstrumentArray, free
     const dragOverHandlerSpecial =  e => {
         e.preventDefault();
     }
+ function downloadAsMidi(){
+
+var midi = turnNotesIntoMidi(chords)
+let blob = new Blob([midi.toArray()], {type: "audio/midi"});
+FileSaver.saveAs(blob, "chordsTest.mid")
+    }
       //====
     return (
         <div onDragOver={dragOverHandlerSpecial} onDrop={dropHandlerSpecial} style={ free ? {'height': '200px', display: display ? '' : 'none'} : {}}>
@@ -1396,6 +1405,7 @@ export default function ChordLab({importedChordData, masterInstrumentArray, free
         </Dropdown.Menu>
         </Dropdown>
          <Menu.Item onClick={handleEdit}> Edit </Menu.Item>       
+         <Menu.Item onClick={() => downloadAsMidi()}> Midi Time </Menu.Item>       
          <Menu.Item onClick={() => setShowDescription(!showDescription)}> Desc </Menu.Item>
          <Button.Group>
          <Button basic compact onClick={() => setDisplay()}>Display</Button>
