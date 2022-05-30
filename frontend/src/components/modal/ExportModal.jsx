@@ -8,12 +8,19 @@ function ExportModal({dataType, exportObj, opened, setOpened, changeParentName, 
   const [isOpen, setIsOpen] = useState(false);
   const [name, setName] = useState('')
   const [desc, setDesc] = useState('')
+  //modes are export, midi, and tab
+  // const [mode, setMode] = useState('export')
   const [inputFocus, setInputFocus] = useState(false)
   const [textAreaFocus, setTextAreaFocus] = useState(false)
   const [messageDisplay, setMessageDisplay] = useState(false)
   const [updateDisplay, setUpdateDisplay] = useState(false)
   const [poolDisplay, setPoolDisplay] = useState('global')
-  const user = JSON.parse(localStorage.getItem('userInfo'))
+  let user;
+  if (localStorage.getItem('userInfo') === null){
+    user = {'_id': '0000000000', 'name': 'anonymous'}
+  } else {
+    user = JSON.parse(localStorage.getItem('userInfo'))
+  }
 
   const dataInsertStatus  = useSelector(state => state.dataInsert)
   const {loading, error, dataInsert} = dataInsertStatus
@@ -110,9 +117,6 @@ function handleBackgroundColor(){
   return colors[dataType]
 }
 
-function handleOnBlurName(){
-
-}
 
   return (
     <>
@@ -197,9 +201,7 @@ function handleOnBlurName(){
               />
              </div>
             </main>
-            <Button loading={loading} onClick={handleExport}>Export</Button>
-            <Button loading={loading} onClick={() => console.log(exportObj)}>Test</Button>
-            <Button loading={loading} onClick={() => exportObj['pool'] = 'local'}>Change</Button>
+            <Button loading={loading} disabled={localStorage.getItem('userInfo') === null} onClick={handleExport}>{localStorage.getItem('userInfo') === null ? 'Log-in to export songs or midi' : 'Export'}</Button>
           </div>
         </>
       )}

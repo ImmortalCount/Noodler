@@ -276,13 +276,13 @@ function round(number, decimals = 0) {
 
 export function turnPlayerDataIntoFullMidiSong(playerObj){
     let midi = new Midi();
-    midi.header.timeSignatures = [
-    {
-        ticks: 2160,
-	    timeSignature: [5,4],
-	    measures: 1,
+    // midi.header.timeSignatures = [
+    // {
+    //     ticks: 2160,
+	//     timeSignature: [5,4],
+	//     measures: 1,
 
-    }]
+    // }]
     for (let i = 0; i < playerObj.length; i++){
         let returnArr = []
         let time = 0;

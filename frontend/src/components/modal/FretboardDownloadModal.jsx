@@ -52,7 +52,7 @@ function handleDownload(){
             onBlur={() => setInputFocus(false)}
             style={{display: inputFocus ? '': 'none' }}
             />
-              <Button onClick={() => handleDownload()}> Download</Button>
+                    <Button disabled={localStorage.getItem('userInfo') === null} onClick={() => handleDownload()}>{localStorage.getItem('userInfo') === null ? 'Log-in to download fretboard diagram' : 'Download'}</Button>
             </main>
  
           </div>

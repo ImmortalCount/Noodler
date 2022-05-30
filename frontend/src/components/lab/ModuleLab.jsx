@@ -353,7 +353,7 @@ for (var o = 0; o < 10; o++){
             var synthPart = new Tone.Sequence(
                 function(time, note) {
                   if (note !== 'X'){
-                      polySynth.triggerAttackRelease(noteStringHandler(note), 0.2, time);
+                      polySynth.triggerAttackRelease(noteStringHandler(note), 0.5, time);
                   }
                 },
                sequence,

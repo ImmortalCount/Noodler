@@ -1,19 +1,15 @@
-import React from 'react'
-import { Dropdown, Menu} from 'semantic-ui-react'
+import {React, useEffect, useState} from 'react'
+import { Dropdown, Menu, Button} from 'semantic-ui-react'
 import { Link } from 'react-router-dom';
 import { useSelector, useDispatch } from 'react-redux';
 import {logout} from '../../store/actions/userActions.js'
+import LoginRegisterModal from '../modal/LoginRegisterModal.jsx';
 
 export default function Navbar() {
+    const [opened, setOpened] = useState(false)
+    const [user, setUser] = useState(JSON.parse(localStorage.getItem('userInfo')))
     var activeItem;
-    const user = JSON.parse(localStorage.getItem('userInfo'))
     const dispatch = useDispatch()
-
-    // var accountOptions = [
-    //     { key: 'name', text: 'Name', value: 'name' },
-    //     { key: 'login', text: 'Login', value: 'login' },
-    //     { key: 'logout', text: 'Logout', value: 'logout' },
-    // ]
 
     const logoutHandler = () => {
         dispatch(logout());
@@ -21,45 +17,22 @@ export default function Navbar() {
         location.reload();
     }
 
+    const userLogin = useSelector((state) => state.userLogin)
+    const { success } = userLogin
 
-
+    useEffect(() => {
+        if (success){
+            setUser(JSON.parse(localStorage.getItem('userInfo')))
+        }
+    }, [success])
     return (
         <>  
+        <div>
         <Menu>
              <Menu.Item
             header
             name='NOODLER'
             />
-             {/* <Menu.Item
-            name='options'
-            active={activeItem === 'options'}
-            onClick={OnClickHandler}
-            /> */}
-            
-            {/* <Menu.Item
-            name='collections'
-            active={activeItem === 'collections'}
-            onClick={OnClickHandler}
-            /> */}
-            {/* <Menu.Item
-            name='pools'
-            active={activeItem === 'pools'}
-            onClick={OnClickHandler}
-            /> */}
-            {/* <Menu.Item
-            name='lab'
-            active={activeItem === 'lab'}
-            onClick={OnClickHandler}
-            /> */}
-            {/* <Menu.Item
-            name='player'
-            active={activeItem === 'player'}
-            onClick={OnClickHandler}
-            /> */}
-            {/* <Menu.Item
-            name='test'
-            onClick={() => console.log(userInfo)}
-            /> */}
             <Menu.Menu position='right'>
             {(user) && 
                 <Dropdown item text={user.name}>
@@ -70,22 +43,14 @@ export default function Navbar() {
             }
             {!(user) && 
             <>
-            <Menu.Item as={Link}
-            to='/login'
-            name='login'
-            active={activeItem === 'login'}
-            />
-            <Menu.Item as={Link}
-            to='/register'
-            name='register'
-            active={activeItem === 'register'}
+            <LoginRegisterModal
+            registerDisplay={'login'}
             />
             </>
-            
             }
-            {/* <Select compact options={accountOptions} defaultValue='login'/> */}
             </Menu.Menu>
-            </Menu>
+        </Menu>
+        </div>
         </>
     )
 }

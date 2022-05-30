@@ -7,7 +7,7 @@ import { setLabData } from '../../store/actions/labDataActions';
 import { scaleHandler } from './utils';
 import ExportModal from '../modal/ExportModal';
 import '../../../public/Do_Mayor_armadura.svg'
-import { keySynth } from './synths';
+import { polySynth } from './synths';
 import { setNoteDisplay } from '../../store/actions/noteDisplayActions';
 import { setPlayImport } from '../../store/actions/playImportActions';
 import { setDisplayFocus } from '../../store/actions/displayFocusActions';
@@ -557,7 +557,7 @@ function convertScaleForDispatch(){
     //---Synthpart function 
             const synthPart = new Tone.Sequence(
               function(time, note) {
-                  keySynth.triggerAttackRelease(note, "10hz", time)
+                polySynth.triggerAttackRelease(note, 0.5, time)
                 let findID = notePositions[Note.pitchClass(note)]
                 if (free){
                   findID = notePositions[Note.pitchClass(note)] + '_1'
@@ -814,7 +814,6 @@ const onDragOver = e => {
         <div onDrop={dropHandler} onDragOver={onDragOver} style={ free ? {'height': '200px', display: display ? '' : 'none'} : {}}>
         <Menu>
         <Menu.Item onClick={() => handleSharpsOrFlats()}>{options === 'sharps' ? '#' : 'b'}</Menu.Item>
-        <Menu.Item onClick={() => console.log(importedScaleData)}>Test</Menu.Item>
         <Dropdown onChange={onChangeDropdown} options={options === 'sharps' ? dropdownOptionsSharp : dropdownOptionsFlat} text = {`Root: ${rootNote}`} simple item/>
         <Button.Group>
         <Button basic compact onClick={()=> {playNoteSequence(); setPlaying(true)}}><Icon name={playing ? 'stop' : 'play'}/></Button>

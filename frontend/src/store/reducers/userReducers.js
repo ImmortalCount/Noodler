@@ -32,9 +32,9 @@ import {
       case USER_LOGIN_REQUEST:
         return { loading: true }
       case USER_LOGIN_SUCCESS:
-        return { loading: false, userInfo: action.payload }
+        return { loading: false, userInfo: action.payload, success: true }
       case USER_LOGIN_FAIL:
-        return { loading: false, error: action.payload }
+        return { loading: false, error: action.payload, success: false }
       case USER_LOGOUT:
         return {}
       default:
@@ -47,9 +47,9 @@ import {
       case USER_REGISTER_REQUEST:
         return { loading: true }
       case USER_REGISTER_SUCCESS:
-        return { loading: false, userInfo: action.payload }
+        return { loading: false, userInfo: action.payload, success: true }
       case USER_REGISTER_FAIL:
-        return { loading: false, error: action.payload }
+        return { loading: false, error: action.payload, success: false}
       case USER_LOGOUT:
         return {}
       default:

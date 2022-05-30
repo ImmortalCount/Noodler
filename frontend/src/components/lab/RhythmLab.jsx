@@ -730,9 +730,9 @@ function playSynth(){
           function(time, note) {
             if (note !== 'X'){
                 if (note === 'O'){
-                    drumKit.triggerAttackRelease('B4', "10hz", time);
+                    drumKit.triggerAttackRelease('B4', 0.5, time);
                 } else {
-                    drumKit.triggerAttackRelease(note, "10hz", time)
+                    drumKit.triggerAttackRelease(note, 0.5, time)
                 }
             }
             const elementsToBeActivated = getAllParentElementsByID(playNoteOrderByID[position])

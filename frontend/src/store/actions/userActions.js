@@ -29,12 +29,19 @@ export const login = (email, password) => async (dispatch) => {
             {'email': email, 'password': password},
             config
         )
-        dispatch({
-            type: USER_LOGIN_SUCCESS,
-            payload: data,
-        })
         
-        localStorage.setItem('userInfo', JSON.stringify(data))
+        if (data['authUser']){
+            dispatch({
+                type: USER_LOGIN_SUCCESS,
+                payload: data,
+            })
+            localStorage.setItem('userInfo', JSON.stringify(data['payload']))
+        }  else {
+            dispatch({
+                type: USER_LOGIN_FAIL,
+                payload: data,
+            })
+        }
     } catch (error) {
         dispatch({
             type: USER_LOGIN_FAIL,
@@ -68,7 +75,7 @@ export const register = (name, email, password, confirmPassword) => async (dispa
             {name, email, password, confirmPassword},
             config
         )
-
+        console.log(data)
         dispatch({
             type: USER_REGISTER_SUCCESS,
             payload: data,

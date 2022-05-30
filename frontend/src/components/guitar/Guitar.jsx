@@ -20,9 +20,11 @@ import { setGlobalInstruments } from '../../store/actions/globalInstrumentsActio
 import TabDownloadModal from '../modal/TabDownloadModal'
 import AudioDownloadModal from '../modal/AudioDownloadModal';
 import BpmModal from '../modal/BpmModal';
+import MidiModal from '../modal/MidiModal'
 import FretboardDownloadModal from '../modal/FretboardDownloadModal'
 import { setGlobalPosition } from '../../store/actions/globalPositionActions';
 import { createGuitarSVG } from './guitarSVG';
+
 
 
 export default function GuitarSVG({masterInstrumentArray, activelyDisplayedInstruments}) {
@@ -81,7 +83,7 @@ export default function GuitarSVG({masterInstrumentArray, activelyDisplayedInstr
         refData.current = data
         refInstruments.current = instruments
         displayNotes()
-        synthCleanup()
+        // synthCleanup()
     }, [data, instruments])
 
     //CASE: SONG IS IMPORTED
@@ -105,12 +107,15 @@ export default function GuitarSVG({masterInstrumentArray, activelyDisplayedInstr
 
     //CASE: STATE IS CHANGED 
     useEffect(() => {
+        console.log('state changed!!')
         if (state !== "Initial Module Data"){
             const dataPackage = JSON.parse(state)
             refData.current = dataPackage['data']
             setData(dataPackage['data'])
             loadNoteSequenceAndVisualDataOntoTimeline(dataPackage['data'])
             setModuleMarkers(moduleMarkerCreator(dataPackage['data']))
+            Tone.Transport.loopStart = 0;
+            Tone.Transport.loopEnd = loopLengthCreator(dataPackage['data']);
         } else {
             return
         }
@@ -181,6 +186,7 @@ function importSynths(importedInstrumentArray){
     for (let i = 0; i < importedInstrumentArray.length; i++){
         let instrumentType = importedInstrumentArray[i]['instrument']
         let synthName = importedInstrumentArray[i]['synthSource']
+        console.log(synthName)
         loadASynth(synthName, instrumentType) 
     }
 }
@@ -733,8 +739,8 @@ function playHandler(){
 }
 
 function loopOn(){
-    Tone.Transport.loopStart = 0;
-    Tone.Transport.loopEnd = loopLengthCreator(data);
+    // Tone.Transport.loopStart = 0;
+    // Tone.Transport.loopEnd = loopLengthCreator(data);
     if (Tone.Transport.loop !== true){
         Tone.Transport.loop = true;
         setLoop(true)
@@ -1043,7 +1049,10 @@ img.src = url;
 }
 
 function loadASynth(synthName, synthType){
-    loadedSynths.current[synthName] = new Tone.Sampler(instrumentSamples[synthType]).toDestination()
+    console.log(loadedSynths.current[synthName] === undefined)
+    if (loadedSynths.current[synthName] === undefined){
+        loadedSynths.current[synthName] = new Tone.Sampler(instrumentSamples[synthType]).toDestination()
+    }
 }
 
 function disposeOfASynth(synthName){
@@ -1087,8 +1096,10 @@ setTimeout(async () => {
         <Button compact basic onClick={() => globalPositionChange('up')}><Icon name='arrow up'/></Button>
         <Button compact basic onClick={() => handleSeeAllPositions()}><Icon name='arrows alternate vertical'/></Button>
         <AudioDownloadModal tab={tab} handleRecord={handleRecord} length={loopLengthCreator(data) * 1000}/>
-        <TabDownloadModal tab={tab}/>
         <BpmModal/>
+        <TabDownloadModal tab={tab}/>
+        <MidiModal masterInstrumentArray={masterInstrumentArray} tab={tab}/>
+        <Button compact basic onClick={() => console.log(loadedSynths.current)}>TEST</Button>
         </>
     )
 }

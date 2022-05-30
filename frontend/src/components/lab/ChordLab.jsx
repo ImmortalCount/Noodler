@@ -462,7 +462,7 @@ export default function ChordLab({importedChordData, masterInstrumentArray, free
             var count = 0;
             const synthPart = new Tone.Sequence(
                 function(time, note) {
-                  polySynth.triggerAttackRelease(noteStringHandler(note), "10hz", time)
+                  polySynth.triggerAttackRelease(noteStringHandler(note), 0.5, time)
                   let chordId = 'chord_' + count
                   if (free){
                       chordId = 'chord_' + count + '_free'
@@ -1405,7 +1405,7 @@ FileSaver.saveAs(blob, "chordsTest.mid")
         </Dropdown.Menu>
         </Dropdown>
          <Menu.Item onClick={handleEdit}> Edit </Menu.Item>       
-         <Menu.Item onClick={() => downloadAsMidi()}> Midi Time </Menu.Item>       
+         {/* <Menu.Item onClick={() => downloadAsMidi()}> Midi Time </Menu.Item>        */}
          <Menu.Item onClick={() => setShowDescription(!showDescription)}> Desc </Menu.Item>
          <Button.Group>
          <Button basic compact onClick={() => setDisplay()}>Display</Button>

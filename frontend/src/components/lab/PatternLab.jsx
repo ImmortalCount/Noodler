@@ -440,7 +440,7 @@ function playAll(){
     var count = 0;
     const synthPart = new Tone.Sequence(
         function(time, note) {
-          polySynth.triggerAttackRelease(noteStringHandler(note), "10hz", time)
+          polySynth.triggerAttackRelease(noteStringHandler(note), 0.5, time)
           let chordId = 'pattern_' + count
                   if (free){
                       chordId = 'pattern_' + count + '_free'

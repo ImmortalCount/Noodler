@@ -12,7 +12,7 @@ export default function Login() {
     const navigate = useNavigate()
 
     const userLogin = useSelector((state) => state.userLogin)
-    const { loading, userInfo } = userLogin
+    const {loading, userInfo } = userLogin
 
     const loginHandler = (e) => {
       e.preventDefault()

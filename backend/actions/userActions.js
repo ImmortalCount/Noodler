@@ -41,7 +41,7 @@ export default class userActions {
           pools: dbUser.pools,
           token: generateWebToken(dbUser._id)
         }
-        return userPayload
+        return {authUser: true, message: 'success', payload: userPayload} 
       } else if (dbUser && !isPassword){
         return {authUser: false, message: 'wrong password'}
       }  else {

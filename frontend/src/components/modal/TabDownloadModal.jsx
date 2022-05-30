@@ -66,11 +66,11 @@ export default function TabDownloadModal({tab}) {
             </div>
             
           </main>
-          <Button onClick={() => downloadTab()}>Download</Button>
+          <Button disabled={localStorage.getItem('userInfo') === null} onClick={() => downloadTab()}>{localStorage.getItem('userInfo') === null ? 'Log-in to download tab' : 'Download'}</Button>
         </div>
       </>
     )}
-    <Button basic compact onClick={() => setIsOpen(true)}><Icon name='sort amount down'/></Button>
+    <Button basic compact onClick={() => setIsOpen(true)}>TAB</Button>
   </>
     
   )

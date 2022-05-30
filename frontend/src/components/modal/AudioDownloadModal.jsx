@@ -93,7 +93,7 @@ export default function AudioDownloadModal({tab, length, handleRecord}) {
             {success && <Progress percent={100} success>{fileName}.webm was successfully downloaded!</Progress>}
             {!recording && <h3>File Length: {convertMillsecondsToMinutesAndSeconds()}</h3>}
           </main>
-          {!recording && <Button onClick={() => exportAudio()}>Download</Button>}
+          {!recording && <Button disabled={localStorage.getItem('userInfo') === null} onClick={() => exportAudio()}>{localStorage.getItem('userInfo') === null ? 'Log-in to download audio' : 'Download'}</Button>}
           {recording && <Button disabled onClick={() => exportAudio()}>Downloading...</Button>}
         </div>
       </>

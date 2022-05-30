@@ -5,13 +5,13 @@ export const instrumentOptions = [
     {key: 'acoustic_guitar_steel', text: 'Acoustic Guitar Steel', value: 'acoustic_guitar_steel'},
     {key: 'electric_guitar_clean', text: 'Electric Guitar Clean', value: 'electric_guitar_clean'},
     {key: 'electric_guitar_jazz', text: 'Electric Guitar Jazz', value: 'electric_guitar_jazz'},
-    {key: 'electric_distortion_guitar', text: 'Electric Guitar Distorted', value: 'electric_distortion_guitar'},
+    // {key: 'electric_distortion_guitar', text: 'Electric Guitar Distorted', value: 'electric_distortion_guitar'},
 ]
 
 export const guitarInstruments = [
     "acoustic_guitar_nylon",
     "acoustic_guitar_steel",
-    "electric_distortion_guitar",
+    // "electric_distortion_guitar",
     "electric_guitar_clean" ,
     "electric_guitar_jazz"
 ]

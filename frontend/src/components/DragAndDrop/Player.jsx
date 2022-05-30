@@ -145,7 +145,10 @@ export default function Player ({masterInstrumentArray, display, childChangeInst
         const sentData = convertModuleDataIntoPlayableSequence(data)
         sendModuleData(JSON.stringify({markers: markers, data: sentData})) 
         let tab = convertToTab()
-        dispatch(setTab({tab: tab, name: name}))
+        const playableSequence = convertModuleDataIntoPlayableSequence(data)
+        const midi = turnPlayerDataIntoFullMidiSong(playableSequence)
+        //Midi is included in tab dispatch!
+        dispatch(setTab({tab: tab, name: name, midi: midi}))
     }, [data, setBpm, globalInstruments, globalPosition]);
 
 function handleSetInstrumentFocus(value){
@@ -856,12 +859,18 @@ function downloadAsMidi(){
         {mapMenuItems()}
         </Button.Group>
         <Menu.Item basic active={mode} onClick={()=> setMode(!mode)}>Mode</Menu.Item>
-        <Menu.Item basic onClick={()=> console.log(convertModuleDataIntoPlayableSequence(data))}>Test</Menu.Item>
-        <Menu.Item basic onClick={()=> downloadAsMidi()}>Midi Time</Menu.Item>
         <Menu.Item basic active={edit} onClick={()=> setEdit(!edit)}>Edit</Menu.Item>
-        <Menu.Item basic active={displayLock} onClick={()=> setDisplayLock(!displayLock)}>Display Lock</Menu.Item>
-        <Menu.Item basic active={hideModuleName} onClick={()=> setHideModuleName(!hideModuleName)}>View</Menu.Item>
-        <Menu.Item basic active={titleLock} onClick={()=> setTitleLock(!titleLock)}>Title Lock{titleLock ? 'on' : 'off'}</Menu.Item>
+        <Dropdown
+            simple
+            item
+            text='Options'
+            >
+        <Dropdown.Menu>
+        <Dropdown.Item onClick={()=> setHideModuleName(!hideModuleName)}>{hideModuleName ? 'Show ' : 'Hide '} Module Names</Dropdown.Item> 
+        <Dropdown.Item onClick={()=> setTitleLock(!titleLock)} > Name Position-Lock {titleLock ? 'On': 'Off'} </Dropdown.Item>    
+         <Dropdown.Item onClick={()=> setDisplayLock(!displayLock)} > Link Display {displayLock ? 'On': 'Off'} </Dropdown.Item>        
+        </Dropdown.Menu>
+        </Dropdown>
         <Menu.Item basic active={showDescription} onClick={() => setShowDescription(!showDescription)}> Desc</Menu.Item>
         <Button.Group>
         <Button basic onClick={() => setOpened(true)}>Export</Button>

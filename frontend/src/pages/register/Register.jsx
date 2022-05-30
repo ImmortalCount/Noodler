@@ -17,7 +17,7 @@ export default function Register({history, location}) {
     const userRegister = useSelector((state) => state.userRegister)
     const {loading, userInfo } = userRegister
 
-    const submitHandler = (e) => {
+    const registerHandler = (e) => {
         e.preventDefault()
         dispatch(register(name, email, password, confirmPassword))
     }
@@ -70,7 +70,7 @@ export default function Register({history, location}) {
                 value={confirmPassword}
                 onChange={(e) => setConfirmPassword(e.target.value)}
               />
-             <Button onClick={submitHandler} color='teal' fluid size='large' loading={loading}>
+             <Button onClick={registerHandler} color='teal' fluid size='large' loading={loading}>
                 Register
               </Button>
             </Segment>
