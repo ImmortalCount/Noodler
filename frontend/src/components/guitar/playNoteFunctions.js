@@ -3,7 +3,7 @@ export function setUpMute(allSynths){
     // var vol = new Tone.Volume(-12);
     allSynths['acoustic_guitar_nylon'].volume.value = -16;
     allSynths['acoustic_bass'].volume.value = -16;
-    console.log('what?')
+    // console.log('what?')
 }
 
 //====Play an entire sequence in an alternative way

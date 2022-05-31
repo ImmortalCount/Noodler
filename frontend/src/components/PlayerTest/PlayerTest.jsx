@@ -54,7 +54,6 @@ useEffect(() => {
 
 useEffect(() => {
     loadNoteSequenceOntoTimeline(data)
-    console.log('loaded')
 }, [data])
     
     
@@ -253,13 +252,11 @@ function loadNoteSequenceOntoTimeline(data){
    }
 
    const onChangeVolume = e => {
-    console.log(e.target.value)
 }
     
 function setUpMute(){
     // var vol = new Tone.Volume(-12);
     allSynths['acoustic_guitar_nylon'].volume.value = -12;
-    console.log('what?')
 }
     
     return (

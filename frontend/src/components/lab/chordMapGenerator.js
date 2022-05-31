@@ -551,7 +551,6 @@ export function turnChordsIntoModules(chords, exportNames, key, positions, maste
 
 
 
-console.log(returnAllModesFromScaleAsScaleData(['C#', 'D', 'F', 'A', 'B']))
 
 export function turnChordIntoModule(chord, key, chordName, moduleName, position){
     //type can equal modal or diatonic

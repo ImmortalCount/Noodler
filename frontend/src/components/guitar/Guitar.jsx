@@ -107,7 +107,6 @@ export default function GuitarSVG({masterInstrumentArray, activelyDisplayedInstr
 
     //CASE: STATE IS CHANGED 
     useEffect(() => {
-        console.log('state changed!!')
         if (state !== "Initial Module Data"){
             const dataPackage = JSON.parse(state)
             refData.current = dataPackage['data']
@@ -186,7 +185,6 @@ function importSynths(importedInstrumentArray){
     for (let i = 0; i < importedInstrumentArray.length; i++){
         let instrumentType = importedInstrumentArray[i]['instrument']
         let synthName = importedInstrumentArray[i]['synthSource']
-        console.log(synthName)
         loadASynth(synthName, instrumentType) 
     }
 }
@@ -490,7 +488,7 @@ function loadNoteSequenceAndVisualDataOntoTimeline(data){
                                 // noteName.setAttribute('class', noteValues[index]["name"] + '_' + NUM + '_name notename_' + NUM + ' notename' )
                             }
                         } else {
-                            console.log('off Model!')
+                            // console.log('off Model!')
                         }
                     }
                 } else {
@@ -518,7 +516,7 @@ function loadNoteSequenceAndVisualDataOntoTimeline(data){
                             }
                         }
                     } else {
-                        console.log('off Model!')
+                        // console.log('off Model!')
                     }
                 }
               }
@@ -614,7 +612,7 @@ function displayNotes(input){
                         }
                     }
                 } else {
-                    console.log('off Model!')
+                    // console.log('off Model!')
                 }
                 }
                 } else {
@@ -642,7 +640,7 @@ function displayNotes(input){
                                 }
                             }
                         } else {
-                            console.log('off Model!')
+                            // console.log('off Model!')
                         }
                     }
                 }
@@ -697,7 +695,7 @@ function displayNotes(input){
                             }
                         }
                     } else {
-                        console.log('off Model!')
+                        // console.log('off Model!')
                     }
                 }
             } else {
@@ -720,7 +718,7 @@ function displayNotes(input){
                         }
                     }
                 } else {
-                    console.log('off Model!')
+                    // console.log('off Model!')
                 }
             }
         }
@@ -1049,7 +1047,6 @@ img.src = url;
 }
 
 function loadASynth(synthName, synthType){
-    console.log(loadedSynths.current[synthName] === undefined)
     if (loadedSynths.current[synthName] === undefined){
         loadedSynths.current[synthName] = new Tone.Sampler(instrumentSamples[synthType]).toDestination()
     }

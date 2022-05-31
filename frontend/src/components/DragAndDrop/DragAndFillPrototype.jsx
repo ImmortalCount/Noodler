@@ -19,7 +19,7 @@ export default function DragAndFillPrototype() {
 
     const dragOverHandler = e => {
         e.preventDefault();
-        console.log(e.currentTarget.id)
+        // console.log(e.currentTarget.id)
         // e.currentTarget.style.background = 'red';
     };
 

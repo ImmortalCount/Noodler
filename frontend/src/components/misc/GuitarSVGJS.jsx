@@ -28,7 +28,6 @@ handleCLick(){
         cx: 180
     // eslint-disable-next-line no-undef
     }, 2000, mina.easein)
-    console.log('hello');
     }
 
 render(){

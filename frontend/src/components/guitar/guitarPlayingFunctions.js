@@ -106,7 +106,6 @@ export function animateBend(){
     var note = document.getElementById('2_11')
     var noteName = document.getElementById('2_11_name')
     var currentPosition = Number(note.getAttribute('cy'));
-    console.log(currentPosition)
     var counter = 100;
     var y = 0.1;
     var bound = 50;

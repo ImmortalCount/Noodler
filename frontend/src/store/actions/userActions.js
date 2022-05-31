@@ -75,7 +75,6 @@ export const register = (name, email, password, confirmPassword) => async (dispa
             {name, email, password, confirmPassword},
             config
         )
-        console.log(data)
         dispatch({
             type: USER_REGISTER_SUCCESS,
             payload: data,

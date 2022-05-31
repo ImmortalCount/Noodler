@@ -275,9 +275,6 @@ for (var o = 0; o < 10; o++){
         if (notesFromRhythm === 0 || notesFromRhythm === undefined){
             notesFromRhythm = 1;
         } 
-
-        console.log(notesFromRhythm, 'notesFromRhythm')
-        console.log(chord, 'chord')
         let returnStr = ''
         for (let i = 0; i < chord.length; i++){
             if (i === chord.length - 1){
@@ -331,11 +328,9 @@ for (var o = 0; o < 10; o++){
         if (playType === 'Melody'){
             let notesToMap = patternAndScaleToNotes(pattern, patternType, scaleNotes)
             sequence = mapNotesToRhythm(notesToMap, rhythm)
-            console.log(sequence, 'notesToMap')
         } else if (playType === 'Chord'){
             let notesToMap = chordIntoNotes(chord, notesFromRhythm)
             sequence = mapNotesToRhythm(notesToMap, rhythm)
-            console.log(sequence, 'notesToMap')
         }
         
         let previousInstrumentDisplay = instrumentDisplay

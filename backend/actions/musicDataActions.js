@@ -17,11 +17,6 @@ export default class musicDataActions {
     try {
       const dataType = dataObject.dataType
       const dataName = dataObject.name
-      // let displayName;
-      // if (dataType === 'scale'){
-      //   displayName = dataObject
-      // }
-      console.log(dataObject, 'dataObject from musicDataActions')
       const authorId = dataObject.authorId
       const pool = dataObject.pool
       let poolName;

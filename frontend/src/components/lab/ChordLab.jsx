@@ -62,7 +62,6 @@ export default function ChordLab({importedChordData, masterInstrumentArray, free
 
     //Convert notes and position data into DATA
     function handleSetData(chords, position){
-        console.log(chords, '!!!!')
         var clone = JSON.parse(JSON.stringify(chords))
         clone = sortAllChordsByPitch(clone)
         if (position === undefined){
@@ -95,7 +94,6 @@ export default function ChordLab({importedChordData, masterInstrumentArray, free
         if(update){
         setUpdate(false)
         const importedChordData = labInfo['chordLab']
-        console.log(importedChordData, '!!!!!')
         if (importedChordData){
             let chords;
             if (importedChordData['chords']){
@@ -358,7 +356,6 @@ export default function ChordLab({importedChordData, masterInstrumentArray, free
                         let note =  Note.pitchClass(chordStack[l][m])
                         let octave = Note.octave(chordStack[l][m])
                         chordStack[l][m] = note + (octave + 1)
-                        console.log('altered a chord')
                     }
                 }
             }
@@ -540,7 +537,6 @@ export default function ChordLab({importedChordData, masterInstrumentArray, free
 
     function sortAllChordsByPitch(chords){
         let tempArr = []
-        console.log(chords, 'CHORDS FROM SORT ALL CHORDS BY PITCH!!!')
         for (let i = 0; i < chords.length; i++){
             tempArr.push(Note.sortedNames(chords[i]))
         }

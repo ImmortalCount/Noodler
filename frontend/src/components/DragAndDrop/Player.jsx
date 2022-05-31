@@ -113,7 +113,6 @@ export default function Player ({masterInstrumentArray, display, childChangeInst
             setData(songImport['data'])
             setName(songImport['name'])
             setDescription(songImport['desc'])
-            console.log(songImport['bpm'])
             Tone.Transport.bpm.value = songImport['bpm']
         } else {
             return

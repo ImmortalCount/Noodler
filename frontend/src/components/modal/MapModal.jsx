@@ -131,7 +131,6 @@ function MapModal({mapObj, handleMapChords, masterScale, masterInstrumentArray})
               </div>
             </main>
             <Button onClick={() => handleMapChords(key, scaleSelectOptions, selectInstruments, overwriteOptions)}>Map</Button>
-            <Button onClick={() => console.log(selectInstruments)}>Test</Button>
           </div>
         </>
       )}

@@ -55,7 +55,6 @@ function BpmModal() {
             </header>
             <main className="modal__main">
               <h3>Bpm: {bpmDisplay}</h3>
-              <Button basic compact onClick={() => console.log(Tone.Transport.bpm.value, 'what?')}>current bpm?</Button>
               <input type="range" min='1' max='500' step='1' value={bpmDisplay} onChange={handleBpmChange}/>
             </main>
           </div>

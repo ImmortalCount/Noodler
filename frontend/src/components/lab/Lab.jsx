@@ -48,8 +48,6 @@ export default function Lab({masterInstrumentArray, display, update, setUpdate, 
    }, [update])
  //scale, chord, pattern, rhythm
   const dropHandler = e => {
-    'is this going off?'
-    console.log(console.log(importedChordData, importedPatternData, importedModuleData, importedRhythmData, '!!!!'))
     var data = JSON.parse(e.dataTransfer.getData("text"));
     if (data['type'] === 'scaleLab'
         || data['type'] === 'chordLab'

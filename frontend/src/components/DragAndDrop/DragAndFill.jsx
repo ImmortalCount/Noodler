@@ -57,7 +57,7 @@ export default function DragAndFill() {
 
 
     const hasAttribute = e => {
-        console.log(e.target.hasAttribute('classname'))
+        // console.log(e.target.hasAttribute('classname'))
     }
 
 

@@ -256,7 +256,6 @@ export default function Palette({display}) {
         storage[activeTabStates[activeTab]][activeSubTabStates[activeSubTab]][pos],
          type: exportType}
 
-        console.log(obj, 'EXPORTED FROM PALLETTE!')
         e.dataTransfer.setData('text', JSON.stringify(obj));
     };
 
@@ -269,7 +268,6 @@ export default function Palette({display}) {
 
     const dragOverHandler = e => {
         e.preventDefault();
-        console.log('This is OVER!')
     }
 
     const dragLeaveHandler = e => {
@@ -279,7 +277,6 @@ export default function Palette({display}) {
     const dropHandler = e => {
         var cloneStorage = JSON.parse(JSON.stringify(storage))
         var data = JSON.parse(e.dataTransfer.getData("text"));
-        console.log(data)
         if (data['type'] !== 'palette' && data['type'] !== 'modulePaletteExport'){
            if (data['className'] === 'chordData'){
             cloneStorage['Components']['Chords'].push(data['message'])

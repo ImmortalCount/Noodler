@@ -23,7 +23,7 @@ function updateLinkedArrays(previousMasterArray, currentMasterArray, slaveArray1
             }
         }
     }
-    console.log(newIndices, 'newIndices')
+    // console.log(newIndices, 'newIndices')
     let returnArr = [];
     for (let k = 0; k < slaveArray1.length; k++){
         returnArr[newIndices[k]] = slaveArray1[k]
@@ -61,5 +61,5 @@ let slaveArray1Result = [2,3,4,5,6,0,1]
   
 //   }
 
-console.log(updateLinkedArrays(previousMasterArray, currentMasterArray, slaveArray1))
+// console.log(updateLinkedArrays(previousMasterArray, currentMasterArray, slaveArray1))
 

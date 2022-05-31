@@ -45,7 +45,6 @@ const onDragStart = (e) => {
         type: displayData.data[e.currentTarget.id.split('_')[0]].dataType + 'ExplorerExport'
     }
         e.dataTransfer.setData('text', JSON.stringify(obj));
-        console.log(obj)
 }
     const scopeOptions = [
     { key: 'all', text: 'All', value: 'all' },
