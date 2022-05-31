@@ -5,6 +5,7 @@ import { useDispatch, useSelector} from 'react-redux';
 import { insertData } from '../../store/actions/dataPoolActions';
 import { toMidi, midiToNoteName } from '@tonaljs/midi';
 import { Note, Scale, Chord} from '@tonaljs/tonal';
+import FileSaver from 'file-saver'
 import { Menu, Button, Input, Icon, Dropdown, Form, TextArea} from 'semantic-ui-react';
 import { keySynth } from './synths';
 import { polySynth } from './synths';
@@ -15,6 +16,7 @@ import { setPlayImport } from '../../store/actions/playImportActions';
 import { setNoteDisplay } from '../../store/actions/noteDisplayActions';
 import { setDisplayFocus as setDisplayFocusAction } from '../../store/actions/displayFocusActions';
 import ExportModal from '../modal/ExportModal';
+import { turnNotesIntoMidi } from '../midi/midifunctions';
 
 
 export default function PatternLab({importedPatternData, masterInstrumentArray, display, free, update, setUpdate, labSplit}) {
@@ -1241,6 +1243,12 @@ const dragOverHandlerSpecial =  e => {
     e.preventDefault();
 }
 
+function downloadAsMidi(name){
+    var midi = turnNotesIntoMidi(notes, 0.50)
+    let blob = new Blob([midi.toArray()], {type: "audio/midi"});
+    FileSaver.saveAs(blob,  name + ".mid")
+        }
+
     return (
         <div onDragOver={dragOverHandlerSpecial} onDrop={dropHandlerSpecial} style={ free ? {'height': '200px', display: display ? '' : 'none'} : {}}>
         <Menu>
@@ -1403,6 +1411,7 @@ const dragOverHandlerSpecial =  e => {
         setOpened={setOpened}
         changeParentName={setName}
         changeParentDesc={setDescription}
+        downloadAsMidi={downloadAsMidi}
         />
         </div>
     )

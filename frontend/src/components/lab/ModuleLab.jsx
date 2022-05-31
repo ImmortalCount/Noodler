@@ -568,8 +568,6 @@ for (var o = 0; o < 10; o++){
         setName(importedModuleData['name'])
         setDescription(importedModuleData['desc'])
 
-        // console.log(data, 'import data')
-        // console.log(labData, 'lab data')
         let exportData = {};
         exportData['chordLab'] = importedModuleData['data']['chordData']
         exportData['patternLab'] = importedModuleData['data']['patternData']
@@ -581,7 +579,8 @@ for (var o = 0; o < 10; o++){
         e.preventDefault();
     }
 
-    function downloadAsMidi(){
+    function downloadAsMidi(name){
+        let timeSignature = rhythm.length
         let sequence;
         if (playType === 'Melody'){
             let notesToMap = patternAndScaleToNotes(pattern, patternType, scaleNotes)
@@ -590,9 +589,9 @@ for (var o = 0; o < 10; o++){
             let notesToMap = chordIntoNotes(chord, notesFromRhythm)
             sequence = mapNotesToRhythm(notesToMap, rhythm)
         }
-        var midi = turnNotesWithRhythmIntoMidi(sequence)
+        var midi = turnNotesWithRhythmIntoMidi(sequence, timeSignature)
         let blob = new Blob([midi.toArray()], {type: "audio/midi"});
-        FileSaver.saveAs(blob, "moduleTest.mid")
+        FileSaver.saveAs(blob, name + ".mid")
 }
 
     return (
@@ -631,7 +630,6 @@ for (var o = 0; o < 10; o++){
         </Dropdown>
         </Button.Group>
         <Menu.Item onClick={() => setShowDescription(!showDescription)}> Desc </Menu.Item>
-        <Menu.Item onClick={() => downloadAsMidi()}> Midi Time </Menu.Item>
          <Button.Group>
          <Button basic onClick={() => setOpened(true)}>Export</Button>
         
@@ -665,6 +663,7 @@ for (var o = 0; o < 10; o++){
          setOpened={setOpened}
          changeParentName={setName}
          changeParentDesc={setDescription}
+         downloadAsMidi={downloadAsMidi}
          />
         </div>
     )

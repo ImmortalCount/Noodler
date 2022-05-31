@@ -1099,7 +1099,6 @@ setTimeout(async () => {
         <BpmModal/>
         <TabDownloadModal tab={tab}/>
         <MidiModal masterInstrumentArray={masterInstrumentArray} tab={tab}/>
-        <Button compact basic onClick={() => console.log(loadedSynths.current)}>TEST</Button>
         </>
     )
 }

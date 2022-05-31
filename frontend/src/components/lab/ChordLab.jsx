@@ -1302,11 +1302,10 @@ export default function ChordLab({importedChordData, masterInstrumentArray, free
     const dragOverHandlerSpecial =  e => {
         e.preventDefault();
     }
- function downloadAsMidi(){
-
+ function downloadAsMidi(name){
 var midi = turnNotesIntoMidi(chords)
 let blob = new Blob([midi.toArray()], {type: "audio/midi"});
-FileSaver.saveAs(blob, "chordsTest.mid")
+FileSaver.saveAs(blob,  name + ".mid")
     }
       //====
     return (
@@ -1475,6 +1474,7 @@ FileSaver.saveAs(blob, "chordsTest.mid")
         setOpened={setOpened}
         changeParentName={changeFirstChordName}
         changeParentDesc={setDescription}
+        downloadAsMidi={downloadAsMidi}
         />
         </div>
     ) 

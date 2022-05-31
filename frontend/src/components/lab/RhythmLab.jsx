@@ -1,11 +1,12 @@
 import {React, useState, useEffect, useRef} from 'react'
 import * as Tone from 'tone';
+import FileSaver from 'file-saver'
 import { Menu, Button, Input, Dropdown, Form, TextArea, Icon } from 'semantic-ui-react';
 import { useDispatch, useSelector} from 'react-redux';
-import { insertData } from '../../store/actions/dataPoolActions';
 import { setLabData } from '../../store/actions/labDataActions';
 import { drumKit } from './synths';
 import ExportModal from '../modal/ExportModal'
+import { turnNotesWithRhythmIntoMidi } from '../midi/midifunctions';
 import './lab.css'
 
 
@@ -843,6 +844,13 @@ const dragOverHandlerSpecial =  e => {
     e.preventDefault();
 }
 
+function downloadAsMidi(name){
+    let timeSignature = notes.length
+    var midi = turnNotesWithRhythmIntoMidi(notes, timeSignature)
+    let blob = new Blob([midi.toArray()], {type: "audio/midi"});
+    FileSaver.saveAs(blob, name + ".mid")
+}
+
 
     return (
         <div onDragOver={dragOverHandlerSpecial} onDrop={dropHandlerSpecial} style={ free ? {'height': '200px', display: display ? '' : 'none'} : {}}>
@@ -909,8 +917,8 @@ const dragOverHandlerSpecial =  e => {
             <Button active ={subdivisionValue === 4} compact basic onClick ={() => handleSubdivision(4)}>4</Button>
             </Button.Group>}
             <Button active ={activeButton === 'undivide'} compact basic onClick ={() => handleControls('undivide')}>Undivide</Button>
-            <Button compact basic onClick={()=> shortenPattern(notes)}>Notes--</Button>
-            <Button compact basic onClick ={() => lengthenPattern(notes)}>Notes++</Button>
+            <Button compact basic onClick={()=> shortenPattern(notes)}>Beat--</Button>
+            <Button compact basic onClick ={() => lengthenPattern(notes)}>Beat++</Button>
         </Button.Group>}
        <div style={{display: 'flex', flexDirection: 'row', width: '900px', flexWrap: 'wrap'}} >
            {mappedNotes}
@@ -940,6 +948,7 @@ const dragOverHandlerSpecial =  e => {
         setOpened={setOpened}
         changeParentName={setName}
         changeParentDesc={setDescription}
+        downloadAsMidi={downloadAsMidi}
         />
         </div>
     )

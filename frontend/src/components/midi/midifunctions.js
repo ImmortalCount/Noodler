@@ -8,7 +8,10 @@ const PPQ =  480
 const BPM = 120
 const millisecondsPerTick = 60000 / (BPM * PPQ);
 const ticksPerSecond = 960
-export function turnNotesIntoMidi(notes){
+export function turnNotesIntoMidi(notes, duration){
+    if (duration === undefined){
+        duration = 1
+    }
     let midi = new Midi()
     let time = 0;
     const track = midi.addTrack();
@@ -17,10 +20,10 @@ export function turnNotesIntoMidi(notes){
             track.addNote({
                 name : notes[i][j],
                 time : time,
-                duration: 1
+                duration: duration
             })
         }
-        time += 1
+        time += duration
     }
     return midi
 }
@@ -138,12 +141,21 @@ function turnNotesWithRhythmDataIntoMidiObj(notes, time, timeSpace, returnArr){
             let noteArr = noteStringHandler(notes[i])
             for (let j = 0; j < noteArr.length; j++){
                 if (noteArr[j] !== 'X'){
-                    returnArr.push(
-                        {name: noteArr[j],
-                        time: time + (duration * i),
-                        duration: duration,
-                        }   
-                    )
+                    if (noteArr[j] === 'O'){
+                        returnArr.push(
+                            {name: 'C4',
+                            time: time + (duration * i),
+                            duration: duration,
+                            }   
+                        )
+                    } else {
+                        returnArr.push(
+                            {name: noteArr[j],
+                            time: time + (duration * i),
+                            duration: duration,
+                            }   
+                        )
+                    }
                 }
             }
         } else {
@@ -153,9 +165,19 @@ function turnNotesWithRhythmDataIntoMidiObj(notes, time, timeSpace, returnArr){
     return returnArr
 }
 
-export function turnNotesWithRhythmIntoMidi(notes){
+export function turnNotesWithRhythmIntoMidi(notes, timeSignature){
     let midiObj = turnNotesWithRhythmDataIntoMidiObj(notes)
     let midi = new Midi()
+    if (timeSignature === undefined){
+        timeSignature = 4
+    }
+    midi.header.timeSignatures = [
+        {
+            ticks: 0,
+            timeSignature: [timeSignature,4],
+            measures: 1,
+    
+        }]
     const track = midi.addTrack();
     for (let i = 0; i < midiObj.length; i++){
         track.addNote({
@@ -274,15 +296,18 @@ function round(number, decimals = 0) {
     return result.toFixed(decimals);
 }
 
-export function turnPlayerDataIntoFullMidiSong(playerObj){
+export function turnPlayerDataIntoFullMidiSong(playerObj, timeSignature){
     let midi = new Midi();
-    // midi.header.timeSignatures = [
-    // {
-    //     ticks: 2160,
-	//     timeSignature: [5,4],
-	//     measures: 1,
-
-    // }]
+    if (timeSignature === undefined){
+        timeSignature = 4
+    }
+    midi.header.timeSignatures = [
+        {
+            ticks: 0,
+            timeSignature: [timeSignature,4],
+            measures: 1,
+    
+        }]
     for (let i = 0; i < playerObj.length; i++){
         let returnArr = []
         let time = 0;

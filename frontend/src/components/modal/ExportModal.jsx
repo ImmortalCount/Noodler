@@ -4,13 +4,15 @@ import { useDispatch, useSelector } from 'react-redux';
 import "./modal.css";
 import { insertData, updateData, initializeUpdateAndInsertData } from '../../store/actions/dataPoolActions';
 
-function ExportModal({dataType, exportObj, opened, setOpened, changeParentName, changeParentDesc}) {
+function ExportModal({dataType, exportObj, opened, setOpened, changeParentName, changeParentDesc, downloadAsMidi}) {
   const [isOpen, setIsOpen] = useState(false);
   const [name, setName] = useState('')
+  const [fileName, setFileName] = useState('')
   const [desc, setDesc] = useState('')
   //modes are export, midi, and tab
-  // const [mode, setMode] = useState('export')
+  const [mode, setMode] = useState('export')
   const [inputFocus, setInputFocus] = useState(false)
+  const [inputMidiFocus, setInputMidiFocus] = useState(false)
   const [textAreaFocus, setTextAreaFocus] = useState(false)
   const [messageDisplay, setMessageDisplay] = useState(false)
   const [updateDisplay, setUpdateDisplay] = useState(false)
@@ -47,8 +49,13 @@ function ExportModal({dataType, exportObj, opened, setOpened, changeParentName, 
     if (exportObj){
       if (dataType === 'scale'){
         setName(exportObj.scaleType)
+        setFileName(exportObj.name)
+      } else if (dataType === 'chord') {
+        setName(exportObj.name)
+        setFileName('chords')
       } else {
         setName(exportObj.name)
+        setFileName(exportObj.name)
       }
       setDesc(exportObj.desc)
     }
@@ -82,6 +89,11 @@ function ExportModal({dataType, exportObj, opened, setOpened, changeParentName, 
   const handleExport = () => {
     setMessageDisplay(true)
     dispatch(insertData(exportObj))
+  }
+
+  const handleDownload = () => {
+    downloadAsMidi(fileName)
+    closeModal()
   }
 
   const handleUpdate = () => {
@@ -125,10 +137,25 @@ function handleBackgroundColor(){
           <div className="overlay"></div>
           <div className="modal">
             <header style={{backgroundColor: handleBackgroundColor()}} className="modal__header">
-              <h2>Export {dataType} '{dataType === 'scale' ? exportObj.name :  name}' to {poolDisplay}</h2>
+              {mode === 'export' && <h2>Export {dataType} '{dataType === 'scale' ? exportObj.name :  name}' to {poolDisplay}</h2>}
+              {mode === 'midi' && <h2>Download {dataType === 'chord' ? 'chords' : dataType} as midi</h2>}
               <button onClick={closeModal} className="close-button">&times;</button>
             </header>
             <main className="modal__main">
+            <h3>Export to Pool or Download Midi</h3>
+            <div className="mode_select" style={{display: 'flex', flexDirection: 'row', gap: '20px', marginBottom: '20px'}}>
+              <Checkbox 
+              label='export'
+              checked={mode === 'export'}
+              onClick={() => setMode('export')}
+              />
+              <Checkbox 
+              label='midi'
+              checked={mode === 'midi'}
+              onClick={() => setMode('midi')}
+              />
+             </div>
+            {mode === 'export' && <div className="export_content">
              {messageDisplay && <h3>{dataInsert?.data?.message}</h3>}
              {updateDisplay && <h3>{dataUpdate?.data?.message}</h3>}
              {messageDisplay && dataInsert?.data?.success === false && <div>
@@ -200,8 +227,22 @@ function handleBackgroundColor(){
               onClick={() => handleClickPool('global')}
               />
              </div>
+             </div>}
+             {mode === 'midi' && <div className="midi_content">
+             <div onClick={() => setInputMidiFocus(!inputMidiFocus)} style={{display: !inputMidiFocus ? '': 'none' }}>
+            <h3>{fileName}.mid</h3>
+             </div>
+            <Input type='text'
+            value={fileName}
+            ref={input => input && input.focus()}
+            onInput={e => setFileName(e.target.value)}
+            onBlur={() => setInputMidiFocus(false)}
+            style={{display: inputMidiFocus ? '': 'none' }}
+            />
+               </div>}
             </main>
-            <Button loading={loading} disabled={localStorage.getItem('userInfo') === null} onClick={handleExport}>{localStorage.getItem('userInfo') === null ? 'Log-in to export songs or midi' : 'Export'}</Button>
+            {mode === 'export' && <Button loading={loading} disabled={localStorage.getItem('userInfo') === null} onClick={handleExport}>{localStorage.getItem('userInfo') === null ? 'Log-in to export songs or midi' : 'Export'}</Button>}
+            {mode === 'midi' && <Button loading={loading} disabled={localStorage.getItem('userInfo') === null} onClick={handleDownload}>{localStorage.getItem('userInfo') === null ? 'Log-in to export songs or midi' : 'Download'}</Button>}
           </div>
         </>
       )}

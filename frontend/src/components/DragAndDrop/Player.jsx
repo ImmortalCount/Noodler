@@ -842,13 +842,51 @@ function convertToTab(){
     let tab = generateTabFromModules(dataFromPlayer, tunings, instrumentNames, globalPosition, name, user?.['name'])
     return tab
 }
+function determineMostCommonTimeSignature(){
+    let timeSignatureObj = {}
+    for (let i = 0; i < data.length; i++){
+        for (let j = 0; j < data[i]['data'].length; j++){
+            let timeSignature = String(data[i]['data'][j]['data']['rhythmData']['length'])
+            if (timeSignatureObj[timeSignature] !== undefined){
+                timeSignatureObj[timeSignature] += 1;
+            } else {
+                timeSignatureObj[timeSignature] = 1;
+            }
+        }
+    }
+    let mostCommonOccurance = -Infinity
+    let mostcommonTimeSignature = ''
+    for (const key of Object.keys(timeSignatureObj)) {
+        if (timeSignatureObj[key] > mostCommonOccurance){
+            mostCommonOccurance = timeSignatureObj[key]
+            mostcommonTimeSignature = key
+        };
+    }
+    return Number(mostcommonTimeSignature)
+}
+
+function handleMode(){
+    if (!mode && edit){
+        setEdit(false)
+        setMode(true)
+    }
+    setMode(!mode)
+}
+
+function handleEdit(){
+    if (!edit && mode){
+        setMode(false)
+        setEdit(true)
+    }
+    setEdit(!edit)
+}
 
 function downloadAsMidi(){
+    const timeSignature = determineMostCommonTimeSignature()
     const playableSequence = convertModuleDataIntoPlayableSequence(data)
-    const midi = turnPlayerDataIntoFullMidiSong(playableSequence)
+    const midi = turnPlayerDataIntoFullMidiSong(playableSequence, timeSignature)
     let blob = new Blob([midi.toArray()], {type: "audio/midi"});
     FileSaver.saveAs(blob, name + ".mid")
-    console.log(midi)
 }
 
     return (
@@ -858,8 +896,8 @@ function downloadAsMidi(){
         <Button.Group>
         {mapMenuItems()}
         </Button.Group>
-        <Menu.Item basic active={mode} onClick={()=> setMode(!mode)}>Mode</Menu.Item>
-        <Menu.Item basic active={edit} onClick={()=> setEdit(!edit)}>Edit</Menu.Item>
+        <Menu.Item basic active={mode} onClick={()=> handleMode()}>Mode</Menu.Item>
+        <Menu.Item basic active={edit} onClick={()=> handleEdit()}>Edit</Menu.Item>
         <Dropdown
             simple
             item
@@ -920,6 +958,7 @@ function downloadAsMidi(){
          setOpened={setOpened}
          changeParentName={setName}
          changeParentDesc={setDescription}
+         downloadAsMidi={downloadAsMidi}
          />
         </>
     )

@@ -2,9 +2,11 @@ import {React, useState, useEffect, useRef} from 'react'
 import { Form, Checkbox , Icon, Dropdown, Menu, Button, TextArea, Input} from 'semantic-ui-react'
 import {Scale, ScaleType, Note} from '@tonaljs/tonal';
 import * as Tone from 'tone';
+import FileSaver from 'file-saver'
 import { useDispatch, useSelector } from 'react-redux';
 import { setLabData } from '../../store/actions/labDataActions';
 import { scaleHandler } from './utils';
+import { turnNotesIntoMidi } from '../midi/midifunctions';
 import ExportModal from '../modal/ExportModal';
 import '../../../public/Do_Mayor_armadura.svg'
 import { polySynth } from './synths';
@@ -809,6 +811,56 @@ const onDragOver = e => {
   console.log('draggin over!!')
 }
 
+function downloadAsMidi(name){
+
+    var returnValues = [];
+    var noteValues =
+    [
+    'C3', 
+    'C#3', 
+    'D3', 
+    'D#3', 
+    'E3', 
+    'F3', 
+    'F#3', 
+    'G3', 
+    'G#3', 
+    'A3', 
+    'A#3', 
+    'B3',
+    'C4', 
+    'C#4', 
+    'D4', 
+    'D#4', 
+    'E4', 
+    'F4', 
+    'F#4', 
+    'G4', 
+    'G#4', 
+    'A4', 
+    'A#4', 
+    'B4',
+  ]
+  var rootIndex;
+  if (noteValues.indexOf(notes[0] + 3) === -1){
+    rootIndex = noteValues.indexOf((Note.enharmonic(notes[0]) + 3))
+  } else {
+    rootIndex = noteValues.indexOf(notes[0] + 3)
+  }
+
+  for (var i = 0; i < 13; i++){
+    if (i === 12){
+      returnValues.push([noteValues[rootIndex + i]])
+    } else {
+      if (scaleDataBinary[i] === 1){
+        returnValues.push([noteValues[rootIndex + i]])
+      }
+    }
+  }
+  var midi = turnNotesIntoMidi(returnValues)
+  let blob = new Blob([midi.toArray()], {type: "audio/midi"});
+  FileSaver.saveAs(blob,  name + ".mid")
+}
 
     return (
         <div onDrop={dropHandler} onDragOver={onDragOver} style={ free ? {'height': '200px', display: display ? '' : 'none'} : {}}>
@@ -1247,6 +1299,7 @@ const onDragOver = e => {
         setOpened={setOpened}
         changeParentName={setScaleName}
         changeParentDesc={setDescription}
+        downloadAsMidi={downloadAsMidi}
         />
         </div>
     )

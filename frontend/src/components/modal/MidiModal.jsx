@@ -66,10 +66,10 @@ export default function MidiModal({tab, masterInstrumentArray}) {
             style={{display: inputFocus ? '': 'none' }}
             />
         </div>
-        <div>
+        {/* <div>
             <h3>Instruments: {JSON.stringify(masterInstrumentArray)}</h3>
-        </div>
-        <div onClick={() => setTimeSignatureFocus(!timeSignatureFocus)} style={{display: !timeSignatureFocus ? '': 'none' }}>
+        </div> */}
+        {/* <div onClick={() => setTimeSignatureFocus(!timeSignatureFocus)} style={{display: !timeSignatureFocus ? '': 'none' }}>
             <h3>Time Signature: {timeSignature}/4</h3>
         </div>
             <Input type='number'
@@ -78,11 +78,11 @@ export default function MidiModal({tab, masterInstrumentArray}) {
             onInput={e => SetTimeSignature(e.target.value)}
             onBlur={() => setTimeSignatureFocus(false)}
             style={{display: timeSignatureFocus ? '': 'none' }}
-            />
-        <div onClick={() => setKeyFocus(!keyFocus)} style={{display: !keyFocus ? '': 'none' }}>
+            /> */}
+        {/* <div onClick={() => setKeyFocus(!keyFocus)} style={{display: !keyFocus ? '': 'none' }}>
             <h3>Key: {key} {major ? 'Major' : 'Minor'}</h3>
-        </div>
-        <div onBlur={() => setKeyFocus(false)} style={{display: keyFocus ? '': 'none' }}>
+        </div> */}
+        {/* <div onBlur={() => setKeyFocus(false)} style={{display: keyFocus ? '': 'none' }}>
         <div className="key_select" style={{display: 'flex', flexWrap:'wrap', gap: '10px', marginBottom: '20px', marginRight: '10px'}}>
         {mapAllKeyCheckboxes()}
         </div>
@@ -98,7 +98,7 @@ export default function MidiModal({tab, masterInstrumentArray}) {
         onClick={() => setMajor(false)}
         />
         </div>
-        </div>
+        </div> */}
           </main>
           <Button disabled={localStorage.getItem('userInfo') === null} onClick={() => downloadMidi()}>{localStorage.getItem('userInfo') === null ? 'Log-in to download midi' : 'Download'}</Button>
         </div>
