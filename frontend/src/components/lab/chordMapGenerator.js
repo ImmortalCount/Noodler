@@ -94,14 +94,29 @@ export const determineChordType = (chord) => {
     if (midiArr.includes(4) && midiArr.includes(10) && midiArr.includes(1)){
         return '7b9'
     }
+    
     if (midiArr.includes(4) && midiArr.includes(10) && midiArr.includes(3)){
         return '7#9'
     }
+
     if (midiArr.includes(4) && midiArr.includes(10) && midiArr.includes(8)){
         return '7#5'
     }
+
+    if (midiArr.includes(4) && midiArr.includes(10) && midiArr.includes(6)){
+        return '7b5'
+    }
+
     if (midiArr.includes(4) && midiArr.includes(10) && midiArr.includes(6)){
         return '7#11'
+    }
+
+    if (midiArr.includes(4) && midiArr.includes(11) && midiArr.includes(6)){
+        return 'maj7#11'
+    }
+
+    if (midiArr.includes(3) && midiArr.includes(10) && midiArr.includes(6)){
+        return 'min7b5'
     }
 
     if (midiArr.includes(3) && midiArr.includes(6)){
@@ -303,11 +318,11 @@ export function setRecommendedScale(chord, key){
         '7b5': 'altered',
         '7#9': 'altered',
         '7#11': 'lydian dominant',
-        '7b6': 'mixolydian b6',
         'maj7#11': 'lydian',
         'min7b5': 'locrian',
         'aug': 'major augmented',
-        'min7b9': 'phrygian'
+        'min7b9': 'phrygian',
+        'minMaj': 'melodic minor'
     }
 
     const positions = {

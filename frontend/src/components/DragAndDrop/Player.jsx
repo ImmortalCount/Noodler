@@ -147,7 +147,6 @@ export default function Player ({masterInstrumentArray, display, childChangeInst
         let tab = convertToTab()
         const playableSequence = convertModuleDataIntoPlayableSequence(data)
         const midi = turnPlayerDataIntoFullMidiSong(playableSequence)
-        //Midi is included in tab dispatch!
         dispatch(setTab({tab: tab, name: name, midi: midi}))
     }, [data, setBpm, globalInstruments, globalPosition]);
 

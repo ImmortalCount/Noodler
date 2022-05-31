@@ -309,6 +309,9 @@ export function turnPlayerDataIntoFullMidiSong(playerObj, timeSignature){
     
         }]
     for (let i = 0; i < playerObj.length; i++){
+        if (playerObj[i]['displayOnly'] === true){
+            continue
+        }
         let returnArr = []
         let time = 0;
         for (let j = 0; j < playerObj[i]['data'].length; j++){
