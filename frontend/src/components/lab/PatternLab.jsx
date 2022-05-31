@@ -108,7 +108,6 @@ function handleSetData(notes, position){
 }
 
 function patternAndScaleToNotes(patternArr){
-        console.log(patternArr, 'good patternArr!')
         var notesExport = [];
         var root = scaleNotes[0] + 3
         const allNotes = Note.sortedNames(allScaleNotes);
@@ -564,7 +563,6 @@ const handleClickUp = (e) => {
     var x = positionId.split('_')[1]
     var y = positionId.split('_')[2]
     setDisplayFocus(Number(x))
-    console.log(x, 'display focus?!?!')
     if (noteOptions === 'scale'){
         if (allScaleNotes.indexOf(notes[x][y]) === -1){
             var chromaIndex = allChromaticNotes.indexOf(notes[x][y]);
@@ -1068,7 +1066,6 @@ function invertMelody(){
             if (typeof pattern[i][j] === 'string'){
                 let num = Number(pattern[i][j].split("").slice(1).join(""))
                 tempPattern.push( '*' + (num * -1))
-                console.log(num, '*' + (num * -1))
             }
         }
         returnPattern.push(tempPattern)

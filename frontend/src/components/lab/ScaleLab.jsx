@@ -808,7 +808,6 @@ const dropHandler =(e) => {
 
 const onDragOver = e => {
   e.preventDefault();
-  console.log('draggin over!!')
 }
 
 function downloadAsMidi(name){

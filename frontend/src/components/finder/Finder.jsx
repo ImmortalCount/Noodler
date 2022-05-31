@@ -50,11 +50,10 @@ export default function Finder() {
     const retrieveModules = () => {
         ModuleDataService.getAll()
         .then(response => {
-            console.log(response.data);
             setModules(response.data.modules)
         })
         .catch(e => {
-            console.log(e)
+            // console.log(e)
         })
     }
 

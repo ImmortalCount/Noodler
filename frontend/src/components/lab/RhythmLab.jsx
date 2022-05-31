@@ -246,7 +246,6 @@ function changePositionsUsingIDs(startingID, endingID, notes){
             if (clone[endingIDCoordinates[0]][endingIDCoordinates[1]][endingIDCoordinates[2]][endingIDCoordinates[3]] === undefined){
                 return
             } else {
-                console.log(clone[endingIDCoordinates[0]][endingIDCoordinates[1]][endingIDCoordinates[2]][endingIDCoordinates[3]])
                 clone[endingIDCoordinates[0]][endingIDCoordinates[1]][endingIDCoordinates[2]].splice([endingIDCoordinates[3]], 0, xfer)
             }
         } else if (endingIDCoordinates.length === 5){
@@ -524,7 +523,6 @@ const dragStartHandlerSpecial = e => {
         dataType: 'rhythm',
         pool: '',
     }, type: 'rhythmLabExport'}
-    console.log(obj)
     e.dataTransfer.setData('text', JSON.stringify(obj));
 }
 
@@ -662,7 +660,6 @@ function randomInteger(min, max) {
 //---random rhythm generator
 function randomRhythmGenerator(maxDepth, length){
 
-    console.log(maxDepth, length)
 
     if (maxDepth === undefined){
         maxDepth = 0;
