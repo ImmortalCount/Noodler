@@ -43,7 +43,7 @@ function LoginRegisterModal() {
 
   const registerHandler = (e) => {
     e.preventDefault()
-    dispatch(register(name, email, password, confirmPassword))
+    dispatch(register(name, registerEmail, registerPassword, confirmPassword))
 }
 
   useEffect(() => {

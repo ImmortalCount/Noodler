@@ -156,7 +156,7 @@ useEffect(() => {
 
 //upon updating
 useEffect(() => {
-    let mostCurrentPattern = patternExtraction()
+    let mostCurrentPattern = patternExtraction(notes)
     setPattern(mostCurrentPattern)
     let newInfo = {...labInfo}
     const patternDataPrototype = {
@@ -181,14 +181,23 @@ useEffect(() => {
 
   useEffect(() => {
     if (importedPatternData?.['pattern']){
-        setPattern(importedPatternData['pattern'])
+        if (importedPatternData['type'] === 'fixed'){
+            
+            let importedNotes = importedPatternData['pattern']
+            let mostCurrentPattern = patternExtraction(importedNotes)
+            console.log(mostCurrentPattern)
+        setPattern(mostCurrentPattern)
+        handleSetData(importedPatternData['pattern'], importedPatternData['position'])
+        } else {
+            setPattern(importedPatternData['pattern'])
+            handleSetData(patternAndScaleToNotes(importedPatternData['pattern']), importedPatternData['position'])
+        }
         setPatternType(importedPatternData['type'])
         setDescription(importedPatternData['desc'])
         setName(importedPatternData['patternName'])
         setPositionType(importedPatternData['positionType'])
-        handleSetData(patternAndScaleToNotes(importedPatternData['pattern']), importedPatternData['position'])
-        let mostCurrentPattern = patternExtraction()
-        setPattern(mostCurrentPattern)
+
+        
         let newInfo = {...labInfo}
         const patternDataPrototype = {
         name: importedPatternData['patternName'],
@@ -1094,7 +1103,7 @@ function fitPatternToScale(){
     handleSetData(patternAndScaleToNotes(pattern), position)
 }
 
-function patternExtraction(){
+function patternExtraction(notes){
     var root = scaleNotes[0] + 3
     var allNotes = [];
     var allChromaticNotes = [];
@@ -1140,15 +1149,15 @@ const exportObj = {
         name: name,
         patternName: name,
         desc: description,
-        type: 'fluid',
+        type: patternType,
         length: notes.length,
         dataType: 'pattern',
-        pattern: pattern,
+        pattern: patternType === 'fixed'? chordSequenceToNoteString(notes) : pattern,
         position: [],
         fixedPosition: false,
         author: user?.['name'],
         authorId: user?.['_id'],
-        pool: exportPool,
+        // pool: exportPool,
 }
 
 const handleEditOptions = () => {

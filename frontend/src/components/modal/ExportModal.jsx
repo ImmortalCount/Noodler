@@ -6,7 +6,7 @@ import { insertData, updateData, initializeUpdateAndInsertData } from '../../sto
 
 function ExportModal({dataType, exportObj, opened, setOpened, changeParentName, changeParentDesc, downloadAsMidi}) {
   const [isOpen, setIsOpen] = useState(false);
-  const [name, setName] = useState('')
+  const [name, setName] = useState(exportObj.name)
   const [fileName, setFileName] = useState('')
   const [desc, setDesc] = useState('')
   //modes are export, midi, and tab
