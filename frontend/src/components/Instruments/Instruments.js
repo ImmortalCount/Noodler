@@ -187,7 +187,7 @@ var instrumentSamples = {
                Gb6: 'MusyngKite_acoustic_guitar_nylon-mp3_Gb6.mp3',
                Gb7: 'MusyngKite_acoustic_guitar_nylon-mp3_Gb7.mp3',
             },
-            baseUrl: 'https://master--unruffled-jang-aafb4a.netlify.app/soundfiles/acoustic_guitar_nylon/'
+            baseUrl: '/soundfiles/acoustic_guitar_nylon/'
             
         },
         "acoustic_guitar_steel": {
